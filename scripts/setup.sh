@@ -42,6 +42,74 @@ print_error() {
   echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Function to install Docker
+install_docker() {
+  # Skip Docker installation in CI environment.
+  if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
+    print_status "Skipping Docker installation (CI environment)"
+    return 0
+  fi
+
+  print_status "Checking if Docker is installed..."
+
+  if command -v docker &> /dev/null; then
+    DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
+    print_success "Docker $DOCKER_VERSION is already installed"
+
+    # Check if Docker daemon is running
+    if docker info &> /dev/null; then
+      print_success "Docker daemon is running"
+    else
+      print_warning "Docker is installed but daemon is not running"
+      print_status "You may need to start Docker manually or run: sudo systemctl start docker"
+    fi
+    return 0
+  fi
+
+  print_status "Docker not found. Installing Docker..."
+
+  # Detect OS
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux installation
+    print_status "Detected Linux. Installing Docker via official script..."
+
+    # Install Docker using the universal installation script
+    print_status "Installing Docker using Docker's universal installation script..."
+    if command_exists apt-get; then
+      sudo apt-get update
+    else
+      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+      exit 1
+    fi
+
+    # Install prerequisites
+    print_status "Installing prerequisites..."
+    if command_exists apt-get; then
+      sudo apt-get install -y \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+    else
+      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+      exit 1
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS installation
+    print_status "Detected macOS. Please install Docker Desktop manually:"
+    echo "1. Visit: https://docs.docker.com/desktop/install/mac-install/"
+    echo "2. Download Docker Desktop for Mac"
+    echo "3. Install the .dmg file"
+    echo "4. Start Docker Desktop from Applications"
+    print_warning "Manual installation required for macOS"
+
+  else
+    print_error "Unsupported operating system: $OSTYPE"
+    print_status "Please install Docker manually from: https://docs.docker.com/get-docker/"
+    return 1
+  fi
+}
+
 #==================================================================================================
 # Main Script
 #==================================================================================================
@@ -65,6 +133,10 @@ else
   print_error "Python 3 is not installed or not in PATH"
   exit 1
 fi
+
+# Install Docker
+print_warning "About to install Docker, this step requires sudo"
+install_docker
 
 # Create virtual environment if it doesn't exist
 if [ ! -d ".venv" ]; then
@@ -108,3 +180,8 @@ echo "  ruff check src tests"
 echo ""
 echo "To format code:"
 echo "  ruff format src tests"
+echo ""
+echo "Docker commands:"
+echo "  docker --version    # Check Docker version"
+echo "  docker info         # Check Docker daemon status"
+echo "  docker run hello-world  # Test Docker installation"
