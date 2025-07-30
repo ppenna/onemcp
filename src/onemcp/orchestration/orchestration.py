@@ -7,6 +7,7 @@ server = FastMCP(
     description="Dynamic MCP Orchestrator for managing tools and resources",
 )
 
+
 @server.tool()
 async def plan(query: str, ctx: Context) -> list[base.Message]:
     """Gives a detailed orchestration plan for the given query."""
@@ -46,6 +47,8 @@ async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
     if result.content.type == "text":
         return [base.Message(role="user", content=result.content.text)]
     return [base.Message(role="user", content=str(result.content))]
+
+
 @server.tool()
 async def install(query: str, ctx: Context) -> list[base.Message]:
     """Installs an MCP server."""
@@ -98,5 +101,7 @@ async def search(query: str, ctx: Context) -> list[base.Message]:
     if result.content.type == "text":
         return [base.Message(role="user", content=result.content.text)]
     return [base.Message(role="user", content=str(result.content))]
+
+
 if __name__ == "__main__":
-    server.run(transport='streamable-http')
+    server.run(transport="streamable-http")
