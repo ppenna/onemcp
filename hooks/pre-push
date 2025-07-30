@@ -1,0 +1,67 @@
+#!/bin/bash
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# Git pre-push hook for OneMCP project
+# This hook runs code quality checks before allowing a push
+
+set -e
+
+echo "🔍 Running pre-push checks..."
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+print_status() {
+  echo -e "${BLUE}[HOOK]${NC} $1"
+}
+
+print_success() {
+  echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_error() {
+  echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if virtual environment exists and activate it
+if [ -d ".venv" ]; then
+  print_status "Activating virtual environment..."
+  source .venv/bin/activate
+else
+  print_error "Virtual environment not found. Run ./scripts/setup.sh first."
+  exit 1
+fi
+
+# Function to run a check and handle errors
+run_check() {
+  local check_name="$1"
+  local command="$2"
+
+  print_status "Running $check_name..."
+  if eval "$command"; then
+    print_success "$check_name passed"
+  else
+    print_error "$check_name failed"
+    echo "Fix the issues above before pushing."
+    exit 1
+  fi
+}
+
+# 1. Code formatting check
+run_check "code formatting" "ruff format --check src tests"
+
+# 2. Linting
+run_check "linting" "ruff check src tests"
+
+# 3. Type checking
+run_check "type checking" "mypy src"
+
+# 4. Tests
+run_check "tests" "pytest"
+
+print_success "All pre-push checks passed! 🎉"
+echo "Push proceeding..."
