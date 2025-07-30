@@ -43,7 +43,9 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
 @server.tool()
 async def uninstall(query: str, ctx: Context) -> list[base.Message]:
     """Uninstalls an MCP server."""
-    return [base.Message(role="user", content="hello")]
+    # Placeholder for uninstallation logic
+    # TODO: Implement actual uninstallation logic for MCP server
+    return [base.Message(role="user", content="Uninstallation logic not implemented")]
 
 
 @server.tool()
