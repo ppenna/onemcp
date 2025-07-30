@@ -1,4 +1,4 @@
-Please write a shell script that will install and run the MCP server available at `https://github.com/githejie/mcp-server-calculator.git`.
+Please write a shell script that will install and run the MCP server available at `{REPOSITORY_URL_USING_HTTPS}`.
 
 The script should include at least the following steps:
 * Install git
@@ -13,3 +13,6 @@ Assume you're running in a Docker container on Ubuntu 24.04. So, for instance, y
 
 Here are the contents of the README file:
 
+```
+{CONTENTS_OF_README_FILE}
+```
