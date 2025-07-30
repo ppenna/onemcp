@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# Git post-merge hook for OneMCP project
+# This hook runs after git pull/merge to refresh virtual environment when requirements change
+
+set -euo pipefail
+
+#==================================================================================================
+# Constants
+#==================================================================================================
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+SCRIPTS_DIR=${PROJECT_ROOT}/scripts
+
+#==================================================================================================
+# Imports
+#==================================================================================================
+
+source "${SCRIPTS_DIR}/utils.sh"
+
+#==================================================================================================
+# Main Script
+#==================================================================================================
+
+print_status "Running post-merge hook..."
+
+# Check if virtual environment exists
+if [ ! -d ".venv" ]; then
+  print_warning "Virtual environment not found. Run ./scripts/setup.sh first."
+  exit 0
+fi
+
+# Check if requirements.txt was modified in the merge
+requirements_changed=false
+
+# Check if requirements.txt changed in the merge
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^requirements\.txt$"; then
+  requirements_changed=true
+  print_status "requirements.txt was modified in this merge"
+fi
+
+# Also check if pyproject.toml changed (for development dependencies)
+pyproject_changed=false
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^pyproject\.toml$"; then
+  pyproject_changed=true
+  print_status "pyproject.toml was modified in this merge"
+fi
+
+# If neither file changed, exit early
+if [ "$requirements_changed" = false ] && [ "$pyproject_changed" = false ]; then
+  print_status "No dependency files changed, skipping virtual environment refresh"
+  exit 0
+fi
+
+print_status "Dependency files changed, refreshing virtual environment..."
+
+# Activate virtual environment
+print_status "Activating virtual environment..."
+source "${PROJECT_ROOT}/.venv/bin/activate"
+
+# Upgrade pip first
+print_status "Upgrading pip..."
+if ! pip install --upgrade pip; then
+  print_error "Failed to upgrade pip"
+  exit 1
+fi
+
+# Install/update dependencies
+if [ "$requirements_changed" = true ] || [ "$pyproject_changed" = true ]; then
+  print_status "Installing/updating dependencies..."
+  if pip install -e ".[dev]"; then
+    print_success "Dependencies updated successfully"
+  else
+    print_error "Failed to update dependencies"
+    print_warning "You may need to manually run: pip install -e \".[dev]\""
+    exit 1
+  fi
+fi
+
+print_success "Virtual environment refreshed successfully! 🎉"
+print_status "Your dependencies are now up to date with the current branch"
