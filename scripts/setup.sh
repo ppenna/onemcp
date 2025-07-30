@@ -74,26 +74,26 @@ install_docker() {
     print_status "Detected Linux. Installing Docker via official script..."
 
     # Install Docker using the universal installation script
-    print_status "Installing Docker using Docker's universal installation script..."
-    if command_exists apt-get; then
-      sudo apt-get update
-    else
-      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
-      exit 1
-    fi
+    # print_status "Installing Docker using Docker's universal installation script..."
+    # if command_exists apt-get; then
+    #   sudo apt-get update
+    # else
+    #   print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+    #   exit 1
+    # fi
 
     # Install prerequisites
     print_status "Installing prerequisites..."
-    if command_exists apt-get; then
+    # if command_exists apt-get; then
       sudo apt-get install -y \
         ca-certificates \
         curl \
         gnupg \
         lsb-release
-    else
-      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
-      exit 1
-    fi
+    # else
+    #   print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+    #   exit 1
+    # fi
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS installation
     print_status "Detected macOS. Please install Docker Desktop manually:"
