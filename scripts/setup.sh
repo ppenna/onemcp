@@ -67,48 +67,27 @@ install_docker() {
     # Linux installation
     print_status "Detected Linux. Installing Docker via official script..."
 
-    # Update package index
-    print_status "Updating package index..."
-    sudo apt-get update
+    # Install Docker using the universal installation script
+    print_status "Installing Docker using Docker's universal installation script..."
+    if command_exists apt-get; then
+      sudo apt-get update
+    else
+      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+      exit 1
+    fi
 
     # Install prerequisites
     print_status "Installing prerequisites..."
-    sudo apt-get install -y \
-      ca-certificates \
-      curl \
-      gnupg \
-      lsb-release
-
-    # Add Docker's official GPG key
-    print_status "Adding Docker GPG key..."
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-    # Set up the repository
-    print_status "Setting up Docker repository..."
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-    # Update package index again
-    sudo apt-get update
-
-    # Install Docker Engine
-    print_status "Installing Docker Engine..."
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    # Add current user to docker group
-    print_status "Adding user to docker group..."
-    sudo usermod -aG docker $USER
-    print_warning "You need to log out and back in for the group changes to take effect."
-    print_status "Alternatively, you can run 'exec su -l $USER' to apply the changes immediately."
-
-    if docker ps >/dev/null 2>&1; then
-      print_success "Docker installed successfully!"
+    if command_exists apt-get; then
+      sudo apt-get install -y \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
     else
-      print_error "Failed to install docker!"
+      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
+      exit 1
     fi
-
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS installation
     print_status "Detected macOS. Please install Docker Desktop manually:"
