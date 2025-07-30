@@ -58,7 +58,7 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
         await ctx.session.create_message(
             messages=[
                 SamplingMessage(
-                    role="system",
+                    role="user",
                     content=TextContent(type="text", text=installation_result),
                 )
             ],
