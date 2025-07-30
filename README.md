@@ -1,6 +1,5 @@
 # OneMCP
 
-
 A dynamic orchestrator for MCP Servers.
 
 ## Quick Start
@@ -166,7 +165,6 @@ pytest --cov=onemcp --cov-report=term-missing
   - Code quality checks
   - Security scanning
   - Coverage reporting
-
 
 ## Contributing
 
