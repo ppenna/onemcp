@@ -32,7 +32,9 @@ async def plan(query: str, ctx: Context) -> list[base.Message]:
 @server.tool()
 async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
     """Evaluates and dynamically orchestrates tools for a given user query."""
-    prompt = f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    prompt = (
+        f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    )
 
     result = await ctx.session.create_message(
         messages=[
@@ -64,7 +66,9 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
             ],
             max_tokens=50,
         )
-        return [base.Message(role="system", content="MCP server installation successful.")]
+        return [
+            base.Message(role="system", content="MCP server installation successful.")
+        ]
     except Exception as e:
         return [base.Message(role="system", content=f"Installation failed: {str(e)}")]
 
