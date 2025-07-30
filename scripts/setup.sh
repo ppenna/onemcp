@@ -44,6 +44,12 @@ print_error() {
 
 # Function to install Docker
 install_docker() {
+  # Skip Docker installation in CI environment.
+  if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
+    print_status "Skipping Docker installation (CI environment)"
+    return 0
+  fi
+
   print_status "Checking if Docker is installed..."
 
   if command -v docker &> /dev/null; then
