@@ -4,7 +4,11 @@
 
 # Install Git hooks for OneMCP project
 
-set -e
+set -euo pipefail
+
+#==================================================================================================
+# Main Script
+#==================================================================================================
 
 echo "Installing Git hooks..."
 
@@ -20,7 +24,7 @@ mkdir -p .git/hooks
 # Copy pre-push hook
 cp hooks/pre-push .git/hooks/pre-push
 
-# Make hook executable
+# Make hooks executable
 chmod +x .git/hooks/pre-push
 
 echo "Git hooks installed successfully!"
