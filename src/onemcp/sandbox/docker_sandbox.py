@@ -45,7 +45,7 @@ class SandboxInstance:
     status: str = "running"
 
     # Basic MCP JSON-RPC messages
-    def initialize(self, protocol_version="2024-11-05"):
+    def _initialize(self, protocol_version="2024-11-05"):
         return {
             "jsonrpc": "2.0",
             "id": 1,
@@ -57,10 +57,10 @@ class SandboxInstance:
             },
         }
 
-    def notif_initialized(self):
+    def _notif_initialized(self):
         return {"jsonrpc": "2.0", "method": "notifications/initialized"}
 
-    def tools_list(self):
+    def _tools_list(self):
         return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
     def send(self, proc, obj):
@@ -68,7 +68,7 @@ class SandboxInstance:
         proc.stdin.write(line)
         proc.stdin.flush()
 
-    def read_until_id(self, proc, expect_id, timeout=5.0):
+    def _read_until_id(self, proc, expect_id, timeout=5.0):
         """Read lines until we see a JSON-RPC response with the given id."""
         start = time.time()
         while True:
@@ -97,22 +97,22 @@ class SandboxInstance:
                 # notification; ignore in this simple client
                 pass
 
-    def get_tools(self):
+    def _get_tools(self):
 
         try:
             # 1) initialize
-            self.send(self.proc, self.initialize())
-            init_resp = self.read_until_id(self.proc, expect_id=1, timeout=10.0)
+            self.send(self.proc, self._initialize())
+            init_resp = self._read_until_id(self.proc, expect_id=1, timeout=10.0)
             if "error" in init_resp:
                 print("Initialize error:", init_resp["error"], file=sys.stderr)
                 sys.exit(2)
 
             # 2) notifications/initialized (no response expected)
-            self.send(self.proc, self.notif_initialized())
+            self.send(self.proc, self._notif_initialized())
 
             # 3) tools/list
-            self.send(self.proc, self.tools_list())
-            tools_resp = self.read_until_id(self.proc, expect_id=2, timeout=10.0)
+            self.send(self.proc, self._tools_list())
+            tools_resp = self._read_until_id(self.proc, expect_id=2, timeout=10.0)
 
             if "error" in tools_resp:
                 print("tools/list error:", tools_resp["error"], file=sys.stderr)
@@ -226,7 +226,7 @@ class DockerSandbox:
                     status="running",
                 )
 
-                instance.get_tools()
+                instance._get_tools()
 
                 self.instances[sandbox_id] = instance
                 self.used_ports.add(port)
