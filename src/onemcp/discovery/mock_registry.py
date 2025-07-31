@@ -8,7 +8,7 @@ class ServerEntry:
 
 
 class MockRegistry:
-    def __init__(self):
+    def __init__(self) -> None:
         self._servers: dict[str, ServerEntry] = {}
 
     def register_server(self, name: str, url: str) -> None:

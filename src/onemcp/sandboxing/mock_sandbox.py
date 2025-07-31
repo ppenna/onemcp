@@ -61,7 +61,7 @@ class StopResponse(BaseModel):
 # MockSandbox
 #
 class MockSandbox:
-    def __init__(self):
+    def __init__(self) -> None:
         # Mock storage for sandbox instances
         self._sandbox_instances: dict[str, dict] = {}
 
