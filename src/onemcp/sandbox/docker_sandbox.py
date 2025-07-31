@@ -40,7 +40,7 @@ class DockerSandboxError(Exception):
     pass
 
 
-class DockerSandbox:
+class DockerSandboxRegistry:
     """Docker-based sandbox for MCP servers."""
 
     def __init__(self, base_port: int = 8000, max_instances: int = 10):

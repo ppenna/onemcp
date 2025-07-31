@@ -10,20 +10,20 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
 
-from .docker_sandbox import DockerSandbox
+from .docker_sandbox import DockerSandboxRegistry
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OneMCP Sandbox API", version="1.0.0")
 
 # Global sandbox instance
-sandbox = DockerSandbox()
+sandbox = DockerSandboxRegistry()
 
 
 class SandboxAPI:
     """HTTP API wrapper for the Docker Sandbox."""
 
-    def __init__(self, sandbox_instance: DockerSandbox):
+    def __init__(self, sandbox_instance: DockerSandboxRegistry):
         self.sandbox = sandbox_instance
 
 
