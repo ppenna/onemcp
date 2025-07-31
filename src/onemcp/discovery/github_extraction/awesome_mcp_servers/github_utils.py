@@ -1,13 +1,14 @@
 import json
 import os
+from typing import Any
 from urllib.parse import urlparse
 
 import markdown
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag, NavigableString
 from dotenv import load_dotenv
 from tqdm import tqdm
-from typing import Any, List
 
 # Load .env file
 load_dotenv()
@@ -83,7 +84,12 @@ class BaseGitHubRepoExplorer:
                     html_content = markdown.markdown(response.text)
                     soup = BeautifulSoup(html_content, "html.parser")
                     try:
-                        self.readme_title = soup.find(["h1"]).text
+                        node = soup.find(["h1"])
+                        if node is None:
+                            self.readme_title = ""
+                        if isinstance(node, NavigableString):
+                            self.readme_title = node.text
+
                     except Exception:
                         self.readme_title = ""
                         # print(f"Error getting Readme Title: {self.repo_url}")
@@ -96,7 +102,7 @@ class BaseGitHubRepoExplorer:
         return ""
 
 
-def get_awesome_mcp_servers_urls(url: str) -> List[str]:
+def get_awesome_mcp_servers_urls(url: str) -> list[str]:
     # Download markdown content
     response = requests.get(url)
     response.raise_for_status()
@@ -109,7 +115,7 @@ def get_awesome_mcp_servers_urls(url: str) -> List[str]:
     soup = BeautifulSoup(html_content, "html.parser")
 
     # Extract all raw URLs under <h3> sections
-    urls_by_section: dict[str, List[Any]] = {}
+    urls_by_section: dict[str, list[Any]] = {}
 
     tags = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol"])
 
@@ -125,10 +131,12 @@ def get_awesome_mcp_servers_urls(url: str) -> List[str]:
             # End the current section when next h1–h3 is encountered
             recording = False
             current_h3 = None
+
         elif recording and tag.name in ["ul", "ol"]:
             for li in tag.find_all("li"):
                 for a in li.find_all("a", href=True):
-                    urls_by_section[current_h3].append(a["href"])
+                    if current_h3 is not None:
+                        urls_by_section[current_h3].append(a["href"])
 
     # Gather results
     results = []
@@ -140,7 +148,7 @@ def get_awesome_mcp_servers_urls(url: str) -> List[str]:
     return results
 
 
-def batch_extract_mcp_urls(urls: List[str], saved_results_filename: str) -> None:
+def batch_extract_mcp_urls(urls: list[str], saved_results_filename: str) -> None:
     # Pick up where we left
     json_results = []
     if os.path.isfile(saved_results_filename):
