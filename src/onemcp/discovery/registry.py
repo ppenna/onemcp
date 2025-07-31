@@ -1,3 +1,5 @@
+from typing import Optional
+
 import requests
 
 from .registry_api import RegistryInterface, ServerEntry, ToolEntry
@@ -6,10 +8,10 @@ from .registry_api import RegistryInterface, ServerEntry, ToolEntry
 class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
-    def __init__(self, base_url="https://1cpgs0fc-8001.usw2.devtunnels.ms"):
+    def __init__(self, base_url: str = "https://1cpgs0fc-8001.usw2.devtunnels.ms") -> None:
         self.base_url = base_url
 
-    def health_check(self):
+    def health_check(self) -> Optional[tuple[int, str]]:
         try:
             response = requests.get(f"{self.base_url}/health")
             return response.status_code, response.json()
@@ -37,7 +39,7 @@ class Registry(RegistryInterface):
             print(f"Error searching tools: {e}")
             return []
 
-    def list_servers(self):
+    def list_servers(self) -> list[ServerEntry]:
         try:
             response = requests.get(f"{self.base_url}/servers")
             result = response.json()
@@ -53,7 +55,7 @@ class Registry(RegistryInterface):
             print(f"Error listing servers: {e}")
             return []
 
-    def register_server(self, server_data):
+    def register_server(self, server_data: ServerEntry) -> Optional[tuple[int, str]]:
         try:
             response = requests.post(
                 f"{self.base_url}/register_server", json=server_data
@@ -63,18 +65,12 @@ class Registry(RegistryInterface):
             print(f"Error registering server: {e}")
             return None
 
-    def unregister_server(self, codebase_url):
-        return None
-        # unregister_request = {"codebase_url": codebase_url}
-        # try:
-        #     response = requests.delete(
-        #         f"{self.base_url}/unregister_server", json=unregister_request
-        #     )
-        #     print(f"Status: {response.status_code}")
-        #     result = response.json()
-        #     print(f"Response: {json.dumps(result, indent=2)}")
-        #     print("Successfully cleaned up test server")
-        #     return result
-        # except Exception as e:
-        #     print(f"Error unregistering server: {e}")
-        #     return None
+    def unregister_server(self, codebase_url: str) -> Optional[dict]:
+        try:
+            response = requests.delete(
+                f"{self.base_url}/unregister_server", json={"codebase_url": codebase_url}
+            )
+            return {"status_code": response.status_code, "response": response.json()}
+        except Exception as e:
+            print(f"Error unregistering server: {e}")
+            return None
