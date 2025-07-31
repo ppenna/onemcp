@@ -6,7 +6,6 @@ from ..discovery.mock_registry import MockRegistry
 
 server = FastMCP(
     name="OneMCP Orchestrator",
-    description="Dynamic MCP Orchestrator for managing tools and resources",
 )
 
 # Initialize mock registry with some sample servers

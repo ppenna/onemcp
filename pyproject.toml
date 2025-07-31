@@ -23,7 +23,16 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = ["mcp>=1.0.0", "anyio>=3.0.0"]
+dependencies = [
+    "anyio>=3.0.0",
+    "fastmcp>=0.1.0",
+    "mcp>=1.0.0",
+    "types-beautifulsoup4",
+    "types-html5lib",
+    "types-Markdown",
+    "types-requests",
+    "types-tqdm",
+]
 
 [project.optional-dependencies]
 dev = [
