@@ -14,7 +14,7 @@ apt install -y git python3 python3-pip python3-venv curl
 
 # Clone the repository
 git clone ${REPOSITORY_URL}
-cd ${REPOSITORY_NAME}
+cd "${REPOSITORY_NAME}"
 
 # Create and activate a virtual environment
 python3 -m venv venv
