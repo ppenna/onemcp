@@ -9,7 +9,7 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
 
-from onemcp.discovery import MockRegistry, Registry, ServerEntry
+from onemcp import MockRegistry, Registry, ServerEntry
 
 # from onemcp.sandboxing.mock_sandbox import MockSandbox
 
