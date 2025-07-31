@@ -27,6 +27,22 @@ source "${SCRIPTS_DIR}/utils.sh"
 # Functions
 #==================================================================================================
 
+install_prerequisites() {
+    print_status "Installing prerequisites..."
+    sudo apt-get update
+    sudo apt-get install -y \
+      build-essential \
+      ca-certificates \
+      curl \
+      git \
+      gnupg \
+      lsb-release \
+      python3 \
+      python3-dev \
+      python3-pip \
+      python3-venv
+}
+
 # Function to install Docker
 install_docker() {
   # Skip Docker installation in CI environment.
@@ -73,25 +89,7 @@ install_docker() {
     fi
 
     # Install prerequisites
-    print_status "Installing prerequisites..."
-    if command_exists apt-get; then
-      sudo apt-get install -y \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release
-    else
-      print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
-      exit 1
-    fi
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS installation
-    print_status "Detected macOS. Please install Docker Desktop manually:"
-    echo "1. Visit: https://docs.docker.com/desktop/install/mac-install/"
-    echo "2. Download Docker Desktop for Mac"
-    echo "3. Install the .dmg file"
-    echo "4. Start Docker Desktop from Applications"
-    print_warning "Manual installation required for macOS"
+    install_prerequisites
 
   else
     print_error "Unsupported operating system: $OSTYPE"
@@ -100,45 +98,51 @@ install_docker() {
   fi
 }
 
+# Checks if Python version is compatible.
+check_python_version() {
+  print_status "Checking Python version..."
+  if command -v python3 &> /dev/null; then
+    PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+    REQUIRED_VERSION="3.10"
+
+    if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1)" = "$REQUIRED_VERSION" ]; then
+      print_success "Python $PYTHON_VERSION found"
+      return 0
+    else
+      print_error "Python 3.10+ is required. Found: $PYTHON_VERSION"
+      return 1
+    fi
+  else
+    print_error "Python 3 is not installed or not in PATH"
+    return 1
+  fi
+}
+
+create_venv() {
+  print_status "Creating virtual environment..."
+  if [ ! -d "${PROJECT_ROOT}/.venv" ]; then
+    python3 -m venv "${PROJECT_ROOT}/.venv"
+    print_success "Virtual environment created at ${PROJECT_ROOT}/.venv"
+  else
+    print_warning "Virtual environment already exists at ${PROJECT_ROOT}/.venv"
+  fi
+}
+
 #==================================================================================================
 # Main Script
 #==================================================================================================
 
-echo "🚀 Setting up OneMCP development environment..."
+print_success "🚀 Setting up OneMCP development environment..."
 
-# Check if Python 3.9+ is available
-print_status "Checking Python version..."
-if command -v python3 &> /dev/null; then
-  PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-  REQUIRED_VERSION="3.10"
-
-  if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1)" = "$REQUIRED_VERSION" ]; then
-    print_success "Python $PYTHON_VERSION found"
-    PYTHON_CMD="python3"
-  else
-    print_error "Python 3.10+ is required. Found: $PYTHON_VERSION"
-    exit 1
-  fi
-else
-  print_error "Python 3 is not installed or not in PATH"
+if ! check_python_version; then
+  print_error "Python version check failed. Please install Python 3.10+."
   exit 1
 fi
 
-# Install Docker
-print_warning "About to install Docker, this step requires sudo"
 install_docker
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "${PROJECT_ROOT}/.venv" ]; then
-  print_status "Creating virtual environment..."
-  $PYTHON_CMD -m venv "${PROJECT_ROOT}/.venv"
-  print_success "Virtual environment created"
-else
-  print_warning "Virtual environment already exists"
-fi
+create_venv
 
-# Activate virtual environment
-print_status "Activating virtual environment..."
 activate_virtualenv
 
 upgrade_pip
