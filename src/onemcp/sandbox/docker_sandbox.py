@@ -187,21 +187,6 @@ class DockerSandbox:
                     "error_description": f"Failed to stop sandbox: {str(e)}",
                 }
 
-    async def list_instances(self) -> list[dict[str, Any]]:
-        """List all running sandbox instances.
-
-        Returns:
-            List of sandbox instance information
-        """
-        return [
-            {
-                "sandbox_id": instance.sandbox_id,
-                "endpoint": instance.endpoint,
-                "status": instance.status,
-            }
-            for instance in self.instances.values()
-        ]
-
     async def cleanup_all(self) -> None:
         """Stop all running sandbox instances."""
         sandbox_ids = list(self.instances.keys())

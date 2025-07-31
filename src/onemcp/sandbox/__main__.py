@@ -123,13 +123,6 @@ async def handle_stop(body: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-@app.get("/sandbox/instances")
-async def list_instances() -> dict[str, Any]:
-    """List all running sandbox instances."""
-    instances = await sandbox.list_instances()
-    return {"instances": instances}
-
-
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
