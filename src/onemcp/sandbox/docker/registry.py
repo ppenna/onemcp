@@ -124,7 +124,12 @@ class DockerSandboxRegistry:
                     status="running",
                 )
 
-                instance.get_tools(container)
+                tools = instance.get_tools(container)
+                if tools is None:
+                    return {
+                        "response_code": "500",
+                        "error_description": "Failed to retrieve tools from MCP server",
+                    }
 
                 self.instances[sandbox_id] = (container, instance)
                 self.used_ports.add(port)
