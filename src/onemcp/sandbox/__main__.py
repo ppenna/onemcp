@@ -145,7 +145,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Clean up resources on shutdown
     logger.info("Shutting down sandbox API, cleaning up instances...")
     await sandbox.cleanup_all()
-    return
 
 
 def create_app() -> FastAPI:
