@@ -114,7 +114,11 @@ if __name__ == "__main__":
     discover_response = sandbox.discover(discover_payload)
     print(discover_response.overview)
 
-    start_payload = StartRequest(bootstrap_metadata={"test_param": "test_value"})
+    start_payload = StartRequest(
+        bootstrap_metadata=BootstrapMetadata(
+            version="1.0.0", config={"test_param": "test_value"}
+        )
+    )
     start_response = sandbox.start(start_payload)
     print(start_response.sandbox_id)
 
