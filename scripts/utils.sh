@@ -37,6 +37,7 @@ print_error() {
 
 # Activates the virtual environment if it exists.
 activate_virtualenv() {
+  echo "Activating virtual environment..."
   if [ -d "${PROJECT_ROOT}/.venv" ]; then
     source "${PROJECT_ROOT}/.venv/bin/activate"
     print_success "Virtual environment activated"

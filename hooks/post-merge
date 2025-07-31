@@ -28,7 +28,7 @@ source "${SCRIPTS_DIR}/utils.sh"
 print_status "Running post-merge hook..."
 
 # Check if virtual environment exists
-if [ ! -d ".venv" ]; then
+if [ ! -d "${PROJECT_ROOT}/.venv" ]; then
   print_warning "Virtual environment not found. Run ./scripts/setup.sh first."
   exit 0
 fi
@@ -59,7 +59,7 @@ print_status "Dependency files changed, refreshing virtual environment..."
 
 # Activate virtual environment
 print_status "Activating virtual environment..."
-source "${PROJECT_ROOT}/.venv/bin/activate"
+activate_virtualenv
 
 # Upgrade pip first
 print_status "Upgrading pip..."
