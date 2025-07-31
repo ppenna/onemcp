@@ -8,7 +8,9 @@ from .registry_api import RegistryInterface, ServerEntry, ToolEntry
 class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
-    def __init__(self, base_url: str = "https://1cpgs0fc-8001.usw2.devtunnels.ms") -> None:
+    def __init__(
+        self, base_url: str = "https://1cpgs0fc-8001.usw2.devtunnels.ms"
+    ) -> None:
         self.base_url = base_url
 
     def health_check(self) -> Optional[tuple[int, str]]:
@@ -68,7 +70,8 @@ class Registry(RegistryInterface):
     def unregister_server(self, codebase_url: str) -> Optional[dict]:
         try:
             response = requests.delete(
-                f"{self.base_url}/unregister_server", json={"codebase_url": codebase_url}
+                f"{self.base_url}/unregister_server",
+                json={"codebase_url": codebase_url},
             )
             return {"status_code": response.status_code, "response": response.json()}
         except Exception as e:
