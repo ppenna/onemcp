@@ -8,7 +8,7 @@ import json
 import requests
 
 
-def test_api():
+def test_api() -> None:
     """Test the indexing API endpoints"""
     base_url = "http://localhost:8001"
 
@@ -94,7 +94,7 @@ def test_api():
     try:
         # URL encode the codebase URL for the path parameter
         import urllib.parse
-        encoded_url = urllib.parse.quote(test_server["codebase_url"], safe='')
+        encoded_url = urllib.parse.quote(str(test_server["codebase_url"]), safe='')
         response = requests.get(f"{base_url}/server/{encoded_url}")
         print(f"Status: {response.status_code}")
 

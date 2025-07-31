@@ -3,7 +3,7 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from indexing import Indexing
+from onemcp.discovery.indexing import Indexing
 from pydantic import BaseModel
 
 
@@ -75,7 +75,7 @@ class IndexingAPI:
         # Setup routes
         self._setup_routes()
 
-    def _setup_routes(self):
+    def _setup_routes(self) -> None:
         """Setup API routes"""
 
         @self.app.post("/register_server")
@@ -149,13 +149,14 @@ class IndexingAPI:
                 tools = []
                 for result in results:
                     # Extract server name from URL or use URL as fallback
-                    server_name = self._extract_server_name(result["server-url"])
+                    server_url = str(result["server-url"])
+                    server_name = self._extract_server_name(server_url)
 
                     tool_result = ToolResult(
-                        tool_name=result["tool-name"],
-                        tool_description=result["tool-description"],
+                        tool_name=str(result["tool-name"]),
+                        tool_description=str(result["tool-description"]),
                         server_name=server_name,
-                        server_url=result["server-url"],
+                        server_url=server_url,
                         distance=float(result.get("distance", 0.0)),
                     )
                     tools.append(tool_result)
@@ -179,11 +180,12 @@ class IndexingAPI:
                 ) from e
 
         @self.app.get("/health")
-        async def health_check():
+        async def health_check() -> dict[str, str]:
             """Health check endpoint"""
             try:
                 # Try to query ChromaDB to ensure it's working
-                self.indexing.collection.count()
+                if self.indexing.collection:
+                    self.indexing.collection.count()
                 return {"status": "healthy", "chromadb": "connected"}
             except Exception as e:
                 return {
@@ -193,7 +195,7 @@ class IndexingAPI:
                 }
 
         @self.app.get("/servers")
-        async def list_servers():
+        async def list_servers() -> dict[str, Any]:
             """List all registered servers"""
             try:
                 servers = []
