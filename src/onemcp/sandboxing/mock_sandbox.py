@@ -37,7 +37,7 @@ class DiscoverResponse(BaseModel):
 # Start
 #
 class StartRequest(BaseModel):
-    bootstrap_metadata: dict[str, str]
+    bootstrap_metadata: BootstrapMetadata
 
 
 class StartResponse(BaseModel):
@@ -61,8 +61,9 @@ class StopResponse(BaseModel):
 # MockSandbox
 #
 class MockSandbox:
-    # Mock storage for sandbox instances
-    _sandbox_instances: dict[str, dict] = {}
+    def __init__(self):
+        # Mock storage for sandbox instances
+        self._sandbox_instances: dict[str, dict] = {}
 
     def discover(self, payload: DiscoverRequest) -> DiscoverResponse:
         """Handle DISCOVER requests"""
