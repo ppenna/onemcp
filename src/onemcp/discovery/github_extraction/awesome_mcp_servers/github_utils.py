@@ -1,11 +1,13 @@
-import requests
-import os,json
-from dotenv import load_dotenv
-from bs4 import BeautifulSoup
-import markdown
-from tqdm import tqdm
+import json
+import os
 from urllib.parse import urlparse
 
+import markdown
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from tqdm import tqdm
+from typing import Any, List
 
 # Load .env file
 load_dotenv()
@@ -21,8 +23,7 @@ HEADERS = {
 
 
 class BaseGitHubRepoExplorer:
-
-    def __init__(self, repo_url):        
+    def __init__(self, repo_url: str):
         # Parse the URL
         parsed = urlparse(repo_url)
 
@@ -36,7 +37,7 @@ class BaseGitHubRepoExplorer:
         # Second and third should always be owner/repo
         self.owner = params[1]
         # Some repo urls come with .git at
-        self.repo = params[2].replace(".git","")
+        self.repo = params[2].replace(".git", "")
         # Get information
         self.repo_information = self.get_repo_information(
             owner=self.owner, repo=self.repo
@@ -50,24 +51,24 @@ class BaseGitHubRepoExplorer:
         )
 
     # Function to get repo information
-    def get_repo_information(self, owner, repo):
+    def get_repo_information(self, owner: str, repo: str) -> Any:
         endpoint = f"/repos/{owner}/{repo}"
         repo_url = f"{BASE_GITHUB_API_URL}{endpoint}"
         response = requests.get(repo_url, headers=HEADERS)
         return response.json()
 
     # Function to get programming languages
-    def get_repo_programming_languages(self, language_url):
-        response = requests.get(language_url,headers=HEADERS)
+    def get_repo_programming_languages(self, language_url: str) -> Any:
+        response = requests.get(language_url, headers=HEADERS)
         response.raise_for_status()
         return response.json()
-    
-    def get_repo_readme(self):
+
+    def get_repo_readme(self) -> str:
         self.readme_title = ""
-        
+
         base_readme_url = f"https://raw.githubusercontent.com/{self.owner}/{self.repo}/refs/heads/{self.default_branch}"
-        name_variations = ['README.md','readme.md','Readme.md',"README.rst"]
-        folder_variations = ["/","/.github/","/docs/"]
+        name_variations = ["README.md", "readme.md", "Readme.md", "README.rst"]
+        folder_variations = ["/", "/.github/", "/docs/"]
         # Try all possible variations
         for fv in folder_variations:
             for nm in name_variations:
@@ -82,23 +83,20 @@ class BaseGitHubRepoExplorer:
                     html_content = markdown.markdown(response.text)
                     soup = BeautifulSoup(html_content, "html.parser")
                     try:
-                        self.readme_title = soup.find(['h1']).text
-                    except Exception as e:
+                        self.readme_title = soup.find(["h1"]).text
+                    except Exception:
                         self.readme_title = ""
-                        #print(f"Error getting Readme Title: {self.repo_url}")
+                        # print(f"Error getting Readme Title: {self.repo_url}")
                     # at this point we should break
                     return response.text
-                        
-                except Exception as e:
-                    #print(f"not found for: {readme_url} ")
+
+                except Exception:
+                    # print(f"not found for: {readme_url} ")
                     continue
-        return None
-        
+        return ""
 
 
-
-
-def get_awesome_mcp_servers_urls(url):
+def get_awesome_mcp_servers_urls(url: str) -> List[str]:
     # Download markdown content
     response = requests.get(url)
     response.raise_for_status()
@@ -111,7 +109,7 @@ def get_awesome_mcp_servers_urls(url):
     soup = BeautifulSoup(html_content, "html.parser")
 
     # Extract all raw URLs under <h3> sections
-    urls_by_section = {}
+    urls_by_section: dict[str, List[Any]] = {}
 
     tags = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol"])
 
@@ -133,34 +131,30 @@ def get_awesome_mcp_servers_urls(url):
                     urls_by_section[current_h3].append(a["href"])
 
     # Gather results
-    # print(urls_by_section)
     results = []
-    for section, links in urls_by_section.items():
-        # print(f"\n### {section}")
+    for _, links in urls_by_section.items():
         for link in links:
             if "https://github.com" in link and link not in results:
                 results.append(link)
-                # print(link)
-    # print(len(results))
+
     return results
 
 
-def batch_extract_mcp_urls(urls, saved_results_filename):
+def batch_extract_mcp_urls(urls: List[str], saved_results_filename: str) -> None:
     # Pick up where we left
     json_results = []
     if os.path.isfile(saved_results_filename):
-        with open(saved_results_filename, 'r') as file:
+        with open(saved_results_filename) as file:
             json_results = json.load(file)
     # Print stats
     json_existing_urls = [x["repository_url"] for x in json_results]
-    empty_readme = [x for x in json_results if x["readme_content"]==""]
-    empty_title = [x for x in json_results if x["readme_title"]==""]
+    empty_readme = [x for x in json_results if x["readme_content"] == ""]
+    empty_title = [x for x in json_results if x["readme_title"] == ""]
     print(f"Records: {len(json_existing_urls)}/{len(urls)}")
     print(f"Records with no readme titles: {len(empty_title)}")
     print(f"Records with no readmes contents: {len(empty_readme)}")
     completed = len(json_existing_urls)
 
-        
     for url in tqdm(urls):
         # Skip the ones we have done
         if url in json_existing_urls:
@@ -185,7 +179,7 @@ def batch_extract_mcp_urls(urls, saved_results_filename):
             with open(saved_results_filename, "w") as json_file:
                 json.dump(json_results, json_file, indent=4)
             # Counter for completed
-            completed+=1
+            completed += 1
         except Exception as e:
             print(f"Error: {url}")
             print(e)
