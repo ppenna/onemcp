@@ -26,7 +26,10 @@ class Registry(RegistryInterface):
             tools = []
             for _, tool in enumerate(result["tools"], 1):
                 entry = ToolEntry(
-                    tool_name=tool["tool_name"], tool_description=tool["tool_description"], server_name=tool["server_name"], distance=tool["distance"]
+                    tool_name=tool["tool_name"],
+                    tool_description=tool["tool_description"],
+                    server_name=tool["server_name"],
+                    distance=tool["distance"],
                 )
                 tools.append(entry)
             return tools
@@ -41,7 +44,9 @@ class Registry(RegistryInterface):
 
             servers = []
             for _, server in enumerate(result["servers"], 1):
-                entry = ServerEntry(name=server.get("filename", ""), url=server.get("codebase_url", ""))
+                entry = ServerEntry(
+                    name=server.get("filename", ""), url=server.get("codebase_url", "")
+                )
                 servers.append(entry)
             return servers
         except Exception as e:
@@ -50,7 +55,9 @@ class Registry(RegistryInterface):
 
     def register_server(self, server_data):
         try:
-            response = requests.post(f"{self.base_url}/register_server", json=server_data)
+            response = requests.post(
+                f"{self.base_url}/register_server", json=server_data
+            )
             return response.status_code, response.json()
         except Exception as e:
             print(f"Error registering server: {e}")

@@ -5,7 +5,9 @@ from typing import Optional
 class ServerEntry:
     __slots__ = ("name", "url", "installation_instructions")
 
-    def __init__(self, name: str, url: str, installation_instructions: Optional[str] = None):
+    def __init__(
+        self, name: str, url: str, installation_instructions: Optional[str] = None
+    ):
         self.name = name
         self.url = url
         self.installation_instructions = installation_instructions
@@ -14,7 +16,9 @@ class ServerEntry:
 class ToolEntry:
     __slots__ = ("tool_name", "tool_description", "server_name", "distance")
 
-    def __init__(self, tool_name: str, tool_description: str, server_name: str, distance: float):
+    def __init__(
+        self, tool_name: str, tool_description: str, server_name: str, distance: float
+    ):
         self.tool_name = tool_name
         self.tool_description = tool_description
         self.server_name = server_name

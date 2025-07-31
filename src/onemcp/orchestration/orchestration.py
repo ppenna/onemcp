@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent))
 
-from discovery import Registry, MockRegistry
+from discovery import MockRegistry, Registry, ServerEntry
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
@@ -24,15 +24,6 @@ def tool_extraction(text: str) -> str:
     return prompt_template.format(user_prompt=text)
 
 
-# Initialize mock registry with some sample servers
-mockRegistry = MockRegistry()
-mockRegistry.register_server("weather-api", "https://github.com/weather/mcp-server")
-mockRegistry.register_server("database-tools", "https://github.com/db/mcp-tools")
-mockRegistry.register_server("file-manager", "https://github.com/files/mcp-manager")
-mockRegistry.register_server("git-helper", "https://github.com/git/mcp-helper")
-mockRegistry.register_server("web-scraper", "https://github.com/web/mcp-scraper")
-
-
 @server.tool()
 async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
     """You must call this tool! Takes the user prompt and suggests which MCP tools would be appropriate."""
@@ -40,7 +31,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     # Get the path to the prompt template relative to this file
     prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
     prompt_template = prompt_path.read_text(encoding="utf-8")
-    prompt = prompt_template.format(user_prompt=prompt, context=(", ".join(files) if files else ""))
+    prompt = prompt_template.format(
+        user_prompt=prompt, context=(", ".join(files) if files else "")
+    )
 
     result = await ctx.session.create_message(
         messages=[
@@ -96,7 +89,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
 @server.tool()
 async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
     """Evaluates and dynamically orchestrates tools for a given user query."""
-    prompt = f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    prompt = (
+        f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    )
 
     result = await ctx.session.create_message(
         messages=[
@@ -127,7 +122,9 @@ async def install(url: str, ctx: Context) -> list[base.Message]:
 
         # TODO: 3. Otherwise, discovery prompt to determine installation instructions
         if not server:
-            return [base.Message(role="system", content="Server not found in registry.")]
+            return [
+                base.Message(role="system", content="Server not found in registry.")
+            ]
 
         # 4. Try to install
         # sandbox = MockSandbox()
@@ -173,8 +170,26 @@ async def status(query: str, ctx: Context) -> list[base.Message]:
 async def search(query: str, ctx: Context) -> list[base.Message]:
     """Searches for a specific resource or tool using the mock registry."""
     try:
+        # Initialize mock registry with some sample servers
+        mockRegistry = MockRegistry()
+        mockRegistry.register_server(
+            ServerEntry("weather-api", "https://github.com/weather/mcp-server")
+        )
+        mockRegistry.register_server(
+            ServerEntry("database-tools", "https://github.com/db/mcp-tools")
+        )
+        mockRegistry.register_server(
+            ServerEntry("file-manager", "https://github.com/files/mcp-manager")
+        )
+        mockRegistry.register_server(
+            ServerEntry("git-helper", "https://github.com/git/mcp-helper")
+        )
+        mockRegistry.register_server(
+            ServerEntry("web-scraper", "https://github.com/web/mcp-scraper")
+        )
+
         # Use the mockRegistry to find similar servers
-        similar_servers = mockRegistry.find_similar_servers(query, k=5)
+        similar_servers = mockRegistry.list_servers()
 
         if not similar_servers:
             return [
@@ -189,10 +204,8 @@ async def search(query: str, ctx: Context) -> list[base.Message]:
             f"Found {len(similar_servers)} similar servers for query '{query}':\n"
         )
 
-        for i, (server_entry, similarity_score) in enumerate(similar_servers, 1):
-            results.append(
-                f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})"
-            )
+        for i, server_entry in enumerate(similar_servers, 1):
+            results.append(f"{i}. {server_entry.name}")
             results.append(f"   URL: {server_entry.url}")
 
         response_text = "\n".join(results)
