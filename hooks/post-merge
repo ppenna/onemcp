@@ -29,24 +29,36 @@ print_status "Running post-merge hook..."
 
 # Check if virtual environment exists
 if [ ! -d "${PROJECT_ROOT}/.venv" ]; then
-  print_warning "Virtual environment not found. Run ./scripts/setup.sh first."
+  print_warning "Virtual environment not found. Run \"${PROJECT_ROOT}/scripts/setup.sh\" first."
   exit 0
 fi
 
-# Check if requirements.txt was modified in the merge
-requirements_changed=false
+# Function to check if a file was modified in the merge
+file_changed_in_merge() {
+  local filename=$1
+  if git rev-parse --verify ORIG_HEAD >/dev/null 2>&1; then
+    if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^${filename}$"; then
+      print_status "${filename} was modified in this merge"
+      return 0
+    else
+      return 1
+    fi
+  else
+    # ORIG_HEAD does not exist, so we cannot determine if the file changed
+    print_warning "ORIG_HEAD not found; cannot determine if ${filename} was modified"
+    return 1
+  fi
+}
 
-# Check if requirements.txt changed in the merge
-if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^requirements\.txt$"; then
+# Check if requirements.txt or pyproject.toml was modified in the merge
+requirements_changed=false
+if file_changed_in_merge "${PROJECT_ROOT}/requirements.txt"; then
   requirements_changed=true
-  print_status "requirements.txt was modified in this merge"
 fi
 
-# Also check if pyproject.toml changed (for development dependencies)
 pyproject_changed=false
-if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^pyproject\.toml$"; then
+if file_changed_in_merge "${PROJECT_ROOT}/pyproject.toml"; then
   pyproject_changed=true
-  print_status "pyproject.toml was modified in this merge"
 fi
 
 # If neither file changed, exit early

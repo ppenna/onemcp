@@ -32,5 +32,5 @@ chmod +x .git/hooks/pre-push
 chmod +x .git/hooks/post-merge
 
 echo "Git hooks installed successfully!"
-echo "The pre-push hook will now run before each push to ensure code quality."
-echo "The post-merge hook will now run after git pull to refresh virtual environment when dependencies change."
+echo "The pre-push hook will now run before each push to run tests and lint checks to ensure code quality."
+echo "The post-merge hook will now run after git pull to check for changes in requirements.txt and update the Python virtual environment if needed."

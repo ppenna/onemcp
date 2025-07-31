@@ -30,7 +30,7 @@ source "${SCRIPTS_DIR}/utils.sh"
 # Function to install Docker
 install_docker() {
   # Skip Docker installation in CI environment.
-  if [ "${GITHUB_ACTIONS:-}" = "true" ] && [ -n "${GITHUB_ACTIONS:-}" ]; then
+  if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
     print_status "Skipping Docker installation (CI environment)"
     return 0
   fi
@@ -38,7 +38,12 @@ install_docker() {
   print_status "Checking if Docker is installed..."
 
   if command -v docker &> /dev/null; then
-    DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
+    # Try to get Docker version using --format if available, else fallback
+    if docker --version --format '{{.Server.Version}}' &> /dev/null; then
+      DOCKER_VERSION=$(docker --version --format '{{.Server.Version}}')
+    else
+      DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
+    fi
     print_success "Docker $DOCKER_VERSION is already installed"
 
     # Check if Docker daemon is running
@@ -111,7 +116,7 @@ if command -v python3 &> /dev/null; then
     print_success "Python $PYTHON_VERSION found"
     PYTHON_CMD="python3"
   else
-    print_error "Python 3.9+ is required. Found: $PYTHON_VERSION"
+    print_error "Python 3.10+ is required. Found: $PYTHON_VERSION"
     exit 1
   fi
 else
