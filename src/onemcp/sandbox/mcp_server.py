@@ -3,7 +3,6 @@
 
 import json
 import logging
-import sys
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -83,14 +82,15 @@ class McpServer:
         """
         This method takes as an argument an MCP server running inside a docker
         container, and it communicates with it over STDIO in order to get the
-        list of tools that it exposes.
+        list of tools that it exposes. It returns the tools description, or
+        None if it fails.
         """
         # 1) initialize
         self.send(proc, self._initialize())
         init_resp = self._read_until_id(proc, expect_id=1, timeout=10.0)
         if "error" in init_resp:
             logger.error(f"Initialize error: {init_resp['error']}")
-            sys.exit(2)
+            return None
 
         # 2) notifications/initialized (no response expected)
         self.send(proc, self._notif_initialized())
@@ -101,7 +101,7 @@ class McpServer:
 
         if "error" in tools_resp:
             logger.error(f"tools/list error: {tools_resp['error']}")
-            sys.exit(3)
+            return None
 
         # Pretty-print the tools the server exposes
         result = tools_resp.get("result", {})
