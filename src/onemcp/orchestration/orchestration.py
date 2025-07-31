@@ -1,27 +1,40 @@
+import json
+import logging
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
+
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
 
-from ..discovery.mock_registry import MockRegistry
+from onemcp import MockRegistry, Registry, ServerEntry
 
-server = FastMCP(
-    name="OneMCP Orchestrator",
-)
+# from onemcp.sandboxing.mock_sandbox import MockSandbox
 
-# Initialize mock registry with some sample servers
-mockRegistry = MockRegistry()
-mockRegistry.register_server("weather-api", "https://github.com/weather/mcp-server")
-mockRegistry.register_server("database-tools", "https://github.com/db/mcp-tools")
-mockRegistry.register_server("file-manager", "https://github.com/files/mcp-manager")
-mockRegistry.register_server("git-helper", "https://github.com/git/mcp-helper")
-mockRegistry.register_server("web-scraper", "https://github.com/web/mcp-scraper")
+logger = logging.getLogger(__name__)
+server = FastMCP("OneMCP")
+
+
+@server.prompt()
+def tool_extraction(text: str) -> str:
+    """Extracts relevant tools and resources based on user input."""
+    prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
+    prompt_template = prompt_path.read_text(encoding="utf-8")
+    return prompt_template.format(user_prompt=text)
 
 
 @server.tool()
-async def plan(query: str, ctx: Context) -> list[base.Message]:
-    """Gives a detailed orchestration plan for the given query."""
+async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
+    """You must call this tool! Takes the user prompt and suggests which MCP tools would be appropriate."""
 
-    prompt = f"Create a detailed orchestration plan for the query: {query}"
+    # Get the path to the prompt template relative to this file
+    prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
+    prompt_template = prompt_path.read_text(encoding="utf-8")
+    prompt = prompt_template.format(
+        user_prompt=prompt, context=(", ".join(files) if files else "")
+    )
 
     result = await ctx.session.create_message(
         messages=[
@@ -34,8 +47,44 @@ async def plan(query: str, ctx: Context) -> list[base.Message]:
     )
 
     if result.content.type == "text":
-        return [base.Message(role="user", content=result.content.text)]
-    return [base.Message(role="user", content=str(result.content))]
+        print(f"Result: {result.content.text}")
+    else:
+        print(f"Result: {str(result.content)}")
+
+    # Assume result.content.text is a JSON array string
+    try:
+        if result.content.type == "text":
+            tools = json.loads(result.content.text)
+            if isinstance(tools, list):
+                extracted_tools = [str(tool) for tool in tools]
+            else:
+                extracted_tools = [str(tools)]
+        else:
+            extracted_tools = [str(result.content)]
+    except Exception as e:
+        extracted_tools = [f"Failed to parse tools: {str(e)}"]
+
+    print(f"Extracted tools: {', '.join(extracted_tools)}")
+
+    registry = Registry()
+
+    output = f"Extracted tools: {', '.join(extracted_tools)}"
+
+    for tool in extracted_tools:
+        registry_tools = registry.find_tools(query=tool, k=3)
+        if registry_tools:
+            output += f"\nFound tools in registry for '{tool}':"
+            for entry in registry_tools:
+                output += f"\n- {entry.tool_name} ({entry.server_name})"
+                print(f"Found tool: {entry.tool_name} on server: {entry.server_name}")
+
+    # try:
+    #     # 2. Otherwise, try to lookup registry for installation instructions
+    #     server = registry.find_tools()
+    return [base.Message(role="user", content=output)]
+
+    # if result.content.type == "text":
+    # return [base.Message(role="user", content=str(result.content))]
 
 
 @server.tool()
@@ -61,11 +110,28 @@ async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
 
 
 @server.tool()
-async def install(query: str, ctx: Context) -> list[base.Message]:
+async def install(url: str, ctx: Context) -> list[base.Message]:
     """Installs an MCP server."""
+
+    # 1. Check if already installed
+
+    registry = Registry("https://1cpgs0fc-8001.usw2.devtunnels.ms")
+
     try:
+        # 2. Otherwise, try to lookup registry for installation instructions
+        server = registry.health_check()
+
+        # TODO: 3. Otherwise, discovery prompt to determine installation instructions
+        if not server:
+            return [
+                base.Message(role="system", content="Server not found in registry.")
+            ]
+
+        # 4. Try to install
+        # sandbox = MockSandbox()
+
         # Simulate installation logic
-        installation_result = f"Installing MCP server with query: {query}"
+        installation_result = f"Installing MCP server with query: {url}"
         await ctx.session.create_message(
             messages=[
                 SamplingMessage(
@@ -75,6 +141,7 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
             ],
             max_tokens=50,
         )
+
         return [
             base.Message(
                 role="assistant", content="MCP server installation successful."
@@ -104,8 +171,26 @@ async def status(query: str, ctx: Context) -> list[base.Message]:
 async def search(query: str, ctx: Context) -> list[base.Message]:
     """Searches for a specific resource or tool using the mock registry."""
     try:
+        # Initialize mock registry with some sample servers
+        mockRegistry = MockRegistry()
+        mockRegistry.register_server(
+            ServerEntry("weather-api", "https://github.com/weather/mcp-server")
+        )
+        mockRegistry.register_server(
+            ServerEntry("database-tools", "https://github.com/db/mcp-tools")
+        )
+        mockRegistry.register_server(
+            ServerEntry("file-manager", "https://github.com/files/mcp-manager")
+        )
+        mockRegistry.register_server(
+            ServerEntry("git-helper", "https://github.com/git/mcp-helper")
+        )
+        mockRegistry.register_server(
+            ServerEntry("web-scraper", "https://github.com/web/mcp-scraper")
+        )
+
         # Use the mockRegistry to find similar servers
-        similar_servers = mockRegistry.find_similar_servers(query, k=5)
+        similar_servers = mockRegistry.list_servers()
 
         if not similar_servers:
             return [
@@ -120,10 +205,8 @@ async def search(query: str, ctx: Context) -> list[base.Message]:
             f"Found {len(similar_servers)} similar servers for query '{query}':\n"
         )
 
-        for i, (server_entry, similarity_score) in enumerate(similar_servers, 1):
-            results.append(
-                f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})"
-            )
+        for i, server_entry in enumerate(similar_servers, 1):
+            results.append(f"{i}. {server_entry.name}")
             results.append(f"   URL: {server_entry.url}")
 
         response_text = "\n".join(results)
