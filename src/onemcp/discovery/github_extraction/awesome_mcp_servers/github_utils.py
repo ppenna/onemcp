@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import markdown
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import Tag, NavigableString
+from bs4.element import NavigableString
 from dotenv import load_dotenv
 from tqdm import tqdm
 
