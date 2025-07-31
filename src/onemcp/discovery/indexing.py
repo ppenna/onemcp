@@ -85,8 +85,12 @@ results = collection.query(
     # where={"metadata_field": "is_equal_to_this"}, # optional filter
     # where_document={"$contains":"search_string"}  # optional filter
 )
-for idx_, mdata in enumerate(results["metadatas"][0]):
-    print("\n=======")
-    print("Distance:", results["distances"][0][idx_])
-    print(mdata["tool-name"])
-    print(mdata["tool-description"])
+all_metadatas = results["metadatas"]
+if all_metadatas and all_metadatas[0]:
+    for idx_, mdata in enumerate(all_metadatas[0]):
+        print("\n=======")
+        distances_list = results["distances"]
+        if distances_list and distances_list[0]:
+            print("Distance:", [distances_list[0][idx_]])
+        print(mdata["tool-name"])
+        print(mdata["tool-description"])
