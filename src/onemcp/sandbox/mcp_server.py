@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 from dataclasses import dataclass
-from urllib.parse import urlparse
 import json
 import sys
 import time
@@ -11,7 +10,7 @@ from onemcp.sandbox.docker.sandbox import DockerContainer
 
 
 @dataclass
-class SandboxedMcpServer:
+class McpServer:
     """Represents a running sandbox instance."""
 
     endpoint: str

@@ -25,10 +25,13 @@ from onemcp.sandbox.docker.sandbox import DockerContainer
 import requests
 from openai import OpenAI
 
-from src.onemcp.sandbox.sandboxed_mcp_server import SandboxedMcpServer
+from onemcp.sandbox.mcp_server import McpServer
 from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 logger = logging.getLogger(__name__)
+
+DISCOVERY_PROMPT_FILE_PATH = os.path.join(ONEMCP_SRC_ROOT, "sandbox", "discovery-prompt-header.md")
+INSTALL_MCP_DOCKERFILE_PATH = os.path.join(ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile")
 
 
 class ReadmeNotFound(Exception):
@@ -53,7 +56,7 @@ class DockerSandboxRegistry:
         """
         self.base_port = base_port
         self.max_instances = max_instances
-        self.instances: dict[str, (DockerContainer, SandboxedMcpServer)] = {}
+        self.instances: dict[str, (DockerContainer, McpServer)] = {}
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
@@ -120,7 +123,7 @@ class DockerSandboxRegistry:
                 )
 
                 # Create sandbox instance
-                instance = SandboxedMcpServer(
+                instance = McpServer(
                     endpoint=f"localhost:{port}",
                     status="running",
                 )
@@ -259,9 +262,7 @@ class DockerSandboxRegistry:
         return prompt
 
     def _generate_dockerfile(self, setup_script: str, image_tag: str) -> None:
-        dockerfile_path = os.path.join(
-            ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile"
-        )
+        dockerfile_path = INSTALL_MCP_DOCKERFILE_PATH
 
         logger.info(f"Generating docker file (tag={image_tag}, path={dockerfile_path})")
 
@@ -305,9 +306,7 @@ class DockerSandboxRegistry:
         # First get the repository readme file.
         prompt = self._build_prompt(repository_url)
 
-        system_prompt_file = Path(
-            os.path.join(ONEMCP_SRC_ROOT, "sandbox", "discovery-prompt-header.md")
-        )
+        system_prompt_file = Path(DISCOVERY_PROMPT_FILE_PATH)
         if not system_prompt_file.exists():
             raise Exception(f"Error: File {system_prompt_file} does not exist.")
 
@@ -365,5 +364,5 @@ class DockerSandboxRegistry:
         )
         return container
 
-    async def _stop_docker_container(self, mcpserver: SandboxedMcpServer) -> None:
+    async def _stop_docker_container(self, mcpserver: McpServer) -> None:
         mcpserver.stop()
