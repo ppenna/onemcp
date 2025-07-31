@@ -1,40 +1,29 @@
 #!/bin/bash
+
 # Copyright(c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 # Git pre-push hook for OneMCP project
 # This hook runs code quality checks before allowing a push
 
-set -e
+set -euo pipefail
 
-echo "🔍 Running pre-push checks..."
+#==================================================================================================
+# Constants
+#==================================================================================================
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+SCRIPTS_DIR=${PROJECT_ROOT}/scripts
 
-print_status() {
-  echo -e "${BLUE}[HOOK]${NC} $1"
-}
+#==================================================================================================
+# Imports
+#==================================================================================================
 
-print_success() {
-  echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
+source "${SCRIPTS_DIR}/utils.sh"
 
-print_error() {
-  echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if virtual environment exists and activate it
-if [ -d ".venv" ]; then
-  print_status "Activating virtual environment..."
-  source .venv/bin/activate
-else
-  print_error "Virtual environment not found. Run ./scripts/setup.sh first."
-  exit 1
-fi
+#==================================================================================================
+# Functions
+#==================================================================================================
 
 # Function to run a check and handle errors
 run_check() {
@@ -50,6 +39,15 @@ run_check() {
     exit 1
   fi
 }
+
+#==================================================================================================
+# Main Script
+#==================================================================================================
+
+echo "🔍 Running pre-push checks..."
+
+# Check if virtual environment exists and activate it
+activate_virtualenv
 
 # 1. Code formatting check
 run_check "code formatting" "ruff format --check src tests"
