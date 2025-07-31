@@ -6,7 +6,7 @@
 import pytest
 from pydantic import AnyUrl
 
-from onemcp.server import (
+from src.onemcp.server import (
     handle_call_tool,
     handle_list_resources,
     handle_list_tools,
@@ -222,7 +222,7 @@ class TestSignalHandling:
         """Test that signal handlers can be set up without errors."""
         import signal
 
-        from onemcp.server import setup_signal_handlers
+        from src.onemcp.server import setup_signal_handlers
 
         # Store original handlers
         original_sigint = signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -248,7 +248,7 @@ class TestSignalHandling:
         """Test that signal handler sets the shutdown event."""
         import signal
 
-        from onemcp.server import shutdown_event, signal_handler
+        from src.onemcp.server import shutdown_event, signal_handler
 
         # Clear the shutdown event
         shutdown_event.clear()
@@ -268,7 +268,7 @@ class TestSignalHandling:
         """Test stdin monitoring for interactive terminals."""
         import sys
 
-        from onemcp.server import monitor_stdin_eof
+        from src.onemcp.server import monitor_stdin_eof
 
         # Mock sys.stdin.isatty to return True
         original_isatty = sys.stdin.isatty
