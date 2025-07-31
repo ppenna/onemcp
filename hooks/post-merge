@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Copyright(c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# Git post-merge hook for OneMCP project
+# This hook runs after git pull/merge to refresh virtual environment when requirements change
+
+set -euo pipefail
+
+#==================================================================================================
+# Constants
+#==================================================================================================
+
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+SCRIPTS_DIR=${PROJECT_ROOT}/scripts
+
+#==================================================================================================
+# Imports
+#==================================================================================================
+
+source "${SCRIPTS_DIR}/utils.sh"
+
+#==================================================================================================
+# Main Script
+#==================================================================================================
+
+print_status "Running post-merge hook..."
+
+# Check if virtual environment exists
+if [ ! -d "${PROJECT_ROOT}/.venv" ]; then
+  print_warning "Virtual environment not found. Run \"${PROJECT_ROOT}/scripts/setup.sh\" first."
+  exit 0
+fi
+
+# Function to check if a file was modified in the merge
+file_changed_in_merge() {
+  local filename=$1
+  if git rev-parse --verify ORIG_HEAD >/dev/null 2>&1; then
+    if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^${filename}$"; then
+      print_status "${filename} was modified in this merge"
+      return 0
+    else
+      return 1
+    fi
+  else
+    # ORIG_HEAD does not exist, so we cannot determine if the file changed
+    print_warning "ORIG_HEAD not found; cannot determine if ${filename} was modified"
+    return 1
+  fi
+}
+
+# Check if requirements.txt or pyproject.toml was modified in the merge
+requirements_changed=false
+if file_changed_in_merge "${PROJECT_ROOT}/requirements.txt"; then
+  requirements_changed=true
+fi
+
+pyproject_changed=false
+if file_changed_in_merge "${PROJECT_ROOT}/pyproject.toml"; then
+  pyproject_changed=true
+fi
+
+# If neither file changed, exit early
+if [ "$requirements_changed" = false ] && [ "$pyproject_changed" = false ]; then
+  print_status "No dependency files changed, skipping virtual environment refresh"
+  exit 0
+fi
+
+print_status "Dependency files changed, refreshing virtual environment..."
+
+# Activate virtual environment
+print_status "Activating virtual environment..."
+activate_virtualenv
+
+upgrade_pip
+
+# Install/update dependencies
+if [ "$requirements_changed" = true ] || [ "$pyproject_changed" = true ]; then
+  install_dev_deps
+fi
+
+print_success "Virtual environment refreshed successfully! 🎉"
+print_status "Your dependencies are now up to date with the current branch"
