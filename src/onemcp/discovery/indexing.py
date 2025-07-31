@@ -1,8 +1,7 @@
-import chromadb
-import os
 import json
-import tqdm
-# import llm_client
+import os
+
+import chromadb
 
 # import chromadb.utils.embedding_functions as embedding_functions
 # openai_ef = embedding_functions.OpenAIEmbeddingFunction(
@@ -49,7 +48,7 @@ Json file example:
 for file in os.listdir("servers"):
     if file.endswith(".json"):
         with open(
-            os.path.join(os.path.join(os.path.dirname(__file__), "servers"), file), "r"
+            os.path.join(os.path.join(os.path.dirname(__file__), "servers"), file)
         ) as f:
             data = json.load(f)
             # Process the data as needed
@@ -60,11 +59,8 @@ for file in os.listdir("servers"):
             print(f"Adding server: {server_summary}")
             for tool in data.get("tools", []):
                 document_info = f"""
-                    Description of the tool: 
-                    {tool["description"]}
-                    
-                    Context: 
-                    {server_summary}
+                    Description of the tool:  {tool["description"]}
+                    Context: {server_summary}
                 """
                 collection.add(
                     documents=[document_info],
@@ -82,9 +78,7 @@ for file in os.listdir("servers"):
 print("Searching for documents in the collection...")
 user_query = "Authenticate to Google task API"
 
-q_prompt = f"""
-    Tool: {user_query}    
-    """
+q_prompt = f"""Tool: {user_query}"""
 results = collection.query(
     query_texts=[q_prompt],
     n_results=5,
