@@ -3,8 +3,9 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from onemcp.discovery.indexing import Indexing
 from pydantic import BaseModel
+
+from onemcp.discovery.indexing import Indexing
 
 
 class ServerRegistrationRequest(BaseModel):
