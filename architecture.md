@@ -8,7 +8,7 @@ The Registry exposes an API to query available servers based on a task descripti
 
 
 # Sandbox
-The Sandbox provides functions that wrap Docker commands to create, start, and stop containers.
+The Sandbox provides functions that wrap Docker commands to create, start, and stop containers.  However, the most important task that the sandbox performs is the discovery of *how* to run an MCP server from a given url (e.g., github, file folder).
 
 
 # Orchestration
