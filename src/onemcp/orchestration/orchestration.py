@@ -77,10 +77,14 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
             max_tokens=50,
         )
         return [
-            base.Message(role="assistant", content="MCP server installation successful.")
+            base.Message(
+                role="assistant", content="MCP server installation successful."
+            )
         ]
     except Exception as e:
-        return [base.Message(role="assistant", content=f"Installation failed: {str(e)}")]
+        return [
+            base.Message(role="assistant", content=f"Installation failed: {str(e)}")
+        ]
 
 
 @server.tool()
@@ -105,14 +109,22 @@ async def search(query: str, ctx: Context) -> list[base.Message]:
         similar_servers = mockRegistry.find_similar_servers(query, k=5)
 
         if not similar_servers:
-            return [base.Message(role="assistant", content=f"No servers found for query: {query}")]
+            return [
+                base.Message(
+                    role="assistant", content=f"No servers found for query: {query}"
+                )
+            ]
 
         # Format the results
         results = []
-        results.append(f"Found {len(similar_servers)} similar servers for query '{query}':\n")
+        results.append(
+            f"Found {len(similar_servers)} similar servers for query '{query}':\n"
+        )
 
         for i, (server_entry, similarity_score) in enumerate(similar_servers, 1):
-            results.append(f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})")
+            results.append(
+                f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})"
+            )
             results.append(f"   URL: {server_entry.url}")
 
         response_text = "\n".join(results)
