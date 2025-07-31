@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 
+from onemcp.sandbox.docker_container import DockerContainer
 import requests
 from openai import OpenAI
 
@@ -114,19 +115,14 @@ class DockerSandboxRegistry:
                     }
 
                 # Start Docker container
-                proc = self._start_docker_container(
+                container: DockerContainer = self._start_docker_container(
                     sandbox_id, bootstrap_metadata, port
                 )
 
-                process_id = proc.pid
-
                 # Create sandbox instance
                 instance = SandboxedMcpServer(
-                    sandbox_id=sandbox_id,
-                    process_id=process_id,
                     endpoint=f"localhost:{port}",
-                    port=port,
-                    proc=proc,
+                    proc=container,
                     status="running",
                 )
 
@@ -170,7 +166,7 @@ class DockerSandboxRegistry:
                 instance = self.instances[sandbox_id]
 
                 # Stop Docker container
-                await self._stop_docker_container(instance.process_id)
+                await self._stop_docker_container(instance)
 
                 # Clean up resources
                 self.used_ports.discard(instance.port)
@@ -360,89 +356,14 @@ class DockerSandboxRegistry:
 
     def _start_docker_container(
         self, sandbox_id: str, bootstrap_metadata: dict[str, Any], port: int
-    ) -> subprocess.Popen:
-        """Start a Docker container for the sandbox instance.
+    ) -> DockerContainer:
+        container: DockerContainer = DockerContainer()
+        container.start(
+            sandbox_id=sandbox_id,
+            bootstrap_metadata=bootstrap_metadata,
+            port=port,
+        )
+        return container
 
-        Args:
-            sandbox_id: Unique identifier for the sandbox
-            bootstrap_metadata: Metadata for container configuration
-            port: Port to expose the container on
-
-        Returns:
-            Container ID
-        """
-        # Create temporary directory for this sandbox
-        sandbox_dir = Path(tempfile.mkdtemp(prefix=f"sandbox_{sandbox_id}_"))
-
-        try:
-            # Get the container image tag from bootstrap metadata
-            container_image_tag = bootstrap_metadata.get("container_image_tag", "onemcp-default")
-
-            # Run Docker container
-            run_cmd = [
-                "docker",
-                "run",
-                "-i",
-                "-p",
-                f"{port}:8000",  # Port mapping
-                "--name",
-                f"sandbox-{sandbox_id}",
-            ]
-
-            # Add environment variables (if any are provided)
-            env_vars = bootstrap_metadata.get("environment_variables", {})
-            for key, value in env_vars.items():
-                run_cmd.extend(["-e", f"{key}={value}"])
-
-            # Set working directory if specified
-            working_dir = bootstrap_metadata.get("working_directory", "/app")
-            run_cmd.extend(["-w", working_dir])
-
-            # Add image tag
-            run_cmd.append(container_image_tag)
-
-            # Add entrypoint if specified
-            entrypoint = bootstrap_metadata.get("entrypoint")
-            if entrypoint:
-                run_cmd.extend(entrypoint.split())
-
-            logger.info(f"Starting Docker container: {' '.join(run_cmd)}")
-
-            proc = subprocess.Popen(
-                run_cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                # stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-            )
-
-            return proc
-
-        except Exception as e:
-            # Clean up on failure
-            shutil.rmtree(sandbox_dir, ignore_errors=True)
-            raise e
-
-    async def _stop_docker_container(self, container_id: str) -> None:
-        """Stop and remove a Docker container.
-
-        Args:
-            container_id: ID of the container to stop
-        """
-        try:
-            # Stop the container
-            stop_cmd = ["docker", "stop", container_id]
-            result = await asyncio.create_subprocess_exec(
-                *stop_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await result.communicate()
-
-            # Container should be automatically removed due to --rm flag
-            logger.info(f"Stopped container {container_id}")
-
-        except Exception as e:
-            logger.error(f"Failed to stop container {container_id}: {e}")
-            raise DockerSandboxError(f"Failed to stop container: {e}") from e
+    async def _stop_docker_container(self, mcpserver: SandboxedMcpServer) -> None:
+        mcpserver.stop()

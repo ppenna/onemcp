@@ -21,6 +21,7 @@ import subprocess
 import sys
 import time
 
+from onemcp.sandbox.docker_container import DockerContainer
 import requests
 from openai import OpenAI
 
@@ -31,11 +32,8 @@ from src.onemcp.util.env import ONEMCP_SRC_ROOT
 class SandboxedMcpServer:
     """Represents a running sandbox instance."""
 
-    sandbox_id: str
-    process_id: str
     endpoint: str
-    port: int
-    proc: Optional[subprocess.Popen] = None
+    proc: Optional[DockerContainer] = None
     status: str = "running"
 
     # Basic MCP JSON-RPC messages
@@ -57,18 +55,17 @@ class SandboxedMcpServer:
     def _tools_list(self):
         return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
-    def send(self, proc, obj):
+    def send(self, obj):
         line = json.dumps(obj, separators=(",", ":")) + "\n"
-        proc.stdin.write(line)
-        proc.stdin.flush()
+        self.proc.write(line)
 
-    def _read_until_id(self, proc, expect_id, timeout=5.0):
+    def _read_until_id(self, expect_id, timeout=5.0):
         """Read lines until we see a JSON-RPC response with the given id."""
         start = time.time()
         while True:
             if time.time() - start > timeout:
                 raise TimeoutError(f"Timed out waiting for response id={expect_id}")
-            line = proc.stdout.readline()
+            line = self.proc.read()
             if not line:
                 # Process may be buffering; small sleep and try again
                 time.sleep(0.01)
@@ -95,18 +92,18 @@ class SandboxedMcpServer:
 
         try:
             # 1) initialize
-            self.send(self.proc, self._initialize())
-            init_resp = self._read_until_id(self.proc, expect_id=1, timeout=10.0)
+            self.send(self._initialize())
+            init_resp = self._read_until_id(expect_id=1, timeout=10.0)
             if "error" in init_resp:
                 print("Initialize error:", init_resp["error"], file=sys.stderr)
                 sys.exit(2)
 
             # 2) notifications/initialized (no response expected)
-            self.send(self.proc, self._notif_initialized())
+            self.send(self._notif_initialized())
 
             # 3) tools/list
-            self.send(self.proc, self._tools_list())
-            tools_resp = self._read_until_id(self.proc, expect_id=2, timeout=10.0)
+            self.send(self._tools_list())
+            tools_resp = self._read_until_id(expect_id=2, timeout=10.0)
 
             if "error" in tools_resp:
                 print("tools/list error:", tools_resp["error"], file=sys.stderr)
@@ -122,3 +119,15 @@ class SandboxedMcpServer:
                 self.proc.terminate()
             except Exception:
                 pass
+
+    def stop(self) -> None:
+        """Stop the sandboxed MCP server."""
+        if self.proc:
+            try:
+                self.proc.stop()
+            except Exception as e:
+                logging.error(f"Failed to stop sandboxed MCP server: {e}")
+            finally:
+                self.proc = None
+        else:
+            logging.warning("No running sandboxed MCP server to stop.")
