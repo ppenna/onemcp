@@ -1,10 +1,11 @@
 # Copyright(c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from dataclasses import dataclass
 import json
 import sys
 import time
+from dataclasses import dataclass
+from typing import Any
 
 from onemcp.sandbox.docker.sandbox import DockerContainer
 
@@ -17,30 +18,35 @@ class McpServer:
     status: str = "running"
 
     # Basic MCP JSON-RPC messages
-    def _initialize(self, protocol_version="2024-11-05"):
+    def _initialize(self, protocol_version: str = "2024-11-05") -> dict[str, Any]:
         return {
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
             "params": {
                 "protocolVersion": protocol_version,
-                "capabilities": {},        # minimal; add if your client supports more
+                "capabilities": {},
                 "clientInfo": {"name": "cli-mcp", "version": "0.1"},
             },
         }
 
-    def _notif_initialized(self):
+    def _notif_initialized(self) -> dict[str, str]:
         return {"jsonrpc": "2.0", "method": "notifications/initialized"}
 
-    def _tools_list(self):
+    def _tools_list(self) -> dict[str, Any]:
         return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
-    def send(self, proc, obj):
+    def send(self, proc: DockerContainer, obj: dict[str, Any]) -> None:
         line = json.dumps(obj, separators=(",", ":")) + "\n"
         proc.write(line)
 
-    def _read_until_id(self, proc, expect_id, timeout=5.0):
-        """Read lines until we see a JSON-RPC response with the given id."""
+    def _read_until_id(self, proc: DockerContainer, expect_id: int, timeout: float = 5.0) -> dict[str, Any]:
+        """
+        This is an internal method used to read from the stdin of a running
+        docker container until we see a JSON-RPC response with a given id.
+
+        It must only be called from inside this class.
+        """
         start = time.time()
         while True:
             if time.time() - start > timeout:
@@ -68,31 +74,33 @@ class McpServer:
                 # notification; ignore in this simple client
                 pass
 
-    def get_tools(self, proc: DockerContainer):
+    def get_tools(self, proc: DockerContainer) -> Any:
+        """
+        This method takes as an argument an MCP server running inside a docker
+        container, and it communicates with it over STDIO in order to get the
+        list of tools that it exposes.
+        """
+        # 1) initialize
+        self.send(proc, self._initialize())
+        init_resp = self._read_until_id(proc, expect_id=1, timeout=10.0)
+        if "error" in init_resp:
+            print("Initialize error:", init_resp["error"], file=sys.stderr)
+            sys.exit(2)
 
-        try:
-            # 1) initialize
-            self.send(proc, self._initialize())
-            init_resp = self._read_until_id(proc, expect_id=1, timeout=10.0)
-            if "error" in init_resp:
-                print("Initialize error:", init_resp["error"], file=sys.stderr)
-                sys.exit(2)
+        # 2) notifications/initialized (no response expected)
+        self.send(proc, self._notif_initialized())
 
-            # 2) notifications/initialized (no response expected)
-            self.send(proc, self._notif_initialized())
+        # 3) tools/list
+        self.send(proc, self._tools_list())
+        tools_resp = self._read_until_id(proc, expect_id=2, timeout=10.0)
 
-            # 3) tools/list
-            self.send(proc, self._tools_list())
-            tools_resp = self._read_until_id(proc, expect_id=2, timeout=10.0)
+        if "error" in tools_resp:
+            print("tools/list error:", tools_resp["error"], file=sys.stderr)
+            sys.exit(3)
 
-            if "error" in tools_resp:
-                print("tools/list error:", tools_resp["error"], file=sys.stderr)
-                sys.exit(3)
+        # Pretty-print the tools the server exposes
+        result = tools_resp.get("result", {})
+        tools = result.get("tools", [])
+        print(json.dumps(tools, indent=2))
 
-            # Pretty-print the tools the server exposes
-            result = tools_resp.get("result", {})
-            tools = result.get("tools", [])
-            print(json.dumps(tools, indent=2))
-
-        finally:
-            pass
+        return tools

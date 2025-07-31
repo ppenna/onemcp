@@ -5,26 +5,11 @@
 
 import asyncio
 import logging
-import os
 import shutil
 import subprocess
 import tempfile
-import uuid
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
-from urllib.parse import urlparse
-import argparse
-import json
-import shlex
-import subprocess
-import sys
-import time
-
-import requests
-from openai import OpenAI
-
-from src.onemcp.util.env import ONEMCP_SRC_ROOT
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +22,29 @@ class DockerSandboxError(Exception):
 
 class DockerContainer:
 
-    def id(self) -> str:
-        """Return the unique identifier for this container."""
+    name: str
+    proc: subprocess.Popen
+
+    def pid(self) -> int:
+        """
+        Return the process identifier for the underlying process running the
+        docker container.
+        """
+        return self.proc.pid
+
+    def container_id(self) -> int:
+        """
+        Return the process identifier for the underlying process running the
+        docker container.
+        """
         return self.proc.pid
 
     def start(
         self, sandbox_id: str, bootstrap_metadata: dict[str, Any], port: int
-    ):
+    ) -> None:
         # Create temporary directory for this sandbox
-        sandbox_dir = Path(tempfile.mkdtemp(prefix=f"sandbox_{sandbox_id}_"))
+        self.name: str = sandbox_id
+        sandbox_dir = Path(tempfile.mkdtemp(prefix=f"sandbox_{self.name}_"))
 
         try:
             # Get the container image tag from bootstrap metadata
@@ -59,7 +58,7 @@ class DockerContainer:
                 "-p",
                 f"{port}:8000",  # Port mapping
                 "--name",
-                f"sandbox-{sandbox_id}",
+                self.name
             ]
 
             # Add environment variables (if any are provided)
@@ -85,7 +84,6 @@ class DockerContainer:
                 run_cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                # stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
@@ -93,13 +91,12 @@ class DockerContainer:
         except Exception as e:
             # Clean up on failure
             shutil.rmtree(sandbox_dir, ignore_errors=True)
-            raise e
+            raise DockerSandboxError(f"Failed to start container: {e}") from e
 
     async def stop(self) -> None:
-        container_id: str = self.proc.pid
         try:
             # Stop the container
-            stop_cmd = ["docker", "stop", container_id]
+            stop_cmd = ["docker", "stop", self.name]
             result = await asyncio.create_subprocess_exec(
                 *stop_cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -108,16 +105,22 @@ class DockerContainer:
             await result.communicate()
 
             # Container should be automatically removed due to --rm flag
-            logger.info(f"Stopped container {container_id}")
+            logger.info(f"Stopped container {self.name}")
 
         except Exception as e:
-            logger.error(f"Failed to stop container {container_id}: {e}")
+            logger.error(f"Failed to stop container {self.name}: {e}")
             raise DockerSandboxError(f"Failed to stop container: {e}") from e
 
     def write(self, data: str) -> None:
+        if self.proc.stdin is None:
+            raise DockerSandboxError("Docker container has no STDIN")
+
         self.proc.stdin.write(data)
         self.proc.stdin.flush()
 
     def read(self) -> str:
+        if self.proc.stdout is None:
+            raise DockerSandboxError("Docker container has no STDIN")
+
         line: str = self.proc.stdout.readline()
         return line

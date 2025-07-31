@@ -89,6 +89,7 @@ ignore = [
 known-first-party = ["onemcp"]
 
 [tool.mypy]
+packages = ["onemcp"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true

@@ -6,25 +6,17 @@
 import asyncio
 import logging
 import os
-import shutil
 import subprocess
 import tempfile
 import uuid
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urlparse
-import argparse
-import json
-import shlex
-import subprocess
-import sys
-import time
 
-from onemcp.sandbox.docker.sandbox import DockerContainer
 import requests
 from openai import OpenAI
 
+from onemcp.sandbox.docker.sandbox import DockerContainer
 from onemcp.sandbox.mcp_server import McpServer
 from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
@@ -56,7 +48,7 @@ class DockerSandboxRegistry:
         """
         self.base_port = base_port
         self.max_instances = max_instances
-        self.instances: dict[str, (DockerContainer, McpServer)] = {}
+        self.instances: dict[str, tuple[DockerContainer, McpServer]] = {}
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
@@ -345,7 +337,7 @@ class DockerSandboxRegistry:
         }
 
         # Start docker container
-        port = await self.start(bootstrap_metadata)
+        await self.start(bootstrap_metadata)
 
         return {
             "overview": overview,
