@@ -22,8 +22,12 @@ from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 logger = logging.getLogger(__name__)
 
-DISCOVERY_PROMPT_FILE_PATH = os.path.join(ONEMCP_SRC_ROOT, "sandbox", "discovery-prompt-header.md")
-INSTALL_MCP_DOCKERFILE_PATH = os.path.join(ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile")
+DISCOVERY_PROMPT_FILE_PATH = os.path.join(
+    ONEMCP_SRC_ROOT, "sandbox", "discovery-prompt-header.md"
+)
+INSTALL_MCP_DOCKERFILE_PATH = os.path.join(
+    ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile"
+)
 
 
 class ReadmeNotFound(Exception):

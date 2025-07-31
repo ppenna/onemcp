@@ -21,7 +21,6 @@ class DockerSandboxError(Exception):
 
 
 class DockerContainer:
-
     name: str
     proc: subprocess.Popen
 
@@ -48,7 +47,9 @@ class DockerContainer:
 
         try:
             # Get the container image tag from bootstrap metadata
-            container_image_tag = bootstrap_metadata.get("container_image_tag", "onemcp-default")
+            container_image_tag = bootstrap_metadata.get(
+                "container_image_tag", "onemcp-default"
+            )
 
             # Run Docker container
             run_cmd = [
@@ -58,7 +59,7 @@ class DockerContainer:
                 "-p",
                 f"{port}:8000",  # Port mapping
                 "--name",
-                self.name
+                self.name,
             ]
 
             # Add environment variables (if any are provided)

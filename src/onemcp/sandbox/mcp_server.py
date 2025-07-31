@@ -40,7 +40,9 @@ class McpServer:
         line = json.dumps(obj, separators=(",", ":")) + "\n"
         proc.write(line)
 
-    def _read_until_id(self, proc: DockerContainer, expect_id: int, timeout: float = 5.0) -> dict[str, Any]:
+    def _read_until_id(
+        self, proc: DockerContainer, expect_id: int, timeout: float = 5.0
+    ) -> dict[str, Any]:
         """
         This is an internal method used to read from the stdin of a running
         docker container until we see a JSON-RPC response with a given id.
