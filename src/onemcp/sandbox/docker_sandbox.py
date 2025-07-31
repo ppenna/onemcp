@@ -4,8 +4,8 @@
 """Docker-based Sandbox implementation for OneMCP."""
 
 import asyncio
-import json
 import logging
+import os
 import shutil
 import subprocess
 import tempfile
@@ -13,8 +13,18 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import urlparse
+
+import requests
+from openai import OpenAI
+
+from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 logger = logging.getLogger(__name__)
+
+
+class ReadmeNotFound(Exception):
+    pass
 
 
 @dataclass
@@ -63,25 +73,15 @@ class DockerSandbox:
         try:
             logger.info(f"Discovering MCP server at {repository_url}")
 
-            # Clone repository to temporary directory
-            with tempfile.TemporaryDirectory() as temp_dir:
-                repo_path = Path(temp_dir) / "repo"
+            # Analyze repository structure
+            discovery_info = await self._analyze_repository(repository_url)
 
-                # Clone the repository
-                try:
-                    await self._clone_repository(repository_url, str(repo_path))
-                except subprocess.CalledProcessError as e:
-                    raise DockerSandboxError(f"Failed to clone repository: {e}") from e
-
-                # Analyze repository structure
-                discovery_info = await self._analyze_repository(repo_path)
-
-                return {
-                    "response_code": "200",
-                    "overview": discovery_info["overview"],
-                    "tools": discovery_info["tools"],
-                    "bootstrap_metadata": discovery_info["bootstrap_metadata"],
-                }
+            return {
+                "response_code": "200",
+                "overview": discovery_info["overview"],
+                "tools": discovery_info["tools"],
+                "bootstrap_metadata": discovery_info["bootstrap_metadata"],
+            }
 
         except Exception as e:
             logger.error(f"Discovery failed for {repository_url}: {e}")
@@ -216,7 +216,96 @@ class DockerSandbox:
                 return port
         return None
 
-    async def _analyze_repository(self, repo_path: Path) -> dict[str, Any]:
+    def _parse_repo_url(self, url: str) -> tuple[str, str]:
+        """Extract (owner, repo) from a GitHub repository URL."""
+        url = url.strip()
+
+        # SSH: git@github.com:owner/repo(.git)
+        if url.startswith("git@github.com:"):
+            path = url.split("git@github.com:")[1]
+            if path.endswith(".git"):
+                path = path[:-4]
+            owner, repo = path.split("/", 1)
+            return owner, repo
+
+        # HTTPS: https://github.com/owner/repo(.git)[/...]
+        parsed = urlparse(url)
+        if parsed.netloc not in {"github.com", "www.github.com"}:
+            raise ValueError("URL must be a github.com repository URL")
+        parts = [p for p in parsed.path.split("/") if p]
+        if len(parts) < 2:
+            raise ValueError(
+                "Repository URL must be like https://github.com/<owner>/<repo>"
+            )
+        owner, repo = parts[0], parts[1]
+        if repo.endswith(".git"):
+            repo = repo[:-4]
+        return owner, repo
+
+    def _get_repo_readme(
+        self, repo_url: str, token: Optional[str] = None, timeout: int = 20
+    ) -> str:
+        """
+        Return the root README text for a GitHub repository URL.
+
+        Works for public repos; for private repos pass a token or set GITHUB_TOKEN.
+        """
+        owner, repo = self._parse_repo_url(repo_url)
+        headers = {
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "readme-minimal/1.0",
+        }
+        token = token or os.getenv("GITHUB_TOKEN")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        url = f"https://api.github.com/repos/{owner}/{repo}/readme"
+        r = requests.get(url, headers=headers, timeout=timeout)
+        if r.status_code == 404:
+            raise ReadmeNotFound("No README found in the repository root.")
+        r.raise_for_status()
+        return r.text
+
+    def _build_prompt(self, repository_url: str) -> str:
+        try:
+            readme_text = self._get_repo_readme(repository_url)
+        except ReadmeNotFound:
+            print(f"Could not find readme at: {repository_url}. Exitting...")
+            exit(1)
+
+        prompt = f"The GitHub URL for the MCP server is {repository_url}. Here "
+        prompt += f"is the README:\n{readme_text}"
+
+        return prompt
+
+    def _generate_dockerfile(self, setup_script: str, image_tag: str) -> None:
+        dockerfile_path = os.path.join(
+            ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile"
+        )
+
+        logger.info(f"Generating docker file (tag={image_tag}, path={dockerfile_path})")
+
+        with open("/tmp/setup.sh", "w") as fh:
+            fh.write(setup_script)
+
+        # Dump the setup script on a temporary file that we delete afterwards.
+        with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
+            tmp.write(setup_script)
+
+            docker_cmd = [
+                "docker",
+                "build",
+                f"-t {image_tag}",
+                f"-f {dockerfile_path}",
+                f"--build-arg SCRIPT_PATH={tmp.name}",
+                "/tmp",
+            ]
+            docker_cmd_str = " ".join(docker_cmd)
+            subprocess.run(docker_cmd_str, shell=True, check=True)
+
+            logger.info("Generated dockerfile at: {image_tag}")
+
+    async def _analyze_repository(self, repository_url: str) -> dict[str, Any]:
         """Analyze repository to extract MCP server information.
 
         Args:
@@ -225,99 +314,54 @@ class DockerSandbox:
         Returns:
             Dictionary containing analysis results
         """
+        # First get the repository readme file.
+        prompt = self._build_prompt(repository_url)
+
+        system_prompt_file = Path(
+            os.path.join(ONEMCP_SRC_ROOT, "sandbox", "discovery-prompt-header.md")
+        )
+        if not system_prompt_file.exists():
+            raise Exception(f"Error: File {system_prompt_file} does not exist.")
+
+        # Read the system prompt from the file.
+        system_prompt = system_prompt_file.read_text().strip()
+
+        # Get the installation instructions from an LLM.
+        # FIXME: this is using carlos' personal API key.
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+        )
+
+        # Catch if the model returns a markdown blob, even if instructed to not
+        # do so.
+        setup_script: str = response.choices[0].message.content or ""
+        if setup_script.startswith("```") and setup_script.endswith("```"):
+            setup_script = "\n".join(setup_script.split("\n")[1:-1])
+
+        logger.info("Generated set-up script for MCP server at url: {repository_url}")
+
+        # Generate temporary dockerfile from the set-up.
+        # TODO: randomize
+        docker_tag = "onemcp-smoke-test"
+        self._generate_dockerfile(setup_script, docker_tag)
+
         overview = "MCP Server Repository"
-        tools = []
+        tools: list[Any] = []
+        # TODO: update
         bootstrap_metadata = {
             "repository_url": "",
             "dockerfile_path": "Dockerfile",
+            "image_tag": docker_tag,
             "entrypoint": "python server.py",
             "environment_variables": {},
             "build_args": {},
             "working_directory": "/app",
         }
-
-        # Check for common files
-        pyproject_path = repo_path / "pyproject.toml"
-        package_json_path = repo_path / "package.json"
-        dockerfile_path = repo_path / "Dockerfile"
-        requirements_path = repo_path / "requirements.txt"
-        readme_path = repo_path / "README.md"
-
-        # Parse pyproject.toml if it exists
-        if pyproject_path.exists():
-            try:
-                # Handle Python version compatibility for tomllib
-                try:
-                    import tomllib  # type: ignore[import-not-found]
-                except ImportError:
-                    # Fallback for Python < 3.11
-                    import tomli as tomllib  # type: ignore[import-not-found]
-
-                with open(pyproject_path, "rb") as f:
-                    pyproject_data = tomllib.load(f)
-
-                project_info = pyproject_data.get("project", {})
-                overview = project_info.get("description", overview)
-
-                # Check for MCP-specific configuration
-                if "mcp" in str(pyproject_data).lower():
-                    bootstrap_metadata["entrypoint"] = "python -m mcp"
-
-            except Exception as e:
-                logger.warning(f"Failed to parse pyproject.toml: {e}")
-
-        # Parse package.json if it exists (Node.js projects)
-        elif package_json_path.exists():
-            try:
-                with open(package_json_path) as f:
-                    package_data = json.load(f)
-
-                overview = package_data.get("description", overview)
-                scripts = package_data.get("scripts", {})
-
-                if "start" in scripts:
-                    bootstrap_metadata["entrypoint"] = "npm start"
-                elif "main" in package_data:
-                    bootstrap_metadata["entrypoint"] = f"node {package_data['main']}"
-
-            except Exception as e:
-                logger.warning(f"Failed to parse package.json: {e}")
-
-        # Check for Dockerfile
-        if dockerfile_path.exists():
-            bootstrap_metadata["has_dockerfile"] = "true"
-        else:
-            # Generate Dockerfile content based on detected language
-            if pyproject_path.exists() or requirements_path.exists():
-                bootstrap_metadata["dockerfile_content"] = (
-                    self._generate_python_dockerfile()
-                )
-            elif package_json_path.exists():
-                bootstrap_metadata["dockerfile_content"] = (
-                    self._generate_nodejs_dockerfile()
-                )
-            else:
-                bootstrap_metadata["dockerfile_content"] = (
-                    self._generate_generic_dockerfile()
-                )
-
-        # Parse README for additional information
-        if readme_path.exists():
-            try:
-                with open(readme_path, encoding="utf-8") as f:
-                    readme_content = f.read()
-
-                # Extract tools information from README (basic heuristic)
-                if "tools" in readme_content.lower():
-                    tools.append(
-                        {
-                            "name": "mcp_server_tool",
-                            "description": "MCP server tool extracted from README",
-                        }
-                    )
-
-            except Exception as e:
-                logger.warning(f"Failed to parse README.md: {e}")
 
         return {
             "overview": overview,
@@ -411,31 +455,9 @@ CMD ["echo", "MCP Server - please configure proper entrypoint"]
         sandbox_dir = Path(tempfile.mkdtemp(prefix=f"sandbox_{sandbox_id}_"))
 
         try:
-            # Clone repository if URL provided
-            repository_url = bootstrap_metadata.get("repository_url")
-            if repository_url:
-                await self._clone_repository(repository_url, str(sandbox_dir / "app"))
-                app_dir = sandbox_dir / "app"
-            else:
-                app_dir = sandbox_dir
-
-            # Create Dockerfile if not present
-            dockerfile_path = app_dir / "Dockerfile"
-            if (
-                not dockerfile_path.exists()
-                and "dockerfile_content" in bootstrap_metadata
-            ):
-                with open(dockerfile_path, "w") as f:
-                    f.write(bootstrap_metadata["dockerfile_content"])
-
             # Build Docker image
-            image_tag = f"onemcp-sandbox-{sandbox_id}"
-            build_cmd = ["docker", "build", "-t", image_tag, str(app_dir)]
-
-            # Add build args if specified
-            build_args = bootstrap_metadata.get("build_args", {})
-            for key, value in build_args.items():
-                build_cmd.extend(["--build-arg", f"{key}={value}"])
+            # TODO: update me
+            build_cmd = ["docker", "build", "-t", "FIXME"]
 
             logger.info(f"Building Docker image: {' '.join(build_cmd)}")
             result = await asyncio.create_subprocess_exec(
@@ -470,7 +492,7 @@ CMD ["echo", "MCP Server - please configure proper entrypoint"]
             run_cmd.extend(["-w", working_dir])
 
             # Add image tag
-            run_cmd.append(image_tag)
+            run_cmd.append("FIXME")
 
             # Add entrypoint if specified
             entrypoint = bootstrap_metadata.get("entrypoint")
@@ -518,22 +540,3 @@ CMD ["echo", "MCP Server - please configure proper entrypoint"]
         except Exception as e:
             logger.error(f"Failed to stop container {container_id}: {e}")
             raise DockerSandboxError(f"Failed to stop container: {e}") from e
-
-    async def _clone_repository(self, repository_url: str, destination: str) -> None:
-        """Clone a Git repository using subprocess.
-
-        Args:
-            repository_url: URL of the repository to clone
-            destination: Local destination path
-        """
-        cmd = ["git", "clone", repository_url, destination]
-
-        result = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await result.communicate()
-
-        if result.returncode != 0:
-            raise subprocess.CalledProcessError(
-                result.returncode or 1, cmd, output=stdout, stderr=stderr
-            )

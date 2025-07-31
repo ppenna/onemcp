@@ -160,7 +160,7 @@ def run_server(
     """
     logger.info(f"Starting OneMCP Sandbox API server on {host}:{port}")
     uvicorn.run(
-        "onemcp.sandboxing.api:app",
+        app,
         host=host,
         port=port,
         log_level=log_level,
