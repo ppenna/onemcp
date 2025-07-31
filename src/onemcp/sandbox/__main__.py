@@ -12,6 +12,12 @@ from fastapi import FastAPI, Header, HTTPException, Request
 
 from src.onemcp.sandbox.docker.registry import DockerSandboxRegistry
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OneMCP Sandbox API", version="1.0.0")
