@@ -2,10 +2,19 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
 
+from ..discovery.mock_registry import MockRegistry
+
 server = FastMCP(
     name="OneMCP Orchestrator",
-    description="Dynamic MCP Orchestrator for managing tools and resources",
 )
+
+# Initialize mock registry with some sample servers
+mockRegistry = MockRegistry()
+mockRegistry.register_server("weather-api", "https://github.com/weather/mcp-server")
+mockRegistry.register_server("database-tools", "https://github.com/db/mcp-tools")
+mockRegistry.register_server("file-manager", "https://github.com/files/mcp-manager")
+mockRegistry.register_server("git-helper", "https://github.com/git/mcp-helper")
+mockRegistry.register_server("web-scraper", "https://github.com/web/mcp-scraper")
 
 
 @server.tool()
@@ -67,10 +76,14 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
             max_tokens=50,
         )
         return [
-            base.Message(role="system", content="MCP server installation successful.")
+            base.Message(
+                role="assistant", content="MCP server installation successful."
+            )
         ]
     except Exception as e:
-        return [base.Message(role="system", content=f"Installation failed: {str(e)}")]
+        return [
+            base.Message(role="assistant", content=f"Installation failed: {str(e)}")
+        ]
 
 
 @server.tool()
@@ -89,22 +102,35 @@ async def status(query: str, ctx: Context) -> list[base.Message]:
 
 @server.tool()
 async def search(query: str, ctx: Context) -> list[base.Message]:
-    """Searches for a specific resource or tool."""
-    prompt = f"Search for resources or tools related to: {query}"
+    """Searches for a specific resource or tool using the mock registry."""
+    try:
+        # Use the mockRegistry to find similar servers
+        similar_servers = mockRegistry.find_similar_servers(query, k=5)
 
-    result = await ctx.session.create_message(
-        messages=[
-            SamplingMessage(
-                role="user",
-                content=TextContent(type="text", text=prompt),
+        if not similar_servers:
+            return [
+                base.Message(
+                    role="assistant", content=f"No servers found for query: {query}"
+                )
+            ]
+
+        # Format the results
+        results = []
+        results.append(
+            f"Found {len(similar_servers)} similar servers for query '{query}':\n"
+        )
+
+        for i, (server_entry, similarity_score) in enumerate(similar_servers, 1):
+            results.append(
+                f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})"
             )
-        ],
-        max_tokens=100,
-    )
+            results.append(f"   URL: {server_entry.url}")
 
-    if result.content.type == "text":
-        return [base.Message(role="user", content=result.content.text)]
-    return [base.Message(role="user", content=str(result.content))]
+        response_text = "\n".join(results)
+        return [base.Message(role="assistant", content=response_text)]
+
+    except Exception as e:
+        return [base.Message(role="assistant", content=f"Search failed: {str(e)}")]
 
 
 if __name__ == "__main__":

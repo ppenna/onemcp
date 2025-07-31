@@ -1,13 +1,10 @@
 from difflib import SequenceMatcher
 
-
-class ServerEntry:
-    def __init__(self, name: str, url: str):
-        self.name = name
-        self.url = url
+# Import or define RegistryInterface and ServerEntry
+from .discovery_api import RegistryInterface, ServerEntry
 
 
-class MockRegistry:
+class MockRegistry(RegistryInterface):
     def __init__(self) -> None:
         self._servers: dict[str, ServerEntry] = {}
 
