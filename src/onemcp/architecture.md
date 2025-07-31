@@ -34,6 +34,6 @@ For each task, it will:
 The Orchestrator may also track historical usage for personalization and efficiency, such as shutting down or removing unused MCP servers.
 
 ## State Management
-Since the orchestrator needs to manage state, we will need to take care that it is concurrency-safe will multiple access from different instances of vscode.
+Since the orchestrator needs to manage state, we will need to take care that it is concurrency-safe with multiple access from different instances of VS Code.
 
-We will need to store the running servers and the list of available tools that we can locally choose from.  It will also need to be a vector embedding similarity search like the registry. The embedding encoder for the local system might be different to the the registry, since we can only use the host LLM prompt - or a small local sentance transformer. 
+We will need to store the running servers and the list of available tools that we can locally choose from. It will also need to be a vector embedding similarity search like the registry. The embedding encoder for the local system might be different to the registry, since we can only use the host LLM prompt - or a small local sentence transformer.
