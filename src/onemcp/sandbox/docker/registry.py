@@ -53,7 +53,7 @@ class DockerSandboxRegistry:
         """
         self.base_port = base_port
         self.max_instances = max_instances
-        self.instances: dict[str, SandboxedMcpServer] = {}
+        self.instances: dict[str, (DockerContainer, SandboxedMcpServer)] = {}
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
@@ -126,9 +126,9 @@ class DockerSandboxRegistry:
                     status="running",
                 )
 
-                instance._get_tools()
+                instance.get_tools(container)
 
-                self.instances[sandbox_id] = instance
+                self.instances[sandbox_id] = (container, instance)
                 self.used_ports.add(port)
 
                 logger.info(f"Started sandbox {sandbox_id} on port {port}")
@@ -163,7 +163,8 @@ class DockerSandboxRegistry:
                         "error_description": f"Sandbox {sandbox_id} not found",
                     }
 
-                instance = self.instances[sandbox_id]
+                container, instance = self.instances[sandbox_id]
+                container.stop()
 
                 # Stop Docker container
                 await self._stop_docker_container(instance)
