@@ -246,7 +246,7 @@ class DockerSandboxRegistry:
         try:
             readme_text = self._get_repo_readme(repository_url)
         except ReadmeNotFound:
-            print(f"Could not find readme at: {repository_url}. Exitting...")
+            logger.error(f"Could not find readme at: {repository_url}. Exitting...")
             exit(1)
 
         prompt = f"The GitHub URL for the MCP server is {repository_url}. Here "
@@ -277,7 +277,7 @@ class DockerSandboxRegistry:
             ]
 
             docker_cmd_str = " ".join(docker_cmd)
-            print(f"docker_cmd: {docker_cmd_str}")
+            logger.info(f"docker_cmd: {docker_cmd_str}")
             subprocess.run(docker_cmd_str, shell=True, check=True)
 
             logger.info("Generated dockerfile at: {image_tag}")

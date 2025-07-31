@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
-import argparse, json, shlex, subprocess, sys, time
+import argparse
+import json
+import logging
+import shlex
+import subprocess
+import sys
+import time
+
+logger = logging.getLogger(__name__)
 
 # Basic MCP JSON-RPC messages
+
+
 def initialize(protocol_version="2024-11-05"):
     return {
         "jsonrpc": "2.0",
@@ -14,16 +24,20 @@ def initialize(protocol_version="2024-11-05"):
         },
     }
 
+
 def notif_initialized():
     return {"jsonrpc": "2.0", "method": "notifications/initialized"}
 
+
 def tools_list():
     return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
+
 
 def send(proc, obj):
     line = json.dumps(obj, separators=(",", ":")) + "\n"
     proc.stdin.write(line)
     proc.stdin.flush()
+
 
 def read_until_id(proc, expect_id, timeout=5.0):
     """Read lines until we see a JSON-RPC response with the given id."""
@@ -43,7 +57,7 @@ def read_until_id(proc, expect_id, timeout=5.0):
             msg = json.loads(line)
         except json.JSONDecodeError:
             # Server printed non-JSON text; ignore or print to stderr
-            print(f"[server-stdout] {line}", file=sys.stderr)
+            logger.error(f"[server-stdout] {line}")
             continue
         if isinstance(msg, dict) and msg.get("id") == expect_id:
             return msg
@@ -51,6 +65,7 @@ def read_until_id(proc, expect_id, timeout=5.0):
         if "method" in msg and "id" not in msg:
             # notification; ignore in this simple client
             pass
+
 
 def main():
     ap = argparse.ArgumentParser(description="List MCP tools from a stdio server")
@@ -75,7 +90,7 @@ def main():
         send(proc, initialize(args.protocol))
         init_resp = read_until_id(proc, expect_id=1, timeout=10.0)
         if "error" in init_resp:
-            print("Initialize error:", init_resp["error"], file=sys.stderr)
+            logger.error(f"Initialize error: {init_resp['error']}")
             sys.exit(2)
 
         # 2) notifications/initialized (no response expected)
@@ -86,19 +101,20 @@ def main():
         tools_resp = read_until_id(proc, expect_id=2, timeout=10.0)
 
         if "error" in tools_resp:
-            print("tools/list error:", tools_resp["error"], file=sys.stderr)
+            logger.error(f"tools/list error: {tools_resp['error']}")
             sys.exit(3)
 
         # Pretty-print the tools the server exposes
         result = tools_resp.get("result", {})
         tools = result.get("tools", [])
-        print(json.dumps(tools, indent=2))
+        logger.info(json.dumps(tools, indent=2))
 
     finally:
         try:
             proc.terminate()
         except Exception:
             pass
+
 
 if __name__ == "__main__":
     main()
