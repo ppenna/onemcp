@@ -5,6 +5,8 @@
 
 import json
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import uvicorn
@@ -135,9 +137,12 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy", "service": "OneMCP Sandbox API"}
 
 
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Clean up resources on shutdown."""
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan context manager for setup and teardown."""
+    # Nothing to do on startup for now
+    yield
+    # Clean up resources on shutdown
     logger.info("Shutting down sandbox API, cleaning up instances...")
     await sandbox.cleanup_all()
 
