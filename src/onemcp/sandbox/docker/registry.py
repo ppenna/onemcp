@@ -122,7 +122,6 @@ class DockerSandboxRegistry:
                 # Create sandbox instance
                 instance = SandboxedMcpServer(
                     endpoint=f"localhost:{port}",
-                    proc=container,
                     status="running",
                 )
 

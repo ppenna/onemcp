@@ -1,31 +1,13 @@
 # Copyright(c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Docker-based Sandbox implementation for OneMCP."""
-
-import asyncio
-import logging
-import os
-import shutil
-import subprocess
-import tempfile
-import uuid
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Optional
 from urllib.parse import urlparse
-import argparse
 import json
-import shlex
-import subprocess
 import sys
 import time
 
 from onemcp.sandbox.docker.sandbox import DockerContainer
-import requests
-from openai import OpenAI
-
-from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 
 @dataclass
@@ -33,7 +15,6 @@ class SandboxedMcpServer:
     """Represents a running sandbox instance."""
 
     endpoint: str
-    proc: Optional[DockerContainer] = None
     status: str = "running"
 
     # Basic MCP JSON-RPC messages
