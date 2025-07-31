@@ -23,6 +23,14 @@ if [ -f "pyproject.toml" ]; then
     PACKAGE_NAME=$(grep -E "^name\s*=" pyproject.toml | sed 's/.*=\s*["\x27]\([^"\x27]*\)["\x27].*/\1/' | tr '-' '_')
 fi
 
+if [ -z "${PACKAGE_NAME}" ] && [ -f "setup.py" ]; then
+    PACKAGE_NAME=$(python3 setup.py --name 2>/dev/null | tr '-' '_')
+fi
+
+if [ -z "${PACKAGE_NAME}" ]; then
+    echo "Warning: Could not determine package name. Using default value 'default_package_name'." >&2
+    PACKAGE_NAME="default_package_name"
+fi
 # Generate a script to run the MCP server
 echo "#!/bin/bash
 source $(pwd)/venv/bin/activate
