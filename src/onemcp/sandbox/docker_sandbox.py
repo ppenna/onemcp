@@ -34,7 +34,7 @@ class ReadmeNotFound(Exception):
 
 
 @dataclass
-class SandboxInstance:
+class SandboxedMcpServer:
     """Represents a running sandbox instance."""
 
     sandbox_id: str
@@ -148,7 +148,7 @@ class DockerSandbox:
         """
         self.base_port = base_port
         self.max_instances = max_instances
-        self.instances: dict[str, SandboxInstance] = {}
+        self.instances: dict[str, SandboxedMcpServer] = {}
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
@@ -217,7 +217,7 @@ class DockerSandbox:
                 process_id = proc.pid
 
                 # Create sandbox instance
-                instance = SandboxInstance(
+                instance = SandboxedMcpServer(
                     sandbox_id=sandbox_id,
                     process_id=process_id,
                     endpoint=f"localhost:{port}",
