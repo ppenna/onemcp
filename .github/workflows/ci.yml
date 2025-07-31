@@ -32,11 +32,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cat requirements.txt
-        cat requirements.txt | grep openai
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
-        pip list | grep openai
 
     - name: Check code formatting
       run: |
