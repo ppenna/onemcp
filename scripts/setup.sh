@@ -134,19 +134,14 @@ fi
 
 # Activate virtual environment
 print_status "Activating virtual environment..."
-source "${PROJECT_ROOT}/.venv/bin/activate"
+activate_virtualenv
 
-# Upgrade pip
-print_status "Upgrading pip..."
-pip install --upgrade pip
-
-# Install development dependencies
-print_status "Installing development dependencies..."
-pip install -e ".[dev]"
+upgrade_pip
+install_dev_deps
 
 # Install git hooks
 print_status "Installing git hooks..."
-./scripts/install-hooks.sh
+"${SCRIPTS_DIR}"/install-hooks.sh
 
 print_success "Setup complete! 🎉"
 

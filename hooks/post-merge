@@ -61,23 +61,11 @@ print_status "Dependency files changed, refreshing virtual environment..."
 print_status "Activating virtual environment..."
 activate_virtualenv
 
-# Upgrade pip first
-print_status "Upgrading pip..."
-if ! pip install --upgrade pip; then
-  print_error "Failed to upgrade pip"
-  exit 1
-fi
+upgrade_pip
 
 # Install/update dependencies
 if [ "$requirements_changed" = true ] || [ "$pyproject_changed" = true ]; then
-  print_status "Installing/updating dependencies..."
-  if pip install -e ".[dev]"; then
-    print_success "Dependencies updated successfully"
-  else
-    print_error "Failed to update dependencies"
-    print_warning "You may need to manually run: pip install -e \".[dev]\""
-    exit 1
-  fi
+  install_dev_deps
 fi
 
 print_success "Virtual environment refreshed successfully! 🎉"

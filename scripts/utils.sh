@@ -46,3 +46,22 @@ activate_virtualenv() {
     exit 1
   fi
 }
+
+# Upgrades pip to the latest version.
+upgrade_pip() {
+  print_status "Upgrading pip..."
+  pip install --upgrade pip || {
+    print_error "Failed to upgrade pip. Please check your Python environment."
+    exit 1
+  }
+}
+
+# Installs development dependencies.
+install_dev_deps() {
+  print_status "Installing development dependencies..."
+  pip install -e ".[dev]" || {
+    print_error "Failed to install development dependencies. Please check your Python environment."
+    exit 1
+  }
+  print_success "Development dependencies installed"
+}
