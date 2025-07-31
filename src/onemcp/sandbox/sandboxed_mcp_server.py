@@ -21,7 +21,7 @@ import subprocess
 import sys
 import time
 
-from onemcp.sandbox.docker_sandbox import DockerContainer
+from onemcp.sandbox.docker.sandbox import DockerContainer
 import requests
 from openai import OpenAI
 

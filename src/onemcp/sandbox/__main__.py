@@ -10,7 +10,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request
 
-from src.onemcp.sandbox.docker_sandbox_registry import DockerSandboxRegistry
+from src.onemcp.sandbox.docker.registry import DockerSandboxRegistry
 
 logger = logging.getLogger(__name__)
 
