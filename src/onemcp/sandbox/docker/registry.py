@@ -259,17 +259,13 @@ class DockerSandboxRegistry:
 
         logger.info(f"Generating docker file (tag={image_tag}, path={dockerfile_path})")
 
-        with open("/tmp/setup.sh", "w") as fh:
-            fh.write(setup_script)
-
         # Dump the setup script on a temporary file that we delete afterwards.
-        with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp:
             tmp.write(setup_script)
+            tmp.flush()
 
-            tmp_name_basename = "setup.sh"
-            tmp_name_dirname = "/tmp"
-            # tmp_name_basename = os.path.basename(tmp.name)
-            # tmp_name_dirname = os.path.dirname(tmp.name)
+            tmp_name_basename = os.path.basename(tmp.name)
+            tmp_name_dirname = os.path.dirname(tmp.name)
             docker_cmd = [
                 "docker",
                 "build",
@@ -279,10 +275,9 @@ class DockerSandboxRegistry:
                 f"--build-context scriptctx={tmp_name_dirname}",
                 ".",
             ]
-            print(f"tmp.name: {tmp.name}")
-            print(f"docker_cmd: {docker_cmd}")
 
             docker_cmd_str = " ".join(docker_cmd)
+            print(f"docker_cmd: {docker_cmd_str}")
             subprocess.run(docker_cmd_str, shell=True, check=True)
 
             logger.info("Generated dockerfile at: {image_tag}")
