@@ -4,7 +4,6 @@ from mcp.types import SamplingMessage, TextContent
 
 server = FastMCP(
     name="OneMCP Orchestrator",
-    description="Dynamic MCP Orchestrator for managing tools and resources",
 )
 
 
