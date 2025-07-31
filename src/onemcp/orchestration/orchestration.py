@@ -3,12 +3,13 @@ import logging
 import pathlib
 import sys
 
-sys.path.append(str(pathlib.Path(__file__).parent.parent))
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
 
-from discovery import MockRegistry, Registry, ServerEntry
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
+
+from onemcp.discovery import MockRegistry, Registry, ServerEntry
 
 # from onemcp.sandboxing.mock_sandbox import MockSandbox
 
