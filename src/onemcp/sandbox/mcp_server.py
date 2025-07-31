@@ -9,18 +9,39 @@ from typing import Any
 
 from src.onemcp.sandbox.docker.sandbox import DockerContainer
 
+# Default protocol version for MCP server communication
+DEFAULT_PROTOCOL_VERSION: str = "2024-11-05"
+
+# Default read delay when reading data from a container.
+DEFAULT_READ_DELAY: float = 0.01
+
+# Default timeout for reading data from a container.
+DEFAULT_READ_TIMEOUT: float = 10.0
+
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class McpServer:
-    """Represents a running sandbox instance."""
+    """Represents an MCP server interface for communicating with MCP servers running in containers."""
 
     endpoint: str
     status: str = "running"
 
-    # Basic MCP JSON-RPC messages
-    def _initialize(self, protocol_version: str = "2024-11-05") -> dict[str, Any]:
+    def _initialize(
+        self, protocol_version: str = DEFAULT_PROTOCOL_VERSION
+    ) -> dict[str, Any]:
+        """
+        Constructs and returns a JSON-RPC 2.0 initialization request payload.
+
+        Args:
+            protocol_version (str, optional): The protocol version to use in the request.
+                Defaults to DEFAULT_PROTOCOL_VERSION.
+
+        Returns:
+            dict[str, Any]: A dictionary representing the JSON-RPC initialization request,
+                including protocol version, capabilities, and client information.
+        """
         return {
             "jsonrpc": "2.0",
             "id": 1,
@@ -33,79 +54,131 @@ class McpServer:
         }
 
     def _notif_initialized(self) -> dict[str, str]:
+        """
+        Creates a JSON-RPC notification message indicating that the server has been initialized.
+
+        Returns:
+            dict[str, str]: A dictionary representing the JSON-RPC notification with
+            the "jsonrpc" version set to "2.0" and the "method" set to "notifications/initialized".
+        """
         return {"jsonrpc": "2.0", "method": "notifications/initialized"}
 
     def _tools_list(self) -> dict[str, Any]:
+        """
+        Constructs and returns a JSON-RPC request dictionary for listing available tools.
+
+        Returns:
+            dict[str, Any]: A dictionary representing a JSON-RPC 2.0 request with the method
+            "tools/list" and empty parameters.
+        """
         return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
 
     def send(self, proc: DockerContainer, obj: dict[str, Any]) -> None:
-        line = json.dumps(obj, separators=(",", ":")) + "\n"
+        """
+        Sends a JSON-encoded dictionary object to a DockerContainer process.
+
+        Args:
+            proc (DockerContainer): The Docker container process to send data to.
+            obj (dict[str, Any]): The dictionary object to be serialized and sent.
+
+        Returns:
+            None
+
+        Notes:
+            The dictionary is serialized to a compact JSON string and a newline character is
+            appended. The resulting string is written to the DockerContainer process.
+        """
+        line: str = json.dumps(obj, separators=(",", ":")) + "\n"
         proc.write(line)
 
     def _read_until_id(
-        self, proc: DockerContainer, expect_id: int, timeout: float = 5.0
+        self,
+        container: DockerContainer,
+        expect_id: int,
+        timeout: float = DEFAULT_READ_TIMEOUT,
     ) -> dict[str, Any]:
         """
-        This is an internal method used to read from the stdin of a running
-        docker container until we see a JSON-RPC response with a given id.
+        Reads lines from the DockerContainer's output until a JSON-RPC response
+        with the specified 'id' is received or a timeout occurs.
 
-        It must only be called from inside this class.
+        Args:
+            container (DockerContainer): The Docker container process to read from.
+            expect_id (int): The JSON-RPC response 'id' to wait for.
+            timeout (float, optional): Maximum time in seconds to wait for the response.
+                Defaults to DEFAULT_READ_TIMEOUT.
+
+        Returns:
+            dict[str, Any]: The parsed JSON-RPC response dictionary with the expected 'id'.
+
+        Raises:
+            TimeoutError: If the expected response is not received within the timeout.
+
+        Notes:
+            - Lines that cannot be parsed as JSON are logged as warnings and ignored.
+            - Only responses with a matching 'id' are returned.
+            - Notifications (messages with a "method" but no "id") are ignored.
         """
         start = time.time()
         while True:
             if time.time() - start > timeout:
+                logger.error(
+                    f"Timeout waiting for response with id={expect_id} after {timeout} seconds"
+                )
                 raise TimeoutError(f"Timed out waiting for response id={expect_id}")
-            line = proc.read()
+            line: str = container.read()
             if not line:
-                # Process may be buffering; small sleep and try again
-                time.sleep(0.01)
+                time.sleep(DEFAULT_READ_DELAY)
                 continue
             line = line.strip()
-            logger.info(f"read line: {line}")
             if not line:
                 continue
             try:
                 msg = json.loads(line)
-                logger.info(f"message: {msg}")
-            except json.JSONDecodeError:
-                # Server printed non-JSON text; ignore or print to stderr
-                logger.error(f"[server-stdout] {line}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to decode JSON: {e} - Line: {line}")
                 continue
             if isinstance(msg, dict) and msg.get("id") == expect_id:
                 return msg
-            # You may also want to surface server-side notifications/logs:
             if "method" in msg and "id" not in msg:
-                # notification; ignore in this simple client
+                # Notification received; ignore and continue reading.
                 pass
 
-    def get_tools(self, proc: DockerContainer) -> Any:
+    def get_tools(self, container: DockerContainer) -> Any:
         """
-        This method takes as an argument an MCP server running inside a docker
-        container, and it communicates with it over STDIO in order to get the
-        list of tools that it exposes. It returns the tools description, or
-        None if it fails.
+        Queries the MCP server running in the specified Docker container for its list of tools.
+
+        Args:
+            container (DockerContainer): The Docker container instance where the MCP server is running.
+
+        Returns:
+            Any: A list of tools provided by the server.
+
+        Raises:
+            RuntimeError: If an error occurs during initialization or tool retrieval.
         """
-        # 1) initialize
-        self.send(proc, self._initialize())
-        init_resp = self._read_until_id(proc, expect_id=1, timeout=10.0)
+        # Send the initialization request.
+        self.send(container, self._initialize())
+        init_resp = self._read_until_id(container, expect_id=1)
         if "error" in init_resp:
-            logger.error(f"Initialize error: {init_resp['error']}")
-            return None
+            logger.error(f"MCP server initialization failed: {init_resp['error']}")
+            raise RuntimeError(f"Initialization error: {init_resp['error']}")
 
-        # 2) notifications/initialized (no response expected)
-        self.send(proc, self._notif_initialized())
+        # Send the initialized notification.
+        self.send(container, self._notif_initialized())
 
-        # 3) tools/list
-        self.send(proc, self._tools_list())
-        tools_resp = self._read_until_id(proc, expect_id=2, timeout=10.0)
+        # Request the list of tools.
+        self.send(container, self._tools_list())
+        tools_resp = self._read_until_id(container, expect_id=2)
 
         if "error" in tools_resp:
-            logger.error(f"tools/list error: {tools_resp['error']}")
-            return None
+            logger.error(
+                f"Failed to retrieve tools from MCP server: {tools_resp['error']}"
+            )
+            raise RuntimeError(f"Tools retrieval error: {tools_resp['error']}")
 
-        # Pretty-print the tools the server exposes
         result = tools_resp.get("result", {})
         tools = result.get("tools", [])
-        logger.info(json.dumps(tools, indent=2))
+
+        logger.debug(f"Retrieved tools: {tools}")
 
         return tools
