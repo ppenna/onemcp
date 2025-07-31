@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from onemcp.sandbox.docker.sandbox import DockerContainer
+from src.onemcp.sandbox.docker.sandbox import DockerContainer
 
 
 @dataclass

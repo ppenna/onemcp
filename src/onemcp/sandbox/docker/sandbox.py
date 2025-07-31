@@ -81,6 +81,7 @@ class DockerContainer:
 
             logger.info(f"Starting Docker container: {' '.join(run_cmd)}")
 
+            self.port = port
             self.proc = subprocess.Popen(
                 run_cmd,
                 stdin=subprocess.PIPE,

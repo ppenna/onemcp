@@ -16,8 +16,8 @@ from urllib.parse import urlparse
 import requests
 from openai import OpenAI
 
-from onemcp.sandbox.docker.sandbox import DockerContainer
-from onemcp.sandbox.mcp_server import McpServer
+from src.onemcp.sandbox.docker.sandbox import DockerContainer
+from src.onemcp.sandbox.mcp_server import McpServer
 from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 logger = logging.getLogger(__name__)
@@ -162,13 +162,10 @@ class DockerSandboxRegistry:
                     }
 
                 container, instance = self.instances[sandbox_id]
-                container.stop()
-
-                # Stop Docker container
-                await self._stop_docker_container(instance)
+                await container.stop()
 
                 # Clean up resources
-                self.used_ports.discard(instance.port)
+                self.used_ports.discard(container.port)
                 del self.instances[sandbox_id]
 
                 logger.info(f"Stopped sandbox {sandbox_id}")
@@ -359,6 +356,3 @@ class DockerSandboxRegistry:
             port=port,
         )
         return container
-
-    async def _stop_docker_container(self, mcpserver: McpServer) -> None:
-        mcpserver.stop()
