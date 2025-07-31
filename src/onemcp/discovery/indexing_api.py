@@ -238,8 +238,7 @@ class IndexingAPI:
 
                 if not server_data:
                     raise HTTPException(
-                        status_code=404,
-                        detail=f"Server not found: {codebase_url}"
+                        status_code=404, detail=f"Server not found: {codebase_url}"
                     )
 
                 return server_data
@@ -249,10 +248,10 @@ class IndexingAPI:
             except Exception as e:
                 print(f"Error in get_server_json: {str(e)}")
                 import traceback
+
                 traceback.print_exc()
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to retrieve server data: {str(e)}"
+                    status_code=500, detail=f"Failed to retrieve server data: {str(e)}"
                 ) from e
 
         @self.app.delete("/unregister_server")

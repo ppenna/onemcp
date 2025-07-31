@@ -17,7 +17,9 @@ class Indexing:
         self.client: Optional[Any] = None
         self.collection: Optional[Any] = None
 
-    def init_db_server(self, reset_collection: bool = False, db_name: str = "chroma_mcpservers_db") -> None:
+    def init_db_server(
+        self, reset_collection: bool = False, db_name: str = "chroma_mcpservers_db"
+    ) -> None:
         """
         Initialize the ChromaDB client and collection.
 
@@ -25,8 +27,10 @@ class Indexing:
             reset_collection: Whether to reset the collection (delete and recreate)
         """
         # chroma run --host localhost --port 8000
-        #self.client = chromadb.HttpClient(host="localhost", port=8000)
-        self.client = chromadb.PersistentClient(path=os.path.join(os.path.dirname(__file__),"servers", db_name))
+        # self.client = chromadb.HttpClient(host="localhost", port=8000)
+        self.client = chromadb.PersistentClient(
+            path=os.path.join(os.path.dirname(__file__), "servers", db_name)
+        )
 
         if reset_collection:
             try:
@@ -39,7 +43,9 @@ class Indexing:
             self.collection = self.client.get_or_create_collection(
                 "all-my-documents",
                 # embedding_function=openai_ef,  # Uncomment if using OpenAI embeddings
-                metadata={"description": "Collection of all tools from various servers"},
+                metadata={
+                    "description": "Collection of all tools from various servers"
+                },
             )
 
     def add_tools_from_json(self, json_file: str) -> None:
@@ -50,7 +56,9 @@ class Indexing:
             json_file: Path to the JSON file containing server and tool information.
         """
         if not self.collection:
-            raise RuntimeError("Collection not initialized. Call init_db_server() first.")
+            raise RuntimeError(
+                "Collection not initialized. Call init_db_server() first."
+            )
 
         with open(json_file) as f:
             data = json.load(f)
@@ -75,7 +83,9 @@ class Indexing:
                     ids=[f"{tool['name']}@{data['codebase-url']}"],
                 )
 
-    def find_similar_tools(self, user_query: str, k: int = 5) -> list[dict[str, str | float]]:
+    def find_similar_tools(
+        self, user_query: str, k: int = 5
+    ) -> list[dict[str, str | float]]:
         """
         Find top K tools with names most similar to the query string.
 
@@ -88,7 +98,9 @@ class Indexing:
             sorted by similarity score in descending order
         """
         if not self.collection:
-            raise RuntimeError("Collection not initialized. Call init_db_server() first.")
+            raise RuntimeError(
+                "Collection not initialized. Call init_db_server() first."
+            )
 
         q_prompt = f"Description: {user_query}"
         results = self.collection.query(
@@ -102,7 +114,11 @@ class Indexing:
         if all_metadatas and all_metadatas[0]:
             for idx_, mdata in enumerate(all_metadatas[0]):
                 distance = (
-                    all_distances[0][idx_] if all_distances and len(all_distances) > 0 and idx_ < len(all_distances[0]) else 0.0
+                    all_distances[0][idx_]
+                    if all_distances
+                    and len(all_distances) > 0
+                    and idx_ < len(all_distances[0])
+                    else 0.0
                 )
                 print("tool-name:", mdata["tool-name"], f"[score = {distance}]")
                 query_result.append(
@@ -128,7 +144,9 @@ class Indexing:
             Dictionary containing the server's JSON data
         """
         if not self.collection:
-            raise RuntimeError("Collection not initialized. Call init_db_server() first.")
+            raise RuntimeError(
+                "Collection not initialized. Call init_db_server() first."
+            )
 
         try:
             all_results = self.collection.get(where={"source": codebase_url})
@@ -141,7 +159,7 @@ class Indexing:
             metadata = all_results["metadatas"][0] if all_results["metadatas"] else {}
             path_to_json = str(metadata.get("path-to-json", ""))
             print("loading server JSON from:", path_to_json)
-            json_file = os.path.join(os.path.dirname(__file__),"servers", path_to_json)
+            json_file = os.path.join(os.path.dirname(__file__), "servers", path_to_json)
             with open(json_file) as f:
                 data: dict[str, Any] = json.load(f)
 
@@ -162,7 +180,9 @@ class Indexing:
             Number of tools removed
         """
         if not self.collection:
-            raise RuntimeError("Collection not initialized. Call init_db_server() first.")
+            raise RuntimeError(
+                "Collection not initialized. Call init_db_server() first."
+            )
 
         try:
             # Query for all tools from this server
@@ -211,7 +231,7 @@ if __name__ == "__main__":
     indexing = Indexing()
     indexing.init_db_server()
     files_dir = os.path.join(os.path.dirname(__file__), "servers")
-    #for file in os.listdir(files_dir):
+    # for file in os.listdir(files_dir):
     #    if file.endswith(".json"):
     #        indexing.add_tools_from_json(os.path.join(files_dir, file))
 

@@ -94,7 +94,8 @@ def test_api() -> None:
     try:
         # URL encode the codebase URL for the path parameter
         import urllib.parse
-        encoded_url = urllib.parse.quote(str(test_server["codebase_url"]), safe='')
+
+        encoded_url = urllib.parse.quote(str(test_server["codebase_url"]), safe="")
         response = requests.get(f"{base_url}/server/{encoded_url}")
         print(f"Status: {response.status_code}")
 
@@ -104,7 +105,7 @@ def test_api() -> None:
             print(f"Description: {result.get('description')[:100]}...")
             print(f"Tools count: {len(result.get('tools', []))}")
             print("\nTools in server:")
-            for i, tool in enumerate(result.get('tools', []), 1):
+            for i, tool in enumerate(result.get("tools", []), 1):
                 print(f"  {i}. {tool.get('name')}")
                 print(f"     Description: {tool.get('description')[:80]}...")
                 print()
@@ -119,7 +120,10 @@ def test_api() -> None:
     print("\n6. Testing get non-existent server JSON...")
     try:
         import urllib.parse
-        non_existent_url = urllib.parse.quote("https://github.com/nonexistent/repo", safe='')
+
+        non_existent_url = urllib.parse.quote(
+            "https://github.com/nonexistent/repo", safe=""
+        )
         response = requests.get(f"{base_url}/server/{non_existent_url}")
         print(f"Status: {response.status_code}")
 
