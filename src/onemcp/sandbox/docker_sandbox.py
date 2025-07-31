@@ -14,6 +14,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urlparse
+import argparse
+import json
+import shlex
+import subprocess
+import sys
+import time
 
 import requests
 from openai import OpenAI
@@ -32,11 +38,96 @@ class SandboxInstance:
     """Represents a running sandbox instance."""
 
     sandbox_id: str
-    container_id: str
+    process_id: str
     endpoint: str
-    repository_url: str
     port: int
+    proc: Optional[subprocess.Popen] = None
     status: str = "running"
+
+    # Basic MCP JSON-RPC messages
+    def initialize(self, protocol_version="2024-11-05"):
+        return {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": protocol_version,
+                "capabilities": {},        # minimal; add if your client supports more
+                "clientInfo": {"name": "cli-mcp", "version": "0.1"},
+            },
+        }
+
+    def notif_initialized(self):
+        return {"jsonrpc": "2.0", "method": "notifications/initialized"}
+
+    def tools_list(self):
+        return {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
+
+    def send(self, proc, obj):
+        line = json.dumps(obj, separators=(",", ":")) + "\n"
+        proc.stdin.write(line)
+        proc.stdin.flush()
+
+    def read_until_id(self, proc, expect_id, timeout=5.0):
+        """Read lines until we see a JSON-RPC response with the given id."""
+        start = time.time()
+        while True:
+            if time.time() - start > timeout:
+                raise TimeoutError(f"Timed out waiting for response id={expect_id}")
+            line = proc.stdout.readline()
+            if not line:
+                # Process may be buffering; small sleep and try again
+                time.sleep(0.01)
+                continue
+            line = line.strip()
+            print(f"read line: {line}")
+            if not line:
+                continue
+            try:
+                msg = json.loads(line)
+                print(f"message: {msg}")
+            except json.JSONDecodeError:
+                # Server printed non-JSON text; ignore or print to stderr
+                print(f"[server-stdout] {line}", file=sys.stderr)
+                continue
+            if isinstance(msg, dict) and msg.get("id") == expect_id:
+                return msg
+            # You may also want to surface server-side notifications/logs:
+            if "method" in msg and "id" not in msg:
+                # notification; ignore in this simple client
+                pass
+
+    def get_tools(self):
+
+        try:
+            # 1) initialize
+            self.send(self.proc, self.initialize())
+            init_resp = self.read_until_id(self.proc, expect_id=1, timeout=10.0)
+            if "error" in init_resp:
+                print("Initialize error:", init_resp["error"], file=sys.stderr)
+                sys.exit(2)
+
+            # 2) notifications/initialized (no response expected)
+            self.send(self.proc, self.notif_initialized())
+
+            # 3) tools/list
+            self.send(self.proc, self.tools_list())
+            tools_resp = self.read_until_id(self.proc, expect_id=2, timeout=10.0)
+
+            if "error" in tools_resp:
+                print("tools/list error:", tools_resp["error"], file=sys.stderr)
+                sys.exit(3)
+
+            # Pretty-print the tools the server exposes
+            result = tools_resp.get("result", {})
+            tools = result.get("tools", [])
+            print(json.dumps(tools, indent=2))
+
+        finally:
+            try:
+                self.proc.terminate()
+            except Exception:
+                pass
 
 
 class DockerSandboxError(Exception):
@@ -119,18 +210,23 @@ class DockerSandbox:
                     }
 
                 # Start Docker container
-                container_id = await self._start_docker_container(
+                proc = self._start_docker_container(
                     sandbox_id, bootstrap_metadata, port
                 )
+
+                process_id = proc.pid
 
                 # Create sandbox instance
                 instance = SandboxInstance(
                     sandbox_id=sandbox_id,
-                    container_id=container_id,
+                    process_id=process_id,
                     endpoint=f"localhost:{port}",
-                    repository_url=bootstrap_metadata.get("repository_url", ""),
                     port=port,
+                    proc=proc,
+                    status="running",
                 )
+
+                instance.get_tools()
 
                 self.instances[sandbox_id] = instance
                 self.used_ports.add(port)
@@ -170,7 +266,7 @@ class DockerSandbox:
                 instance = self.instances[sandbox_id]
 
                 # Stop Docker container
-                await self._stop_docker_container(instance.container_id)
+                await self._stop_docker_container(instance.process_id)
 
                 # Clean up resources
                 self.used_ports.discard(instance.port)
@@ -197,7 +293,6 @@ class DockerSandbox:
             {
                 "sandbox_id": instance.sandbox_id,
                 "endpoint": instance.endpoint,
-                "repository_url": instance.repository_url,
                 "status": instance.status,
             }
             for instance in self.instances.values()
@@ -292,8 +387,10 @@ class DockerSandbox:
         with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
             tmp.write(setup_script)
 
-            tmp_name_basename = os.path.basename(tmp.name)
-            tmp_name_dirname = os.path.dirname(tmp.name)
+            tmp_name_basename = "setup.sh"
+            tmp_name_dirname = "/tmp"
+            # tmp_name_basename = os.path.basename(tmp.name)
+            # tmp_name_dirname = os.path.dirname(tmp.name)
             docker_cmd = [
                 "docker",
                 "build",
@@ -301,8 +398,11 @@ class DockerSandbox:
                 f"-f {dockerfile_path}",
                 f"--build-arg SCRIPT_PATH={tmp_name_basename}",
                 f"--build-context scriptctx={tmp_name_dirname}",
-                "/tmp",
+                ".",
             ]
+            print(f"tmp.name: {tmp.name}")
+            print(f"docker_cmd: {docker_cmd}")
+
             docker_cmd_str = " ".join(docker_cmd)
             subprocess.run(docker_cmd_str, shell=True, check=True)
 
@@ -350,21 +450,18 @@ class DockerSandbox:
 
         # Generate temporary dockerfile from the set-up.
         # TODO: randomize
-        docker_tag = "onemcp-smoke-test"
-        self._generate_dockerfile(setup_script, docker_tag)
+        container_image_tag = "onemcp-smoke-test"
+        self._generate_dockerfile(setup_script, container_image_tag)
 
         overview = "MCP Server Repository"
         tools: list[Any] = []
         # TODO: update
         bootstrap_metadata = {
-            "repository_url": "",
-            "dockerfile_path": "Dockerfile",
-            "image_tag": docker_tag,
-            "entrypoint": "python server.py",
-            "environment_variables": {},
-            "build_args": {},
-            "working_directory": "/app",
+            "container_image_tag": container_image_tag,
         }
+
+        # Start docker container
+        port = await self.start(bootstrap_metadata)
 
         return {
             "overview": overview,
@@ -372,9 +469,9 @@ class DockerSandbox:
             "bootstrap_metadata": bootstrap_metadata,
         }
 
-    async def _start_docker_container(
+    def _start_docker_container(
         self, sandbox_id: str, bootstrap_metadata: dict[str, Any], port: int
-    ) -> str:
+    ) -> subprocess.Popen:
         """Start a Docker container for the sandbox instance.
 
         Args:
@@ -389,34 +486,21 @@ class DockerSandbox:
         sandbox_dir = Path(tempfile.mkdtemp(prefix=f"sandbox_{sandbox_id}_"))
 
         try:
-            # Build Docker image
-            # TODO: update me
-            build_cmd = ["docker", "build", "-t", "FIXME"]
-
-            logger.info(f"Building Docker image: {' '.join(build_cmd)}")
-            result = await asyncio.create_subprocess_exec(
-                *build_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout, stderr = await result.communicate()
-
-            if result.returncode != 0:
-                raise DockerSandboxError(f"Docker build failed: {stderr.decode()}")
+            # Get the container image tag from bootstrap metadata
+            container_image_tag = bootstrap_metadata.get("container_image_tag", "onemcp-default")
 
             # Run Docker container
             run_cmd = [
                 "docker",
                 "run",
-                "-d",  # Run in detached mode
+                "-i",
                 "-p",
                 f"{port}:8000",  # Port mapping
                 "--name",
                 f"sandbox-{sandbox_id}",
-                "--rm",  # Remove container when it stops
             ]
 
-            # Add environment variables
+            # Add environment variables (if any are provided)
             env_vars = bootstrap_metadata.get("environment_variables", {})
             for key, value in env_vars.items():
                 run_cmd.extend(["-e", f"{key}={value}"])
@@ -426,7 +510,7 @@ class DockerSandbox:
             run_cmd.extend(["-w", working_dir])
 
             # Add image tag
-            run_cmd.append("FIXME")
+            run_cmd.append(container_image_tag)
 
             # Add entrypoint if specified
             entrypoint = bootstrap_metadata.get("entrypoint")
@@ -434,18 +518,17 @@ class DockerSandbox:
                 run_cmd.extend(entrypoint.split())
 
             logger.info(f"Starting Docker container: {' '.join(run_cmd)}")
-            result = await asyncio.create_subprocess_exec(
-                *run_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+
+            proc = subprocess.Popen(
+                run_cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                # stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
             )
-            stdout, stderr = await result.communicate()
 
-            if result.returncode != 0:
-                raise DockerSandboxError(f"Docker run failed: {stderr.decode()}")
-
-            container_id = stdout.decode().strip()
-            logger.info(f"Started container {container_id} for sandbox {sandbox_id}")
-
-            return container_id
+            return proc
 
         except Exception as e:
             # Clean up on failure
