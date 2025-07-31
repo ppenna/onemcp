@@ -5,6 +5,11 @@
 mcp>=1.0.0
 anyio>=3.0.0
 fastmcp>=0.1.0
+types-beautifulsoup4>=4.12.0
+types-html5lib>=1.1.11
+types-Markdown>=3.8.0
+types-requests>=2.32.4
+types-tqdm>=4.67.0
 
 # Development dependencies (install with: pip install -r requirements.txt -r requirements-dev.txt)
 # Or use: pip install -e ".[dev]"
