@@ -1,6 +1,7 @@
 import json
 import logging
 import pathlib
+import re
 import sys
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
@@ -15,6 +16,19 @@ from onemcp import MockRegistry, Registry, ServerEntry
 
 logger = logging.getLogger(__name__)
 server = FastMCP("OneMCP")
+
+
+def extract_code_blocks(markdown_text: str) -> list[dict]:
+    # Regular expression to match code blocks (```language ... ```)
+    code_block_pattern = r"```(\w+)?\n(.*?)```"
+    matches = re.findall(code_block_pattern, markdown_text, re.DOTALL)
+
+    # Convert matches into a structured JSON format
+    code_blocks = [
+        {"language": match[0] or "plaintext", "code": match[1].strip()}
+        for match in matches
+    ]
+    return code_blocks
 
 
 @server.prompt()
@@ -46,17 +60,18 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
         max_tokens=100,
     )
 
-    if result.content.type == "text":
-        print(f"Result: {result.content.text}")
-    else:
-        print(f"Result: {str(result.content)}")
-
     # Assume result.content.text is a JSON array string
     try:
         if result.content.type == "text":
+            result.content.text = extract_code_blocks(result.content.text)[0]["code"]
+
+            print(f"Parsing tools from: {result.content.text}")
+
             tools = json.loads(result.content.text)
             if isinstance(tools, list):
-                extracted_tools = [str(tool) for tool in tools]
+                extracted_tools = [
+                    tool["type"] + " " + tool["context"] for tool in tools
+                ]
             else:
                 extracted_tools = [str(tools)]
         else:
