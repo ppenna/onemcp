@@ -344,7 +344,6 @@ class DockerSandboxRegistry:
             Dictionary containing analysis results
         """
 
-        setup_script: str = ""
         if USE_HEURISTIC_DISCOVERY:
             # Use the template file to generate the setup script.
             logger.info(
