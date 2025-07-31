@@ -1,6 +1,7 @@
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
+
 from ..discovery.mock_registry import MockRegistry
 
 server = FastMCP(
@@ -102,21 +103,21 @@ async def search(query: str, ctx: Context) -> list[base.Message]:
     try:
         # Use the mockRegistry to find similar servers
         similar_servers = mockRegistry.find_similar_servers(query, k=5)
-        
+
         if not similar_servers:
             return [base.Message(role="assistant", content=f"No servers found for query: {query}")]
-        
+
         # Format the results
         results = []
         results.append(f"Found {len(similar_servers)} similar servers for query '{query}':\n")
-        
+
         for i, (server_entry, similarity_score) in enumerate(similar_servers, 1):
             results.append(f"{i}. {server_entry.name} (similarity: {similarity_score:.2f})")
             results.append(f"   URL: {server_entry.url}")
-        
+
         response_text = "\n".join(results)
         return [base.Message(role="assistant", content=response_text)]
-        
+
     except Exception as e:
         return [base.Message(role="assistant", content=f"Search failed: {str(e)}")]
 
