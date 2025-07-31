@@ -28,6 +28,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "fastmcp>=0.1.0",
     "mcp>=1.0.0",
+    "requests>=2.32.0",
     "types-beautifulsoup4",
     "types-html5lib",
     "types-Markdown",
