@@ -1,6 +1,11 @@
 #!/bin/bash
 
 REPOSITORY_URL=
+
+if [ -z "${REPOSITORY_URL}" ]; then
+    echo "Error: REPOSITORY_URL is not set. Please provide a valid repository URL." >&2
+    exit 1
+fi
 REPOSITORY_NAME=$(basename "${REPOSITORY_URL}" .git)
 
 # Install necessary packages
