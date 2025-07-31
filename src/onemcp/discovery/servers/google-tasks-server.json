@@ -1,0 +1,66 @@
+{
+  "codebase-url": "https://github.com/arpitbatra123/mcp-googletasks",
+  "description": "Google Tasks MCP Server - A bridge between Claude and Google Tasks that allows you to manage your task lists and tasks directly through Claude. Requires Google Cloud Project with Tasks API enabled and OAuth2 authentication. Built with TypeScript and provides comprehensive task management functionality.",
+  "tools": [
+    {
+      "name": "authenticate",
+      "description": "Initialize the authentication flow and get an authorization URL for Google Tasks API access."
+    },
+    {
+      "name": "set-auth-code",
+      "description": "Complete the authentication process by providing the authorization code received from Google OAuth2 flow."
+    },
+    {
+      "name": "list-tasklists",
+      "description": "Retrieve and list all your Google Tasks task lists with their details and metadata."
+    },
+    {
+      "name": "get-tasklist",
+      "description": "Get detailed information about a specific task list by its ID, including title and other properties."
+    },
+    {
+      "name": "create-tasklist",
+      "description": "Create a new task list in Google Tasks with a specified title and optional description."
+    },
+    {
+      "name": "update-tasklist",
+      "description": "Update an existing task list's properties such as title or other metadata."
+    },
+    {
+      "name": "delete-tasklist",
+      "description": "Permanently delete a task list and all its contained tasks from Google Tasks."
+    },
+    {
+      "name": "list-tasks",
+      "description": "List all tasks within a specific task list, including their status, due dates, and hierarchical structure."
+    },
+    {
+      "name": "get-task",
+      "description": "Retrieve detailed information about a specific task by its ID, including notes, due dates, and completion status."
+    },
+    {
+      "name": "create-task",
+      "description": "Create a new task in a specified task list with title, notes, due date, and other properties."
+    },
+    {
+      "name": "update-task",
+      "description": "Update an existing task's properties such as title, notes, due date, status, or parent task."
+    },
+    {
+      "name": "delete-task",
+      "description": "Permanently delete a specific task from Google Tasks."
+    },
+    {
+      "name": "complete-task",
+      "description": "Mark a task as completed, updating its status and completion timestamp."
+    },
+    {
+      "name": "move-task",
+      "description": "Move a task within a list to reorder it or change its parent task for hierarchical organization."
+    },
+    {
+      "name": "clear-completed-tasks",
+      "description": "Remove all completed tasks from a specified task list to clean up the list."
+    }
+  ]
+}
