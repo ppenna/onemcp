@@ -1,27 +1,25 @@
-Analyze the provided query and its historical context to create a structured task breakdown:
+# Tool Type Identification Prompt
 
-1. Review the current query and all relevant conversation history to ensure complete context
-2. Generate a comprehensive rewrite of the query incorporating all pertinent historical information
-3. Break down the enhanced query into discrete, actionable tasks
-4. Create a JSON array that specifies:
-   - Individual task descriptions
-   - Required inputs or preconditions
-   - Expected outputs or success criteria
-5. Format the JSON array using standard indentation and proper syntax
-6. Validate that all tasks align with the original query intent
-7. Ensure each task is specific, measurable, and achievable
+Given the following user request, identify the types of tools or capabilities that would be required to accomplish the task. List the tool types in a concise, comma-separated format. Suggest general categories of tools (e.g., "web search", "file system access", "data extraction", "optimization", "constraint satisfaction", "math computation", etc.). Assume the algorithms and code already exists for these tools.
 
-The output should be a valid JSON array with the following schema:
+Also provide a brief context for each tool type. e.g., for "data extraction" perhaps "csv", "sqlite", "pdf to markdown", etc.
+
+Some additional context might help in identifying the tool types:
+"""
+{context}
+"""
+
+**Only identify tools for the following user request**:
+"""
+{user_prompt}
+"""
+
+Tool types needed:
 ```json
-{
-  "tasks": [
-    {
-      "id": "string",
-      "description": "string",
-      "dependencies": ["string"],
-      "inputs": ["string"],
-      "outputs": ["string"]
-    }
-  ]
-}
+[
+  {{
+    "type": string, 
+    "context": string
+  }}
+]
 ```

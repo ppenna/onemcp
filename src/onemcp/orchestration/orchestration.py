@@ -1,18 +1,37 @@
+import json
+import logging
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
+
+from discovery import Registry
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.types import SamplingMessage, TextContent
 
-server = FastMCP(
-    name="OneMCP Orchestrator",
-    description="Dynamic MCP Orchestrator for managing tools and resources",
-)
+# from onemcp.sandboxing.mock_sandbox import MockSandbox
+
+logger = logging.getLogger(__name__)
+server = FastMCP("OneMCP")
+
+
+@server.prompt()
+def tool_extraction(text: str) -> str:
+    """Extracts relevant tools and resources based on user input."""
+    prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
+    prompt_template = prompt_path.read_text(encoding="utf-8")
+    return prompt_template.format(user_prompt=text)
 
 
 @server.tool()
-async def plan(query: str, ctx: Context) -> list[base.Message]:
-    """Gives a detailed orchestration plan for the given query."""
+async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
+    """You must call this tool! Takes the user prompt and suggests which MCP tools would be appropriate."""
 
-    prompt = f"Create a detailed orchestration plan for the query: {query}"
+    # Get the path to the prompt template relative to this file
+    prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
+    prompt_template = prompt_path.read_text(encoding="utf-8")
+    prompt = prompt_template.format(user_prompt=prompt, context=(", ".join(files) if files else ""))
 
     result = await ctx.session.create_message(
         messages=[
@@ -25,16 +44,50 @@ async def plan(query: str, ctx: Context) -> list[base.Message]:
     )
 
     if result.content.type == "text":
-        return [base.Message(role="user", content=result.content.text)]
-    return [base.Message(role="user", content=str(result.content))]
+        print(f"Result: {result.content.text}")
+    else:
+        print(f"Result: {str(result.content)}")
+
+    # Assume result.content.text is a JSON array string
+    try:
+        if result.content.type == "text":
+            tools = json.loads(result.content.text)
+            if isinstance(tools, list):
+                extracted_tools = [str(tool) for tool in tools]
+            else:
+                extracted_tools = [str(tools)]
+        else:
+            extracted_tools = [str(result.content)]
+    except Exception as e:
+        extracted_tools = [f"Failed to parse tools: {str(e)}"]
+
+    print(f"Extracted tools: {', '.join(extracted_tools)}")
+
+    registry = Registry()
+
+    output = f"Extracted tools: {', '.join(extracted_tools)}"
+
+    for tool in extracted_tools:
+        registry_tools = registry.find_tools(query=tool, k=3)
+        if registry_tools:
+            output += f"\nFound tools in registry for '{tool}':"
+            for entry in registry_tools:
+                output += f"\n- {entry.tool_name} ({entry.server_name})"
+                print(f"Found tool: {entry.tool_name} on server: {entry.server_name}")
+
+    # try:
+    #     # 2. Otherwise, try to lookup registry for installation instructions
+    #     server = registry.find_tools()
+    return [base.Message(role="user", content=output)]
+
+    # if result.content.type == "text":
+    # return [base.Message(role="user", content=str(result.content))]
 
 
 @server.tool()
 async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
     """Evaluates and dynamically orchestrates tools for a given user query."""
-    prompt = (
-        f"Analyze the query '{query}' and determine the appropriate tools to invoke."
-    )
+    prompt = f"Analyze the query '{query}' and determine the appropriate tools to invoke."
 
     result = await ctx.session.create_message(
         messages=[
@@ -52,11 +105,26 @@ async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
 
 
 @server.tool()
-async def install(query: str, ctx: Context) -> list[base.Message]:
+async def install(url: str, ctx: Context) -> list[base.Message]:
     """Installs an MCP server."""
+
+    # 1. Check if already installed
+
+    registry = Registry("https://1cpgs0fc-8001.usw2.devtunnels.ms")
+
     try:
+        # 2. Otherwise, try to lookup registry for installation instructions
+        server = registry.health_check()
+
+        # TODO: 3. Otherwise, discovery prompt to determine installation instructions
+        if not server:
+            return [base.Message(role="system", content="Server not found in registry.")]
+
+        # 4. Try to install
+        # sandbox = MockSandbox()
+
         # Simulate installation logic
-        installation_result = f"Installing MCP server with query: {query}"
+        installation_result = f"Installing MCP server with query: {url}"
         await ctx.session.create_message(
             messages=[
                 SamplingMessage(
@@ -66,9 +134,7 @@ async def install(query: str, ctx: Context) -> list[base.Message]:
             ],
             max_tokens=50,
         )
-        return [
-            base.Message(role="system", content="MCP server installation successful.")
-        ]
+        return [base.Message(role="system", content="MCP server installation successful.")]
     except Exception as e:
         return [base.Message(role="system", content=f"Installation failed: {str(e)}")]
 
