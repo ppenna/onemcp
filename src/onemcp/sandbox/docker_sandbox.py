@@ -292,12 +292,15 @@ class DockerSandbox:
         with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
             tmp.write(setup_script)
 
+            tmp_name_basename = os.path.basename(tmp.name)
+            tmp_name_dirname = os.path.dirname(tmp.name)
             docker_cmd = [
                 "docker",
                 "build",
                 f"-t {image_tag}",
                 f"-f {dockerfile_path}",
-                f"--build-arg SCRIPT_PATH={tmp.name}",
+                f"--build-arg SCRIPT_PATH={tmp_name_basename}",
+                f"--build-context scriptctx={tmp_name_dirname}",
                 "/tmp",
             ]
             docker_cmd_str = " ".join(docker_cmd)
