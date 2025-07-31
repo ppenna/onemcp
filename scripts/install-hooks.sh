@@ -4,7 +4,11 @@
 
 # Install Git hooks for OneMCP project
 
-set -e
+set -euo pipefail
+
+#==================================================================================================
+# Main Script
+#==================================================================================================
 
 echo "Installing Git hooks..."
 
@@ -20,8 +24,13 @@ mkdir -p .git/hooks
 # Copy pre-push hook
 cp hooks/pre-push .git/hooks/pre-push
 
-# Make hook executable
+# Copy post-merge hook
+cp hooks/post-merge .git/hooks/post-merge
+
+# Make hooks executable
 chmod +x .git/hooks/pre-push
+chmod +x .git/hooks/post-merge
 
 echo "Git hooks installed successfully!"
-echo "The pre-push hook will now run before each push to ensure code quality."
+echo "The pre-push hook will now run before each push to run tests and lint checks to ensure code quality."
+echo "The post-merge hook will now run after git pull to check for changes in requirements.txt and update the Python virtual environment if needed."
