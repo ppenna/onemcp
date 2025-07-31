@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 import json
+import logging
 import sys
 import time
 from dataclasses import dataclass
 from typing import Any
 
 from src.onemcp.sandbox.docker.sandbox import DockerContainer
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -59,15 +62,15 @@ class McpServer:
                 time.sleep(0.01)
                 continue
             line = line.strip()
-            print(f"read line: {line}")
+            logger.info(f"read line: {line}")
             if not line:
                 continue
             try:
                 msg = json.loads(line)
-                print(f"message: {msg}")
+                logger.info(f"message: {msg}")
             except json.JSONDecodeError:
                 # Server printed non-JSON text; ignore or print to stderr
-                print(f"[server-stdout] {line}", file=sys.stderr)
+                logger.error(f"[server-stdout] {line}")
                 continue
             if isinstance(msg, dict) and msg.get("id") == expect_id:
                 return msg
@@ -86,7 +89,7 @@ class McpServer:
         self.send(proc, self._initialize())
         init_resp = self._read_until_id(proc, expect_id=1, timeout=10.0)
         if "error" in init_resp:
-            print("Initialize error:", init_resp["error"], file=sys.stderr)
+            logger.error(f"Initialize error: {init_resp['error']}")
             sys.exit(2)
 
         # 2) notifications/initialized (no response expected)
@@ -97,12 +100,12 @@ class McpServer:
         tools_resp = self._read_until_id(proc, expect_id=2, timeout=10.0)
 
         if "error" in tools_resp:
-            print("tools/list error:", tools_resp["error"], file=sys.stderr)
+            logger.error(f"tools/list error: {tools_resp['error']}")
             sys.exit(3)
 
         # Pretty-print the tools the server exposes
         result = tools_resp.get("result", {})
         tools = result.get("tools", [])
-        print(json.dumps(tools, indent=2))
+        logger.info(json.dumps(tools, indent=2))
 
         return tools
