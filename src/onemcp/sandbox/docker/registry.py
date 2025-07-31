@@ -28,6 +28,10 @@ DISCOVERY_PROMPT_FILE_PATH = os.path.join(
 INSTALL_MCP_DOCKERFILE_PATH = os.path.join(
     ONEMCP_SRC_ROOT, "sandbox", "install_mcp.dockerfile"
 )
+SETUP_SCRIPT_TEMPLATE_PATH = os.path.join(
+    ONEMCP_SRC_ROOT, "sandbox", "try-install-mcp-server.sh"
+)
+USE_HEURISTIC_DISCOVERY = os.getenv("USE_HEURISTIC_DISCOVERY", "true").lower() == "true"
 
 
 class ReadmeNotFound(Exception):
@@ -287,15 +291,7 @@ class DockerSandboxRegistry:
 
             logger.info("Generated dockerfile at: {image_tag}")
 
-    async def _analyze_repository(self, repository_url: str) -> dict[str, Any]:
-        """Analyze repository to extract MCP server information.
-
-        Args:
-            repo_path: Path to the cloned repository
-
-        Returns:
-            Dictionary containing analysis results
-        """
+    def ask_openai(self, repository_url: str) -> str:
         # First get the repository readme file.
         prompt = self._build_prompt(repository_url)
 
@@ -323,7 +319,45 @@ class DockerSandboxRegistry:
         if setup_script.startswith("```") and setup_script.endswith("```"):
             setup_script = "\n".join(setup_script.split("\n")[1:-1])
 
-        logger.info("Generated set-up script for MCP server at url: {repository_url}")
+        return setup_script
+
+    def try_template_file(self, repository_url: str) -> str:
+        # Read the template file
+        template_file_path = Path(SETUP_SCRIPT_TEMPLATE_PATH)
+
+        # Add the repository URL to the template
+        if not template_file_path.exists():
+            raise Exception(f"Error: File {template_file_path} does not exist.")
+        template_content = template_file_path.read_text()
+        setup_script = template_content.replace(
+            "REPOSITORY_URL=", f"REPOSITORY_URL={repository_url}"
+        )
+        return setup_script
+
+    async def _analyze_repository(self, repository_url: str) -> dict[str, Any]:
+        """Analyze repository to extract MCP server information.
+
+        Args:
+            repo_path: Path to the cloned repository
+
+        Returns:
+            Dictionary containing analysis results
+        """
+
+        setup_script: str = ""
+        if USE_HEURISTIC_DISCOVERY:
+            # Use the template file to generate the setup script.
+            logger.info(
+                f"Using template file to generate setup script for {repository_url}"
+            )
+            setup_script = self.try_template_file(repository_url)
+        else:
+            # Ask OpenAI to generate the setup script.
+            logger.info(f"Using OpenAI to generate setup script for {repository_url}")
+            setup_script = self.ask_openai(repository_url)
+
+        logger.debug(f"Generated set-up script for MCP server at url: {repository_url}")
+        logger.debug(f"{setup_script}")
 
         # Generate temporary dockerfile from the set-up.
         # TODO: randomize
