@@ -64,7 +64,7 @@ class LocalState:
     def has_server(self, server: str) -> bool:
         return server in self._available_servers
 
-    def add_server(self, server: str, tools: list[types.Tool]):
+    def add_server(self, server: str, tools: list[types.Tool]) -> None:
         self._available_servers.add(server)
         self._available_tools[server] = tools
 
