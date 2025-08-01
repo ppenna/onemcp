@@ -20,7 +20,7 @@ The script you generate should include at least the following steps:
 * Activate the python3 virtual environment created in the previous step
 * Follow the instructions in the README file to install and configure the MCP server
 * Generate an executable script in `/run_mcp.sh` to launch the MCP server.
-    - Make sure to acticate the virtual environment in the cloned repository using the absolute path to the virtual environment's `activate` script.
+    - Make sure to activate the virtual environment in the cloned repository using the absolute path to the virtual environment's `activate` script.
     - Make sure to use the `python3` command from the virtual environment to run the MCP server.
     - If you have a choice between STDIO, HTTP, or SSE, **use the STDIO option**.
     - Remember to change directory into wherever you need to be to run the MCP server. This involves rerunning any change-directory commands in the README that precede the instruction saying how to run the MCP server.
