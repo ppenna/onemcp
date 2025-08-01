@@ -31,23 +31,23 @@ def post_discover_request(
         print(f"Raw response: {response.text}")
         return {}
 
-    tools = resp_json.get("tools")
-    setup_script = resp_json.get("setup_script")
-
-    if not tools or not setup_script:
-        print("Invalid response format. Expected 'tools' and 'setup_script'.")
+    response_code = resp_json.get("response_code")
+    if response_code != "200":
+        print(f"Error in response: {resp_json.get('error_message', 'Unknown error')}")
         return {}
 
+    print(f"Response JSON: {json.dumps(resp_json, indent=2)}")
+    tools = resp_json.get("tools")
+    bootstrap_metadata = resp_json.get("bootstrap_metadata")
+
     print("Discovery successful!")
-    print(f"Tools: {json.dumps(tools, indent=2)}")
-    print(f"Setup Script: {setup_script}")
 
     # Create a JSON object with the discovered information
     discovered_info = {
         "repository_url": repository_url,
         "repository_readme": repository_readme,
         "tools": tools,
-        "setup_script": setup_script,
+        "bootstrap_metadata": bootstrap_metadata,
     }
 
     return discovered_info

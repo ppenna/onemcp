@@ -272,7 +272,7 @@ class DockerSandboxRegistry:
                 await container.remove()
                 logger.info(f"Cleaned up sandbox {sandbox_id}")
 
-                await container.prune_images()
+                await container.remove_image()
                 logger.info("Removed orphaned images")
 
                 self.used_ports.discard(container.port)
