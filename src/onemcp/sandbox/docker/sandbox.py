@@ -24,6 +24,7 @@ class DockerSandboxError(Exception):
 
 class DockerContainer:
     name: str
+    image: str
     proc: subprocess.Popen
 
     def pid(self) -> int:
@@ -91,6 +92,7 @@ class DockerContainer:
                 raise DockerSandboxError(
                     "Missing required field: container_image_tag in bootstrap metadata"
                 )
+            self.image = container_image_tag
 
             # Run Docker container
             run_cmd = [
@@ -176,10 +178,10 @@ class DockerContainer:
             logger.error(f"Failed to remove container {self.name}: {e}")
             raise DockerSandboxError(f"Failed to remove container: {e}") from e
 
-    async def prune_images(self) -> None:
+    async def remove_image(self) -> None:
         try:
             # Remove orphaned images
-            remove_cmd = ["docker", "image", "prune", "-a", "-f"]
+            remove_cmd = ["docker", "rmi", self.image]
             result = await asyncio.create_subprocess_exec(
                 *remove_cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -187,7 +189,7 @@ class DockerContainer:
             )
             await result.communicate()
 
-            logger.info("Removed orphaned Docker images")
+            logger.info("Removed container image {self.image}")
 
         except Exception as e:
             logger.error(f"Failed to remove orphaned Docker images: {e}")

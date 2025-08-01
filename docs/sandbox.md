@@ -1,5 +1,12 @@
 # Sandbox - Quick Start Guide
 
+Before running the sandbox API, make sure you have built the base container
+images.
+
+```bash
+./src/onemcp/sandbox/build-base-docker-images.sh
+```
+
 To run the sandbox HTTP server, from the root of the directory, run:
 
 ```bash
