@@ -3,9 +3,12 @@
 set -euo pipefail
 
 echo -n "Sending START request..."
+setup_script=$(cat assets/test/explored-mcp-server.json | jq -r .bootstrap_metadata.setup_script)
+repository_url=$(cat assets/test/explored-mcp-server.json | jq -r .bootstrap_metadata.repository_url)
 START_JSON=$(jq -n \
-    --arg container_image_tag  "onemcp/github.com/ithejie/mcp-server-calculator:v1" \
-    '{bootstrap_metadata: {container_image_tag: $container_image_tag}}'
+    --arg repository_url "$repository_url" \
+    --arg setup_script "$setup_script" \
+    '{bootstrap_metadata: {repository_url: $repository_url, setup_script: $setup_script}}'
 )
 SANDBOX_ID=$(curl \
   --silent \

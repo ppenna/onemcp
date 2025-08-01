@@ -83,7 +83,7 @@ class DockerSandboxRegistry:
             return {
                 "response_code": "200",
                 "tools": discovery_info["tools"],
-                "setup_script": discovery_info["setup_script"],
+                "bootstrap_metadata": discovery_info["bootstrap_metadata"],
             }
 
         except Exception as e:
@@ -109,6 +109,34 @@ class DockerSandboxRegistry:
                         "response_code": "429",
                         "error_description": "Maximum number of sandbox instances reached",
                     }
+
+                repository_url = bootstrap_metadata.get("repository_url")
+                if not repository_url:
+                    return {
+                        "response_code": "400",
+                        "error_description": "Missing required field: repository_url",
+                    }
+
+                setup_script = bootstrap_metadata.get("setup_script")
+                if not setup_script:
+                    return {
+                        "response_code": "400",
+                        "error_description": "Missing required field: setup_script",
+                    }
+
+                container_image_tag = self.get_image_tag_from_repo_url(repository_url)
+
+                # FIXME: remove this tweak once start method does not require bootstrap_metadata
+                bootstrap_metadata["container_image_tag"] = container_image_tag
+
+                # Generate Dockerfile if the image does not exist.
+                if not self._check_if_docker_image_exists(container_image_tag):
+                    logger.info(
+                        f"Generating Dockerfile for {repository_url} with tag {container_image_tag}"
+                    )
+                    self._generate_dockerfile(setup_script, container_image_tag)
+                else:
+                    logger.info(f"Using existing Docker image: {container_image_tag}")
 
                 # Generate unique sandbox ID
                 sandbox_id = str(uuid.uuid4())
@@ -376,15 +404,12 @@ class DockerSandboxRegistry:
         logger.debug(f"Generated set-up script for MCP server at url: {repository_url}")
         logger.debug(f"{setup_script}")
 
-        # Generate temporary dockerfile from the set-up.
-        container_image_tag = self.get_image_tag_from_repo_url(repository_url)
-        self._generate_dockerfile(setup_script, container_image_tag)
-
         overview = "MCP Server Repository"
         tools: list[Any] = []
         # TODO: update
         bootstrap_metadata = {
-            "container_image_tag": container_image_tag,
+            "repository_url": repository_url,
+            "setup_script": setup_script,
         }
 
         # Start docker container
@@ -428,7 +453,6 @@ class DockerSandboxRegistry:
             "overview": overview,
             "tools": tools,
             "bootstrap_metadata": bootstrap_metadata,
-            "setup_script": setup_script,
         }
 
     def _start_docker_container(
@@ -441,3 +465,15 @@ class DockerSandboxRegistry:
             port=port,
         )
         return container
+
+    def _check_if_docker_image_exists(self, tag: str) -> bool:
+        proc = subprocess.run(
+            ["docker", "image", "ls", "--quiet", "--filter", f"reference={tag}"],
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(proc.stderr.strip() or "Failed to run `docker image ls`")
+
+        # Any non-empty line means we matched at least one image ID
+        return any(line.strip() for line in proc.stdout.splitlines())
