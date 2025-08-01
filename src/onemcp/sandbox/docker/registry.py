@@ -386,6 +386,17 @@ class DockerSandboxRegistry:
                 f"Error getting tools for sandbox {sandbox_id} from repo {repository_url}"
             )
 
+            # Attempt to stop the sandbox and check for errors.
+            stop_response: dict[str, Any] = await self.stop(sandbox_id)
+            if stop_response.get("response_code") != "200":
+                logger.error(
+                    f"Failed to stop sandbox {sandbox_id} after error: {stop_response}"
+                )
+
+            # TODO: Remove the container.
+
+            # TODO: Cleanup orphaned images.
+
             return {
                 "response_code": "500",
                 "error_description": "Failed to retrieve tools from MCP server",
