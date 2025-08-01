@@ -7,9 +7,7 @@ import mcp.types as types
 class ServerEntry:
     __slots__ = ("name", "url", "installation_instructions", "tools")
 
-    def __init__(
-        self, name: str, url: str, installation_instructions: Optional[str] = None
-    ):
+    def __init__(self, name: str, url: str, installation_instructions: str = ""):
         self.name = name
         self.url = url
         self.installation_instructions = installation_instructions

@@ -29,6 +29,19 @@ from mcp.types import (
 from onemcp import Registry, ToolEntry
 
 
+class MockSandbox:
+    """A mock sandbox for testing purposes."""
+
+    async def call_tool(self, name: str, args: dict[str, Any], context: Context) -> Any:
+        print(f"Mock call to tool: {name} with args: {args} and context: {context}")
+        return f"Mock response from {name} with args {args} and context {context}"
+
+    async def run_server(self, name: str, instructions: str) -> None:
+        print(
+            f"Mock sandbox server {name} is running with instructions: {instructions}"
+        )
+
+
 class LocalState:
     """A simple class to hold local state for the MCP server."""
 
@@ -214,10 +227,15 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
                     servers.add(entry.server_name)
 
     # install missing servers
+    sandbox = MockSandbox()
+
     for server in servers:
         registry_server = registry.get_server(server)
         if registry_server:
-            # TODO: run the sandbox server
+            await sandbox.run_server(
+                name=registry_server.name,
+                instructions=registry_server.installation_instructions,
+            )
             local_state.add_server(server, registry_server.tools)
 
     # servers are already installed, so just add the tools
@@ -243,10 +261,8 @@ async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
     tool = local_state.get_tool(name)
 
     if tool:
-        # TODO: call the sandbox MCP proxy with the tool name and args
-        print(
-            f"Calling sandbox MCP proxy for tool: {tool.name} with schema: {tool.inputSchema}"
-        )
+        sandbox = MockSandbox()
+        return await sandbox.call_tool(name, args, ctx)
 
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "
