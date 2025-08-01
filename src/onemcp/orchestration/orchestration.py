@@ -164,7 +164,7 @@ def _convert_to_content(
         return [result.to_image_content()]
 
     if isinstance(result, list | tuple):
-        return list(chain.from_iterable(_convert_to_content(item) for item in result))  # type: ignore[reportUnknownVariableType]
+        return list(chain.from_iterable(_convert_to_content(item) for item in result))
 
     if not isinstance(result, str):
         result = pydantic_core.to_json(result, fallback=str, indent=2).decode()
@@ -217,7 +217,7 @@ async def my_list_tools() -> list[types.Tool]:
             },
             annotations=None,
         )
-    ] + dynamic_tools  # type: ignore[return-value
+    ] + dynamic_tools
 
 
 if __name__ == "__main__":
