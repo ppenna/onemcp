@@ -1,0 +1,15 @@
+    [
+        {
+            "repository_url": "https://github.com/githejie/mcp-server-calculator",
+            "name": "mcp-server-calculator",
+            "description": "A Model Context Protocol server for calculating.",
+            "language": "Python",
+            "all_languages": {
+                "Python": 5803,
+                "Dockerfile": 674
+            },
+            "readme_url": "https://raw.githubusercontent.com/githejie/mcp-server-calculator/refs/heads/main/README.md",
+            "readme_content": "# Calculator MCP Server\n\nA Model Context Protocol server for calculating. This server enables LLMs to use calculator for precise numerical calculations.\n\n### Available Tools\n\n- `calculate` - Calculates/evaluates the given expression.\n  - `expression` (string, required): Expression to be calculated\n\n## Installation\n\n### Using uv (recommended)\n\nWhen using [`uv`](https://docs.astral.sh/uv/) no specific installation is needed. We will\nuse [`uvx`](https://docs.astral.sh/uv/guides/tools/) to directly run *mcp-server-calculator*.\n\n```bash\ncurl -LsSf https://astral.sh/uv/install.sh | sh\n```\n\n### Using PIP\n\nAlternatively you can install `mcp-server-calculator` via pip:\n\n```bash\npip install mcp-server-calculator\n```\n\nAfter installation, you can run it as a script using:\n\n```bash\npython -m mcp_server_calculator\n```\n\n## Configuration\n\n### Using uv (recommended)\n\nAdd this to your MCP client settings:\n\n```json\n\"mcpServers\": {\n  \"calculator\": {\n    \"command\": \"uvx\",\n    \"args\": [\"mcp-server-calculator\"]\n  }\n}\n```\n\n### Using PIP\n\nAlternatively add this to your MCP client settings:\n\n```json\n\"mcpServers\": {\n  \"calculator\": {\n    \"command\": \"python\",\n    \"args\": [\"-m\", \"mcp_server_calculator\"]\n  }\n}\n```\n\n## License\n\nmcp-server-calculator is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.\n",
+            "readme_title": "Calculator MCP Server"
+        }
+    ]
