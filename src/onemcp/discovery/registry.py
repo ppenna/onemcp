@@ -11,7 +11,7 @@ class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
     def __init__(
-        self, base_url: str = "https://4k6k502m-8001.usw2.devtunnels.ms"
+        self, base_url: str = "https://klqnxwmj-8001.usw2.devtunnels.ms"
     ) -> None:
         self.base_url = base_url
 
@@ -75,7 +75,8 @@ class Registry(RegistryInterface):
             servers = []
             for _, server in enumerate(result["servers"], 1):
                 entry = ServerEntry(
-                    name=server.get("filename", ""), url=server.get("codebase_url", "")
+                    name=server.get("filename", ""),
+                    url=server.get("repository_url", ""),
                 )
                 servers.append(entry)
             return servers
