@@ -1,0 +1,50 @@
+{
+  "repository_url": "https://github.com/jjsantos01/jupyter-notebook-mcp",
+  "description": "JupyterMCP - Jupyter Notebook Model Context Protocol Integration. Connects Claude AI to Jupyter Notebook through a WebSocket-based server for two-way communication, cell manipulation, and notebook management. Compatible ONLY with Jupyter Notebook version 6.x.",
+  "tools": [
+    {
+      "name": "ping",
+      "description": "Check server connectivity and verify the connection to the Jupyter WebSocket server."
+    },
+    {
+      "name": "insert_and_execute_cell",
+      "description": "Insert a cell at the specified position and execute it. Supports both code and markdown cells with optional slideshow type configuration."
+    },
+    {
+      "name": "save_notebook",
+      "description": "Save the current Jupyter notebook to disk."
+    },
+    {
+      "name": "get_cells_info",
+      "description": "Get information about all cells in the notebook including cell IDs, positions, content, and types."
+    },
+    {
+      "name": "get_notebook_info",
+      "description": "Get information about the current notebook including metadata and overall state."
+    },
+    {
+      "name": "run_cell",
+      "description": "Run a specific cell by its index and return the execution output."
+    },
+    {
+      "name": "run_all_cells",
+      "description": "Restart and run all cells in the notebook. Requires user approval."
+    },
+    {
+      "name": "get_cell_text_output",
+      "description": "Get the text output content of a specific code cell by its index with configurable output length limits."
+    },
+    {
+      "name": "get_image_output",
+      "description": "Get image outputs from a specific cell by its index, supporting PNG, JPEG, and SVG formats."
+    },
+    {
+      "name": "edit_cell_content",
+      "description": "Edit the content of an existing cell by its index and optionally execute it after editing."
+    },
+    {
+      "name": "set_slideshow_type",
+      "description": "Set the slideshow type for a specific cell (slide, subslide, fragment, skip, notes) for presentation purposes."
+    }
+  ]
+} 
