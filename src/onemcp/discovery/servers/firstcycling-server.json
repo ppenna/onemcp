@@ -1,5 +1,5 @@
 {
-  "codebase-url": "https://github.com/r-huijts/firstcycling-mcp",
+  "repository_url": "https://github.com/r-huijts/firstcycling-mcp",
   "description": "FirstCycling MCP Server - A comprehensive Model Context Protocol server that provides rich access to professional cycling data from FirstCycling. Enables analysis of rider performance, career progression, race results, historical cycling data, team information, and cycling competitions. Perfect for sports journalism, cycling education, rider analysis, and race research. Built with Python 3.10+ and uses web scraping to access FirstCycling data.",
   "tools": [
     {

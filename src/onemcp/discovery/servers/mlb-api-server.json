@@ -1,5 +1,5 @@
 {
-  "codebase-url": "https://github.com/guillochon/mlb-api-mcp",
+  "repository_url": "https://github.com/guillochon/mlb-api-mcp",
   "description": "MLB API MCP Server - A comprehensive bridge between AI applications and MLB data sources, enabling seamless integration of baseball statistics, game information, player data, and more. Provides access to current standings, schedules, player stats (traditional and sabermetric like WAR, wOBA, wRC+), team information, live game data, highlights, and advanced Statcast analytics. Built with FastMCP and Python 3.10+.",
   "tools": [
     {

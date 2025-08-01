@@ -1,5 +1,5 @@
 {
-  "codebase-url": "https://github.com/jjsantos01/jupyter-notebook-mcp",
+  "repository_url": "https://github.com/jjsantos01/jupyter-notebook-mcp",
   "description": "JupyterMCP - Jupyter Notebook Model Context Protocol Integration. Connects Claude AI to Jupyter Notebook through a WebSocket-based server for two-way communication, cell manipulation, and notebook management. Compatible ONLY with Jupyter Notebook version 6.x.",
   "tools": [
     {

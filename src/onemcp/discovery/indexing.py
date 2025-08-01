@@ -74,13 +74,13 @@ class Indexing:
                     documents=[document_info],
                     metadatas=[
                         {
-                            "source": data["codebase-url"],
+                            "source": data["repository_url"],
                             "path-to-json": os.path.basename(json_file),
                             "tool-name": tool["name"],
                             "tool-description": tool["description"],
                         }
                     ],
-                    ids=[f"{tool['name']}@{data['codebase-url']}"],
+                    ids=[f"{tool['name']}@{data['repository_url']}"],
                 )
 
     def find_similar_tools(

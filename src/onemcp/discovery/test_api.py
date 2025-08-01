@@ -10,7 +10,7 @@ import requests
 
 def test_api() -> None:
     """Test the indexing API endpoints"""
-    base_url = "http://localhost:8001"
+    base_url = "http://localhost:8004"
 
     print("🔍 Testing OneMCP Indexing API")
     print("=" * 50)
@@ -26,10 +26,11 @@ def test_api() -> None:
         return
 
     # Test registering a new server
-    print("\n2. Testing server registration...")
+    print("\n2.1. Testing server registration...")
     test_server = {
-        "codebase_url": "https://github.com/test/weather-api-mcp",
+        "repository_url": "https://github.com/test/weather-api-mcp",
         "description": "Weather API MCP Server - Provides access to current weather conditions, forecasts, and weather alerts for locations worldwide. Features include temperature, humidity, precipitation, wind speed, and severe weather notifications.",
+        "language": "Python",
         "tools": [
             {
                 "name": "get_current_weather",
@@ -48,6 +49,55 @@ def test_api() -> None:
 
     try:
         response = requests.post(f"{base_url}/register_server", json=test_server)
+        print(f"Status: {response.status_code}")
+        print(f"Response: {json.dumps(response.json(), indent=2)}")
+    except Exception as e:
+        print(f"❌ Error registering server: {e}")
+
+    print("\n2.2. Testing server registration...")
+    test_server2 = {
+  "repository_url": "https://github.com/githejie/mcp-server-calculator",
+  "repository_readme": "",
+  "tools": [
+    {
+      "name": "calculate",
+      "description": "Calculates/evaluates the given expression.",
+      "inputSchema": {
+        "properties": {
+          "expression": {
+            "title": "Expression",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expression"
+        ],
+        "title": "calculateArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "calculateOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\nREPOSITORY_URL=https://github.com/githejie/mcp-server-calculator\n\nif [ -z \"${REPOSITORY_URL}\" ]; then\n    echo \"Error: REPOSITORY_URL is not set. Please provide a valid repository URL.\" >&2\n    exit 1\nfi\nREPOSITORY_NAME=$(basename \"${REPOSITORY_URL}\" .git)\n\n# Install necessary packages\napt update\napt install -y git python3 python3-pip python3-venv curl\n\n# Clone the repository\ngit clone ${REPOSITORY_URL}\ncd \"${REPOSITORY_NAME}\"\n\n# Create and activate a virtual environment\npython3 -m venv venv\nsource venv/bin/activate\n\n# Install the MCP server using pip inside the virtual environment\npip install .\n\n# Final fallback: try to extract from pyproject.toml or setup.py\nif [ -f \"pyproject.toml\" ]; then\n    PACKAGE_NAME=$(grep -E \"^name\\s*=\" pyproject.toml | sed 's/.*=\\s*[\"\\x27]\\([^\"\\x27]*\\)[\"\\x27].*/\\1/' | tr '-' '_')\nfi\n\nif [ -z \"${PACKAGE_NAME}\" ] && [ -f \"setup.py\" ]; then\n    PACKAGE_NAME=$(python3 setup.py --name 2>/dev/null | tr '-' '_')\nfi\n\nif [ -z \"${PACKAGE_NAME}\" ]; then\n    echo \"Warning: Could not determine package name. Using default value 'default_package_name'.\" >&2\n    PACKAGE_NAME=\"default_package_name\"\nfi\n# Generate a script to run the MCP server\necho \"#!/bin/bash\nsource $(pwd)/venv/bin/activate\npython3 -m ${PACKAGE_NAME}\" > /run_mcp.sh\nchmod +x /run_mcp.sh\n",
+  "language": "Python",
+  "description": "A Model Context Protocol server for calculating.",
+  "name": "mcp-server-calculator"
+}
+
+    try:
+        response = requests.post(f"{base_url}/register_server", json=test_server2)
         print(f"Status: {response.status_code}")
         print(f"Response: {json.dumps(response.json(), indent=2)}")
     except Exception as e:
@@ -83,7 +133,7 @@ def test_api() -> None:
         print("\nRegistered servers:")
         for i, server in enumerate(result["servers"], 1):
             print(f"  {i}. {server['filename']}")
-            print(f"     URL: {server['codebase_url']}")
+            print(f"     URL: {server['repository_url']}")
             print(f"     Tools: {server['tools_count']}")
             print()
     except Exception as e:
@@ -95,13 +145,13 @@ def test_api() -> None:
         # URL encode the codebase URL for the path parameter
         import urllib.parse
 
-        encoded_url = urllib.parse.quote(str(test_server["codebase_url"]), safe="")
+        encoded_url = urllib.parse.quote(str(test_server["repository_url"]), safe="")
         response = requests.get(f"{base_url}/server/{encoded_url}")
         print(f"Status: {response.status_code}")
 
         if response.status_code == 200:
             result = response.json()
-            print(f"Server URL: {result.get('codebase-url')}")
+            print(f"Server URL: {result.get('repository_url')}")
             print(f"Description: {result.get('description')[:100]}...")
             print(f"Tools count: {len(result.get('tools', []))}")
             print("\nTools in server:")
@@ -138,7 +188,7 @@ def test_api() -> None:
 
     # Test unregistering the server (cleanup)
     print("\n7. Testing server unregistration (cleanup)...")
-    unregister_request = {"codebase_url": test_server["codebase_url"]}
+    unregister_request = {"repository_url": test_server["repository_url"]}
 
     try:
         response = requests.delete(
@@ -161,7 +211,44 @@ def test_api() -> None:
 
         # Check if test server still exists
         test_server_exists = any(
-            server["codebase_url"] == test_server["codebase_url"]
+            server["repository_url"] == test_server["repository_url"]
+            for server in result["servers"]
+        )
+
+        if test_server_exists:
+            print("⚠️  Test server still exists after unregistration")
+        else:
+            print("✅ Test server successfully removed")
+
+    except Exception as e:
+        print(f"❌ Error verifying removal: {e}")
+
+
+    print("\n9. Testing server unregistration (cleanup)...")
+    unregister_request = {"repository_url": test_server2["repository_url"]}
+
+    try:
+        response = requests.delete(
+            f"{base_url}/unregister_server", json=unregister_request
+        )
+        print(f"Status: {response.status_code}")
+        result = response.json()
+        print(f"Response: {json.dumps(result, indent=2)}")
+        print("✅ Successfully cleaned up test server")
+    except Exception as e:
+        print(f"❌ Error unregistering server: {e}")
+
+    # Verify server was removed
+    print("\n10. Verifying server removal...")
+    try:
+        response = requests.get(f"{base_url}/servers")
+        print(f"Status: {response.status_code}")
+        result = response.json()
+        print(f"Total servers after cleanup: {result['total_count']}")
+
+        # Check if test server still exists
+        test_server_exists = any(
+            server["repository_url"] == test_server2["repository_url"]
             for server in result["servers"]
         )
 

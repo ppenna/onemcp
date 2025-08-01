@@ -1,5 +1,5 @@
 {
-  "codebase-url": "https://github.com/arpitbatra123/mcp-googletasks",
+  "repository_url": "https://github.com/arpitbatra123/mcp-googletasks",
   "description": "Google Tasks MCP Server - A bridge between Claude and Google Tasks that allows you to manage your task lists and tasks directly through Claude. Requires Google Cloud Project with Tasks API enabled and OAuth2 authentication. Built with TypeScript and provides comprehensive task management functionality.",
   "tools": [
     {

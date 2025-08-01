@@ -11,7 +11,7 @@ from onemcp.discovery.indexing import Indexing
 class ServerRegistrationRequest(BaseModel):
     """Request model for server registration"""
 
-    codebase_url: str
+    repository_url: str
     description: str
     tools: list[dict[str, str]]
 
@@ -26,7 +26,7 @@ class FindToolsRequest(BaseModel):
 class UnregisterServerRequest(BaseModel):
     """Request model for server unregistration"""
 
-    codebase_url: str
+    repository_url: str
 
 
 class ToolResult(BaseModel):
@@ -66,9 +66,6 @@ class IndexingAPI:
             self.indexing.init_db_server(db_name=db_name)
         except Exception as e:
             print(f"Warning: Could not initialize ChromaDB: {e}")
-            print(
-                "Make sure ChromaDB is running: chroma run --host localhost --port 8000"
-            )
 
         # Ensure servers directory exists
         os.makedirs(self.servers_dir, exist_ok=True)
@@ -80,26 +77,29 @@ class IndexingAPI:
         """Setup API routes"""
 
         @self.app.post("/register_server")
-        async def register_server(request: ServerRegistrationRequest) -> dict[str, Any]:
+        async def register_server(request: dict[str, Any]) -> dict[str, Any]:
             """
             Register a new MCP server and its tools.
 
             Args:
-                request: Server registration data including codebase-url, description, and tools
+                request: Server registration data (any JSON format) that must include repository_url
 
             Returns:
                 Dictionary with registration status and server info
             """
             try:
-                # Convert request to JSON format expected by indexing
-                server_data = {
-                    "codebase-url": request.codebase_url,
-                    "description": request.description,
-                    "tools": request.tools,
-                }
+                # Validate that repository_url is present
+                if "repository_url" not in request:
+                    raise HTTPException(
+                        status_code=422, 
+                        detail="Missing required field: repository_url"
+                    )
+
+                # Use the request data as-is
+                server_data = request
 
                 # Generate a unique filename for the server
-                server_name = self._generate_server_filename(request.codebase_url)
+                server_name = self._generate_server_filename(request["repository_url"])
                 json_file_path = os.path.join(self.servers_dir, server_name)
 
                 # Save to local storage
@@ -109,12 +109,15 @@ class IndexingAPI:
                 # Add to ChromaDB using the existing method
                 self.indexing.add_tools_from_json(json_file_path)
 
+                # Calculate tools count if tools are present, otherwise 0
+                tools_count = len(request.get("tools", []))
+
                 return {
                     "status": "success",
                     "message": "Server registered successfully",
                     "server_file": server_name,
-                    "tools_count": len(request.tools),
-                    "server_url": request.codebase_url,
+                    "tools_count": tools_count,
+                    "server_url": request["repository_url"],
                 }
 
             except Exception as e:
@@ -208,7 +211,7 @@ class IndexingAPI:
                             servers.append(
                                 {
                                     "filename": file,
-                                    "codebase_url": server_data.get("codebase-url"),
+                                    "repository_url": server_data.get("repository_url"),
                                     "description": server_data.get("description"),
                                     "tools_count": len(server_data.get("tools", [])),
                                 }
@@ -266,7 +269,7 @@ class IndexingAPI:
                 Dictionary with unregistration status and removal details
             """
             try:
-                codebase_url = request.codebase_url
+                codebase_url = request.repository_url
 
                 # Remove tools from ChromaDB
                 tools_removed = self.indexing.remove_server_tools(codebase_url)
@@ -279,7 +282,7 @@ class IndexingAPI:
                         try:
                             with open(file_path) as f:
                                 server_data = json.load(f)
-                                if server_data.get("codebase-url") == codebase_url:
+                                if server_data.get("repository_url") == codebase_url:
                                     os.remove(file_path)
                                     files_removed.append(file)
                         except Exception as e:
@@ -357,6 +360,10 @@ def create_app(db_name: str = "chroma_mcpservers_db") -> FastAPI:
 # For development/testing
 if __name__ == "__main__":
     import uvicorn
+    import argparse
+    parser = argparse.ArgumentParser(description="Run the OneMCP Indexing API")
+    parser.add_argument("--port", type=int, default=8001, help="Port to run the API on")
 
+    args = parser.parse_args()
     app = create_app()
-    uvicorn.run(app, host="localhost", port=8002)
+    uvicorn.run(app, host="localhost", port=args.port)
