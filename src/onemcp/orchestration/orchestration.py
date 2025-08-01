@@ -30,14 +30,19 @@ logger = logging.getLogger(__name__)
 server = FastMCP("OneMCP")
 dynamic_tools = []
 
+
 def extract_code_blocks(markdown_text: str) -> list[dict]:
     # Regular expression to match code blocks (```language ... ```)
     code_block_pattern = r"```(\w+)?\n(.*?)```"
     matches = re.findall(code_block_pattern, markdown_text, re.DOTALL)
 
     # Convert matches into a structured JSON format
-    code_blocks = [{"language": match[0] or "plaintext", "code": match[1].strip()} for match in matches]
+    code_blocks = [
+        {"language": match[0] or "plaintext", "code": match[1].strip()}
+        for match in matches
+    ]
     return code_blocks
+
 
 async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
     """Takes the user prompt and suggests which MCP tools would be appropriate."""
@@ -45,7 +50,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     # Get the path to the prompt template relative to this file
     prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
     prompt_template = prompt_path.read_text(encoding="utf-8")
-    prompt = prompt_template.format(user_prompt=prompt, context=(", ".join(files) if files else ""))
+    prompt = prompt_template.format(
+        user_prompt=prompt, context=(", ".join(files) if files else "")
+    )
 
     result = await ctx.session.create_message(
         messages=[
@@ -66,7 +73,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
 
             tools = json.loads(result.content.text)
             if isinstance(tools, list):
-                extracted_tools = [tool["type"] + ": " + tool["context"] for tool in tools]
+                extracted_tools = [
+                    tool["type"] + ": " + tool["context"] for tool in tools
+                ]
             else:
                 extracted_tools = [str(tools)]
         else:
@@ -79,7 +88,7 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     registry = Registry()
 
     output = "Suggested tools based on your query:\n"
-    #output = f"Extracted tools: {', '.join(extracted_tools)}"
+    # output = f"Extracted tools: {', '.join(extracted_tools)}"
     servers = set()
 
     dynamic_tools.clear()
@@ -96,12 +105,16 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
                 # TODO: get the tool schema from the registry
                 dynamic_tools.append(
                     types.Tool(
-                        name=entry.server_name + '_' + entry.tool_name,
+                        name=entry.server_name + "_" + entry.tool_name,
                         description=entry.tool_description,
                         inputSchema={
                             "properties": {
                                 "prompt": {"title": "Prompt", "type": "string"},
-                                "files": {"items": {"type": "string"}, "title": "Files", "type": "array"},
+                                "files": {
+                                    "items": {"type": "string"},
+                                    "title": "Files",
+                                    "type": "array",
+                                },
                             },
                             "required": ["prompt", "files"],
                             "title": "suggestArguments",
@@ -111,21 +124,30 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
                     )
                 )
 
-
-    #output += "\nSuggested MCP servers:\n" + "\n- ".join(servers) if servers else "No servers found."
-    #output += "\n\n#mcp_onemcp_install these servers."
+    # output += "\nSuggested MCP servers:\n" + "\n- ".join(servers) if servers else "No servers found."
+    # output += "\n\n#mcp_onemcp_install these servers."
 
     await ctx.request_context.session.send_tool_list_changed()
 
     # try:
     #     # 2. Otherwise, try to lookup registry for installation instructions
     #     server = registry.find_tools()
-    return [base.Message(role="assistant", content=output),
-            base.Message(role="user", content="Please retry the original prompt with the suggested tools.")]
+    return [
+        base.Message(role="assistant", content=output),
+        base.Message(
+            role="user",
+            content="Please retry the original prompt with the suggested tools.",
+        ),
+    ]
 
 
 async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
-    return ["This is a mock response from the sandbox MCP proxy for tool: " + name + " with args: " + str(args)]
+    return [
+        "This is a mock response from the sandbox MCP proxy for tool: "
+        + name
+        + " with args: "
+        + str(args)
+    ]
 
 
 def _convert_to_content(
@@ -150,13 +172,19 @@ def _convert_to_content(
     return [TextContent(type="text", text=result)]
 
 
-async def my_call_tool(name: str, arguments: dict[str, Any]) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+async def my_call_tool(
+    name: str, arguments: dict[str, Any]
+) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
     """Call a tool by name with arguments."""
     print(f"Calling tool: {name} with arguments: {arguments}")
     context = server.get_context()
 
     if name == "onemcp":
-        result = await suggest(prompt=arguments.get("prompt", ""), files=arguments.get("files", []), ctx=context)
+        result = await suggest(
+            prompt=arguments.get("prompt", ""),
+            files=arguments.get("files", []),
+            ctx=context,
+        )
     else:
         # pass the name and arguments to the sandbox MCP proxy
         result = await sandbox_call(name, arguments, context)
@@ -169,7 +197,7 @@ async def my_call_tool(name: str, arguments: dict[str, Any]) -> Sequence[TextCon
 async def my_list_tools() -> list[types.Tool]:
     """Lists all available tools."""
     print("Listing OneMCP tools...")
- 
+
     return [
         types.Tool(
             name="onemcp",
@@ -177,7 +205,11 @@ async def my_list_tools() -> list[types.Tool]:
             inputSchema={
                 "properties": {
                     "prompt": {"title": "Prompt", "type": "string"},
-                    "files": {"items": {"type": "string"}, "title": "Files", "type": "array"},
+                    "files": {
+                        "items": {"type": "string"},
+                        "title": "Files",
+                        "type": "array",
+                    },
                 },
                 "required": ["prompt", "files"],
                 "title": "suggestArguments",
@@ -194,14 +226,12 @@ if __name__ == "__main__":
     server.run(transport="streamable-http")
 
 
-
-
-
-
 @server.tool()
 async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
     """Evaluates and dynamically orchestrates tools for a given user query."""
-    prompt = f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    prompt = (
+        f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+    )
 
     result = await ctx.session.create_message(
         messages=[
