@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import mcp.types as types
+
 
 class ServerEntry:
-    __slots__ = ("name", "url", "installation_instructions")
+    __slots__ = ("name", "url", "installation_instructions", "tools")
 
     def __init__(
         self, name: str, url: str, installation_instructions: Optional[str] = None
@@ -11,6 +13,7 @@ class ServerEntry:
         self.name = name
         self.url = url
         self.installation_instructions = installation_instructions
+        self.tools: list[types.Tool] = []
 
 
 class ToolEntry:

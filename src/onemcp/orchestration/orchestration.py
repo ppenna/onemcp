@@ -24,15 +24,94 @@ from mcp.types import (
     TextContent,
 )
 
-from onemcp import Registry
+# from qdrant_client import QdrantClient, models
+# from sentence_transformers import SentenceTransformer
+from onemcp import Registry, ToolEntry
+
+
+class LocalState:
+    """A simple class to hold local state for the MCP server."""
+
+    def __init__(self) -> None:
+        self._dynamic_tools: list[types.Tool] = []
+        self._lookup_tools: dict[str, types.Tool] = {}
+        self._available_servers: set[str] = set()
+        self._available_tools: dict[str, list[types.Tool]] = {}
+        # self._rag = QdrantClient(":memory:")  # Create in-memory Qdrant instance
+        # self._encoder = SentenceTransformer("thenlper/gte-small")
+
+        # self._rag.create_collection(
+        #     collection_name="tools",
+        #     vectors_config=models.VectorParams(
+        #         size=self._encoder.get_sentence_embedding_dimension(),
+        #         distance=models.Distance.COSINE,
+        #     ),
+        # )
+
+    @property
+    def dynamic_tools(self) -> list[types.Tool]:
+        return self._dynamic_tools
+
+    def clear_dynamic(self) -> None:
+        self._dynamic_tools.clear()
+        self._lookup_tools.clear()
+
+    def add_dynamic(self, tool: types.Tool) -> None:
+        self._dynamic_tools.append(tool)
+        self._lookup_tools[tool.name] = tool
+
+    # add/remove entire MCP servers
+    def has_server(self, server: str) -> bool:
+        return server in self._available_servers
+
+    def add_server(self, server: str, tools: list[types.Tool]) -> None:
+        self._available_servers.add(server)
+        self._available_tools[server] = tools
+
+        # self._rag.upload_points(
+        #     collection_name="tools",
+        #     points=[
+        #         models.PointStruct(
+        #             id=(server, tool.name),
+        #             vector=self._encoder.encode(tool.description).tolist(),
+        #             payload=tool,
+        #         )
+        #         for i, tool in enumerate(tools)
+        #     ],
+        # )
+
+    def remove_server(self, server: str) -> None:
+        if server in self._available_servers:
+            self._available_servers.remove(server)
+            self._available_tools.pop(server, None)
+
+        # TODO: remove all tools from dynamic tools and lookup tools
+        # TODO: remove from Qdrant collection
+
+    # lookup tools by fuzzy search
+    def find_tools(self, query: str, k: int = 3) -> list[types.Tool]:
+        """Find tools by fuzzy search."""
+        # results = self._rag.query_points(
+        #     collection_name="tools", query=self._encoder.encode(query).tolist(), limit=3
+        # )
+
+        # return results.points
+        return []
+
+    def get_tool(self, name: str) -> types.Tool | None:
+        """Get a tool by name."""
+        if name in self._lookup_tools:
+            return self._lookup_tools[name]
+        return None
+
 
 logger = logging.getLogger(__name__)
 server = FastMCP("OneMCP")
-dynamic_tools: list[types.Tool] = []
+local_state = LocalState()
 
 
 def extract_code_blocks(markdown_text: str) -> list[dict]:
-    # Regular expression to match code blocks (```language ... ```)
+    """Extract code blocks from markdown text."""
     code_block_pattern = r"```(\w+)?\n(.*?)```"
     matches = re.findall(code_block_pattern, markdown_text, re.DOTALL)
 
@@ -44,8 +123,10 @@ def extract_code_blocks(markdown_text: str) -> list[dict]:
     return code_blocks
 
 
-async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
-    """Takes the user prompt and suggests which MCP tools would be appropriate."""
+async def guess_required_tool_descriptions(
+    prompt: str, files: list[str], context: Context
+) -> list[str]:
+    """Guess high-level required tool descriptions based on the prompt."""
 
     # Get the path to the prompt template relative to this file
     prompt_path = pathlib.Path(__file__).parent / "tool_extraction.prompt.md"
@@ -54,7 +135,8 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
         user_prompt=prompt, context=(", ".join(files) if files else "")
     )
 
-    result = await ctx.session.create_message(
+    # MCP sampling for LLM callback
+    result = await context.session.create_message(
         messages=[
             SamplingMessage(
                 role="user",
@@ -83,65 +165,89 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     except Exception as e:
         extracted_tools = [f"Failed to parse tools: {str(e)}"]
 
-    print(f"Extracted tools: {', '.join(extracted_tools)}")
+    return extracted_tools
 
-    registry = Registry()
+
+##
+## The OneMCP tool
+##
+async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
+    """Takes the user prompt and suggests which MCP tools would be appropriate."""
+
+    # 1. Extract tool descriptions from the prompt
+    extracted_tool_descriptions = await guess_required_tool_descriptions(
+        prompt, files, ctx
+    )
+    print(f"Extracted tools: {', '.join(extracted_tool_descriptions)}")
 
     output = "Suggested tools based on your query:\n"
-    # output = f"Extracted tools: {', '.join(extracted_tools)}"
     servers = set()
+    suggested_tools: set[ToolEntry] = set()
 
-    dynamic_tools.clear()
+    # 2. Check local state for existing tools
+    # for tool_description in extracted_tool_descriptions:
+    #     found_existing_tools = local_state.find_tools(tool_description)
 
-    for tool in extracted_tools:
-        registry_tools = registry.find_tools(query=tool, k=3)
-        if registry_tools:
-            output += f"\n'{tool}':"
-            for entry in registry_tools:
-                output += f"\n- {entry.tool_name} ({entry.server_name})"
-                print(f"Found tool: {entry.tool_name} on server: {entry.server_name}")
-                servers.add(entry.server_name)
+    #     for existing_tool in found_existing_tools:
+    #         print(f"Found local tool: {existing_tool.name}")
+    #         suggested_tools.add(existing_tool)
 
-                # TODO: get the tool schema from the registry
-                dynamic_tools.append(
-                    types.Tool(
-                        name=entry.server_name + "_" + entry.tool_name,
-                        description=entry.tool_description,
-                        inputSchema={
-                            "properties": {
-                                "prompt": {"title": "Prompt", "type": "string"},
-                                "files": {
-                                    "items": {"type": "string"},
-                                    "title": "Files",
-                                    "type": "array",
-                                },
-                            },
-                            "required": ["prompt", "files"],
-                            "title": "suggestArguments",
-                            "type": "object",
-                        },
-                        annotations=None,
-                    )
+    # TODO: can I skip registry search if tools already found?
+
+    # 3. Search the registry for suggested tools
+    registry = Registry()
+    for tool_description in extracted_tool_descriptions:
+        found_registry_tools = registry.find_tools(query=tool_description, k=3)
+
+        if found_registry_tools:
+            output += f"\n'{tool_description}':"
+
+            for entry in found_registry_tools:
+                print(
+                    f"Found registry tool: {entry.tool_name} on server: {entry.server_name}"
                 )
+                output += f"\n- {entry.tool_name} ({entry.server_name})"
 
-    # output += "\nSuggested MCP servers:\n" + "\n- ".join(servers) if servers else "No servers found."
-    # output += "\n\n#mcp_onemcp_install these servers."
+                suggested_tools.add(entry)
+
+                if not local_state.has_server(entry.server_name):
+                    servers.add(entry.server_name)
+
+    # install missing servers
+    for server in servers:
+        registry_server = registry.get_server(server)
+        if registry_server:
+            # TODO: run the sandbox server
+            local_state.add_server(server, registry_server.tools)
+
+    # servers are already installed, so just add the tools
+    local_state.clear_dynamic()
+
+    for tool in suggested_tools:
+        entry = local_state.get_tool(tool.tool_name)
+        if entry:
+            local_state.add_dynamic(entry)
 
     await ctx.request_context.session.send_tool_list_changed()
 
-    # try:
-    #     # 2. Otherwise, try to lookup registry for installation instructions
-    #     server = registry.find_tools()
     return [
         base.Message(role="assistant", content=output),
         base.Message(
             role="user",
-            content="Please retry the original prompt with the suggested tools.",
+            content="Retry the last prompt with any relevant tools.",
         ),
     ]
 
 
 async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
+    tool = local_state.get_tool(name)
+
+    if tool:
+        # TODO: call the sandbox MCP proxy with the tool name and args
+        print(
+            f"Calling sandbox MCP proxy for tool: {tool.name} with schema: {tool.inputSchema}"
+        )
+
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "
         + name
@@ -201,7 +307,7 @@ async def my_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="onemcp",
-            description="This my new tool.",
+            description="This tool dynamically registers and suggests MCP tools based on user prompts.",
             inputSchema={
                 "properties": {
                     "prompt": {"title": "Prompt", "type": "string"},
@@ -217,7 +323,7 @@ async def my_list_tools() -> list[types.Tool]:
             },
             annotations=None,
         )
-    ] + dynamic_tools
+    ] + local_state.dynamic_tools
 
 
 if __name__ == "__main__":
@@ -226,26 +332,26 @@ if __name__ == "__main__":
     server.run(transport="streamable-http")
 
 
-@server.tool()
-async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
-    """Evaluates and dynamically orchestrates tools for a given user query."""
-    prompt = (
-        f"Analyze the query '{query}' and determine the appropriate tools to invoke."
-    )
+# @server.tool()
+# async def orchestrate(query: str, ctx: Context) -> list[base.Message]:
+#     """Evaluates and dynamically orchestrates tools for a given user query."""
+#     prompt = (
+#         f"Analyze the query '{query}' and determine the appropriate tools to invoke."
+#     )
 
-    result = await ctx.session.create_message(
-        messages=[
-            SamplingMessage(
-                role="user",
-                content=TextContent(type="text", text=prompt),
-            )
-        ],
-        max_tokens=150,
-    )
+#     result = await ctx.session.create_message(
+#         messages=[
+#             SamplingMessage(
+#                 role="user",
+#                 content=TextContent(type="text", text=prompt),
+#             )
+#         ],
+#         max_tokens=150,
+#     )
 
-    if result.content.type == "text":
-        return [base.Message(role="user", content=result.content.text)]
-    return [base.Message(role="user", content=str(result.content))]
+#     if result.content.type == "text":
+#         return [base.Message(role="user", content=result.content.text)]
+#     return [base.Message(role="user", content=str(result.content))]
 
 
 # @server.tool()
