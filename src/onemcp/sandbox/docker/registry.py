@@ -220,10 +220,6 @@ class DockerSandboxRegistry:
                 container, instance = self.instances[sandbox_id]
                 await container.stop()
 
-                # Clean up resources
-                self.used_ports.discard(container.port)
-                del self.instances[sandbox_id]
-
                 logger.info(f"Stopped sandbox {sandbox_id}")
 
                 return {"response_code": "200"}
@@ -235,11 +231,34 @@ class DockerSandboxRegistry:
                     "error_description": f"Failed to stop sandbox: {str(e)}",
                 }
 
+    async def cleanup(self, sandbox_id: str) -> None:
+        """Clean up resources for a specific sandbox instance.
+
+        Args:
+            sandbox_id: ID of the sandbox to clean up
+        """
+        async with self._lock:
+            if sandbox_id in self.instances:
+                container, _ = self.instances[sandbox_id]
+
+                await container.remove()
+                logger.info(f"Cleaned up sandbox {sandbox_id}")
+
+                await container.prune_images()
+                logger.info("Removed orphaned images")
+
+                self.used_ports.discard(container.port)
+                del self.instances[sandbox_id]
+
+            else:
+                logger.warning(f"Sandbox {sandbox_id} not found for cleanup")
+
     async def cleanup_all(self) -> None:
         """Stop all running sandbox instances."""
         sandbox_ids = list(self.instances.keys())
         for sandbox_id in sandbox_ids:
             await self.stop(sandbox_id)
+            await self.cleanup(sandbox_id)
 
     def _allocate_port(self) -> Optional[int]:
         """Allocate an available port for a new sandbox instance."""
@@ -385,6 +404,16 @@ class DockerSandboxRegistry:
             logger.error(
                 f"Error getting tools for sandbox {sandbox_id} from repo {repository_url}"
             )
+
+            # Attempt to stop the sandbox and check for errors.
+            stop_response: dict[str, Any] = await self.stop(sandbox_id)
+            if stop_response.get("response_code") != "200":
+                logger.error(
+                    f"Failed to stop sandbox {sandbox_id} after error: {stop_response}"
+                )
+
+            # Clean up the sandbox instance.
+            await self.cleanup(sandbox_id)
 
             return {
                 "response_code": "500",

@@ -64,13 +64,17 @@ def parse_mcp_servers(json_path: str, output_path: str) -> None:
         if language != "Python":
             continue
 
+        repo_readme = server.get("readme_content", "")
+        if repo_readme == "":
+            continue
+
         print(
             f"Name: {name}\nDescription: {description}\nRepository URL: {repo_url}\nLanguage: {language}\n"
         )
 
         response = post_discover_request(
             repository_url=repo_url,
-            repository_readme=server.get("repository_readme", ""),
+            repository_readme=repo_readme,
             endpoint="http://localhost:8080/sandbox",
         )
 
