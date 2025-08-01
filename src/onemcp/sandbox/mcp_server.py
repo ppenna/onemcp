@@ -182,3 +182,40 @@ class McpServer:
         logger.debug(f"Retrieved tools: {tools}")
 
         return tools
+
+    def call_tool(self, container: DockerContainer, body: dict[str, Any]) -> Any:
+        """
+        Queries the MCP server running in the specified Docker container to run a specific tool.
+
+        Args:
+            container (DockerContainer): The Docker container instance where the MCP server is running.
+            body: The body of the tools/call request
+
+        Returns:
+            Any: The response of the tool
+
+        Raises:
+            RuntimeError: If an error occurs during initialization or tool execution.
+        """
+        # Send the initialization request.
+        self.send(container, self._initialize())
+        init_resp = self._read_until_id(container, expect_id=1)
+        if "error" in init_resp:
+            logger.error(f"MCP server initialization failed: {init_resp['error']}")
+            raise RuntimeError(f"Initialization error: {init_resp['error']}")
+
+        # Send the initialized notification.
+        self.send(container, self._notif_initialized())
+
+        # Request the list of tools.
+        body["id"] = 2
+        self.send(container, body)
+        tools_resp = self._read_until_id(container, expect_id=2)
+
+        if "error" in tools_resp:
+            logger.error(f"Failed to call tool from MCP server: {tools_resp['error']}")
+            raise RuntimeError(f"Tool execution error: {tools_resp['error']}")
+
+        logger.debug(f"Tools resp: {tools_resp}")
+
+        return tools_resp

@@ -45,6 +45,8 @@ async def sandbox_endpoint(
     Supported message types:
     - DISCOVER: Discover MCP server capabilities
     - START: Start a sandbox instance
+    - GET_TOOLS: Get the tools offered by a running sandbox
+    - CALL_TOOL: Call a specific tool offered by a sandbox
     - STOP: Stop a sandbox instance
     """
     try:
@@ -54,6 +56,10 @@ async def sandbox_endpoint(
             return await handle_discover(body)
         elif x_onemcp_message_type == "START":
             return await handle_start(body)
+        elif x_onemcp_message_type == "GET_TOOLS":
+            return await handle_get_tools(body)
+        elif x_onemcp_message_type == "CALL_TOOL":
+            return await handle_call_tool(body)
         elif x_onemcp_message_type == "STOP":
             return await handle_stop(body)
         else:
@@ -76,7 +82,8 @@ async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
 
     Expected payload:
     {
-        "repository_url": "<URL>"
+        "repository_url": "<URL>",
+        "repository_readme": "<README_CONTENTS>"
     }
     """
     if "repository_url" not in body:
@@ -86,7 +93,8 @@ async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
         }
 
     repository_url = body["repository_url"]
-    result = await sandbox.discover(repository_url)
+    repository_readme = body["repository_readme"]
+    result = await sandbox.discover(repository_url, repository_readme)
 
     return result
 
@@ -107,6 +115,55 @@ async def handle_start(body: dict[str, Any]) -> dict[str, Any]:
 
     bootstrap_metadata = body["bootstrap_metadata"]
     result = await sandbox.start(bootstrap_metadata)
+
+    return result
+
+
+async def handle_get_tools(body: dict[str, Any]) -> dict[str, Any]:
+    """Handle TOOLS message type.
+
+    Expected payload:
+    {
+        "sandbox_id": "..."
+    }
+    """
+    if "sandbox_id" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: sandbox_id",
+        }
+
+    sandbox_id = body["sandbox_id"]
+    result = await sandbox.get_tools(sandbox_id)
+
+    return result
+
+
+async def handle_call_tool(body: dict[str, Any]) -> dict[str, Any]:
+    """Handle CALL_TOOL message type.
+
+    The expected payload is the same payload of the tools/call request of the
+    MCP protocol, plus the sandbox id.
+    {
+        "sandbox_id": "..."
+        "jsonrpc": "2.0"
+        "id": ...,
+        "method": "tools/call",
+        "params": {
+            "name": "tool_name",
+            "arguments": { tool: args },
+        }
+    }
+    """
+    if "sandbox_id" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: sandbox_id",
+        }
+
+    sandbox_id = body["sandbox_id"]
+    del body["sandbox_id"]
+    result = await sandbox.call_tool(sandbox_id, body)
 
     return result
 
