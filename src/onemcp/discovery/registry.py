@@ -52,7 +52,7 @@ class Registry(RegistryInterface):
             entry = ServerEntry(
                 name=result.get("name", ""),
                 url=result.get("repository_url", ""),
-                installation_instructions=result.get("setup_script", ""),
+                bootstrap_metadata=result.get("bootstrap_metadata", {}),
             )
             for tool in result.get("tools", []):
                 t = types.Tool(
@@ -78,6 +78,7 @@ class Registry(RegistryInterface):
                 entry = ServerEntry(
                     name=server.get("filename", ""),
                     url=server.get("repository_url", ""),
+                    bootstrap_metadata=server.get("bootstrap_metadata", {}),
                 )
                 servers.append(entry)
             return servers
