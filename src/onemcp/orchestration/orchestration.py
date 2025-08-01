@@ -26,7 +26,7 @@ from mcp.types import (
 
 # from qdrant_client import QdrantClient, models
 # from sentence_transformers import SentenceTransformer
-from onemcp import Registry
+from onemcp import Registry, ToolEntry
 
 
 class LocalState:
@@ -182,15 +182,15 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
 
     output = "Suggested tools based on your query:\n"
     servers = set()
-    suggested_tools = set()
+    suggested_tools: set[ToolEntry] = set()
 
     # 2. Check local state for existing tools
-    for tool_description in extracted_tool_descriptions:
-        found_existing_tools = local_state.find_tools(tool_description)
+    # for tool_description in extracted_tool_descriptions:
+    #     found_existing_tools = local_state.find_tools(tool_description)
 
-        for existing_tool in found_existing_tools:
-            print(f"Found local tool: {existing_tool.name}")
-            suggested_tools.add(existing_tool)
+    #     for existing_tool in found_existing_tools:
+    #         print(f"Found local tool: {existing_tool.name}")
+    #         suggested_tools.add(existing_tool)
 
     # TODO: can I skip registry search if tools already found?
 
