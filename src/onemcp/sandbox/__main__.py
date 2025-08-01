@@ -98,6 +98,12 @@ async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
             "error_description": "Missing required field: repository_url",
         }
 
+    if "repository_readme" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: repository_readme",
+        }
+
     repository_url = body["repository_url"]
     repository_readme = body["repository_readme"]
     result = await sandbox.discover(repository_url, repository_readme)

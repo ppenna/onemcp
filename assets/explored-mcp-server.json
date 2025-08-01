@@ -38,3 +38,4545 @@
   "description": "A Model Context Protocol server for calculating.",
   "name": "mcp-server-calculator"
 }
+{
+  "repository_url": "https://github.com/abhiemj/manim-mcp-server",
+  "repository_readme": "# Manim MCP Server\n\n![Manim MCP Demo](Demo-manim-mcp.gif)\n\n\n## Overview\n\nThis is an MCP (Model Context Protocol) server that executes Manim animation code and returns the generated video. It allows users to send Manim scripts and receive the rendered animation.\n\n## Features\n\n- Executes Manim Python scripts.\n- Saves animation output in a visible media folder.\n- Allows users to clean up temporary files after execution.\n- Portable and configurable via environment variables.\n\n## Installation\n\n### Prerequisites\n\nEnsure you have the following installed:\n\n- Python 3.8+\n- Manim (Community Version)\n- MCP\n\n### Install Manim\n\n```sh\npip install manim\n```\n\n### Install MCP\n\n```sh\npip install mcp\n```\n\n### Clone the Repository\n\n```sh\ngit clone https://github.com/abhiemj/manim-mcp-server.git\ncd manim-mcp-server\n```\n\n## Integration with Claude\n\nTo integrate the Manim MCP server with Claude, add the following to your `claude_desktop_config.json` file:\n\n```json\n{\n  \"mcpServers\": {\n     \"manim-server\": {\n      \"command\": \"/absolute/path/to/python\",\n      \"args\": [\n        \"/absolute/path/to/manim-mcp-server/src/manim_server.py\"\n      ],\n      \"env\": {\n        \"MANIM_EXECUTABLE\": \"/Users/[Your_username]/anaconda3/envs/manim2/Scripts/manim.exe\"\n      }\n    }\n  }\n}\n```\n\n### Finding Your Python Path\n\nTo find your Python executable path, use the following command:\n\n#### Windows (PowerShell):\n```sh\n(Get-Command python).Source\n```\n\n#### Windows (Command Prompt/Terminal):\n```sh\nwhere python\n```\n\n#### Linux/macOS (Terminal):\n```sh\nwhich python\n```\n\nThis ensures that Claude can communicate with the Manim MCP server to generate animations dynamically.\n\n## Contributing\n\n1. Fork the repository.\n2. Create a new branch:\n   ```sh\n   git checkout -b add-feature\n   ```\n3. Make changes and commit:\n   ```sh\n   git commit -m \"Added a new feature\"\n   ```\n4. Push to your fork:\n   ```sh\n   git push origin add-feature\n   ```\n5. Open a pull request.\n\n## License\n\nThis MCP server is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the LICENSE file in the project repository.\n\n## Author\n\nCreated by **[abhiemj](https://github.com/abhiemj)**. Contributions welcome! 🚀\n\n### **Listed in Awesome MCP Servers**  \nThis repository is featured in the [Awesome MCP Servers](https://github.com/punkpeye/awesome-mcp-servers) repository under the **Animation & Video** category. Check it out along with other great MCP server implementations!\n\n\n## **Acknowledgments**  \n- Thanks to the [Manim Community](https://www.manim.community/) for their amazing animation library.  \n- Inspired by the open-source MCP ecosystem.\n\n## Find me at\n<a href=\"https://www.instagram.com/aiburner_official\" target=\"blank\"><img align=\"center\" src=\"https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg\" alt=\"aiburner_official\" height=\"30\" width=\"40\" /></a>\n@aiburner_official\n",
+  "tools": [
+    {
+      "name": "execute_manim_code",
+      "description": "Execute the Manim code",
+      "inputSchema": {
+        "properties": {
+          "manim_code": {
+            "title": "Manim Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "manim_code"
+        ],
+        "title": "execute_manim_codeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "execute_manim_codeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "cleanup_manim_temp_dir",
+      "description": "Clean up the specified Manim temporary directory after execution.",
+      "inputSchema": {
+        "properties": {
+          "directory": {
+            "title": "Directory",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directory"
+        ],
+        "title": "cleanup_manim_temp_dirArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "cleanup_manim_temp_dirOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\n# Step 1: Install git\napt update\napt install -y git\n\n# Step 2: Clone the repository containing the MCP server's code\ngit clone https://github.com/abhiemj/manim-mcp-server.git\n\n# Navigate into the cloned repository\ncd manim-mcp-server\n\n# Step 3: Install python3, pip, and python3-venv\napt install -y python3 python3-pip python3-venv\n\n# Step 4: Create a python3 virtual environment inside the cloned repository\npython3 -m venv venv\n\n# Step 5: Activate the python3 virtual environment\nsource venv/bin/activate\n\n# Step 6: Follow the instructions in the README file to install and configure the MCP server\npip install manim\npip install mcp\n\n# Step 7: Generate an executable script in /run_mcp.sh to launch the MCP server\ncat << 'EOF' > /run_mcp.sh\n#!/bin/bash\n# Activate the virtual environment\nsource /manim-mcp-server/venv/bin/activate\n# Run the MCP server\npython3 /manim-mcp-server/src/manim_server.py\nEOF\n\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": null,
+  "name": "manim-mcp-server"
+}
+{
+  "repository_url": "https://github.com/samuelgursky/davinci-resolve-mcp",
+  "repository_readme": "# DaVinci Resolve MCP Server\n\n[![Version](https://img.shields.io/badge/version-1.3.8-blue.svg)](https://github.com/samuelgursky/davinci-resolve-mcp/releases)\n[![DaVinci Resolve](https://img.shields.io/badge/DaVinci%20Resolve-18.5+-darkred.svg)](https://www.blackmagicdesign.com/products/davinciresolve)\n[![Python](https://img.shields.io/badge/python-3.6+-green.svg)](https://www.python.org/downloads/)\n[![macOS](https://img.shields.io/badge/macOS-stable-brightgreen.svg)](https://www.apple.com/macos/)\n[![Windows](https://img.shields.io/badge/Windows-stable-brightgreen.svg)](https://www.microsoft.com/windows)\n[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)\n\nA Model Context Protocol (MCP) server that connects AI coding assistants (Cursor, Claude Desktop) to DaVinci Resolve, enabling them to query and control DaVinci Resolve through natural language.\n\n## Features\n\nFor a comprehensive list of implemented and planned features, see [docs/FEATURES.md](docs/FEATURES.md).\n\n## Requirements\n\n- **macOS** or **Windows** with DaVinci Resolve installed\n- **Python 3.6+**\n- DaVinci Resolve running in the background\n- (Optional) Node.js/npm for some features\n\n## Installation Guide\n\nFor detailed installation instructions, please see [INSTALL.md](INSTALL.md). This guide covers:\n- Prerequisites and system requirements\n- Step-by-step installation process\n- Configuration details\n- Common troubleshooting steps\n\n## Platform Support\n\n| Platform | Status | One-Step Install | Quick Start |\n|----------|--------|------------------|-------------|\n| macOS | ✅ Stable | `./install.sh` | `./run-now.sh` |\n| Windows | ✅ Stable | `install.bat` | `run-now.bat` |\n| Linux | ❌ Not supported | N/A | N/A |\n\n## Quick Start Guide\n\n### New One-Step Installation (Recommended)\n\nThe easiest way to get started is with our new unified installation script. This script does everything automatically:\n\n- Clone the repository:\n   ```bash\n   git clone https://github.com/samuelgursky/davinci-resolve-mcp.git\n   cd davinci-resolve-mcp\n   ```\n\n- Make sure DaVinci Resolve Studio is installed and running\n\n- Run the installation script:\n   **macOS/Linux:**\n   ```bash\n   ./install.sh\n   ```\n   \n   **Windows:**\n   ```batch\n   install.bat\n   ```\n\nThis will:\n1. Automatically detect the correct paths on your system\n2. Create a Python virtual environment\n3. Install the MCP SDK from the official repository\n4. Set up environment variables\n5. Configure Cursor/Claude integration \n6. Verify the installation is correct\n7. Optionally start the MCP server\n\n### Alternative Quick Start\n\nYou can also use the original quick start scripts:\n\n**Windows Users:**\n```bash\nrun-now.bat\n``` \n\n**macOS Users:**\n```bash\nchmod +x run-now.sh\n./run-now.sh\n```\n\n## Configuration\n\nFor configuration of DaVinci Resolve MCP with different AI assistant clients like Cursor or Claude, see the [config-templates](config-templates) directory.\n\n## Troubleshooting\n\nFor detailed troubleshooting guidance, refer to the [INSTALL.md](INSTALL.md#troubleshooting) file which contains solutions to common issues.\n\n### Common Issues\n\n#### Path Resolution\n- The installation scripts now use more robust path resolution, fixing issues with `run-now.sh` looking for files in the wrong locations\n- Always let the scripts determine the correct paths based on their location\n\n#### DaVinci Resolve Detection\n- We've improved the process detection to reliably find DaVinci Resolve regardless of how it appears in the process list\n- Make sure DaVinci Resolve is running before starting the MCP server\n\n#### Environment Variables\n- Make sure all required environment variables are set correctly\n- Review the log file at `scripts/cursor_resolve_server.log` for troubleshooting\n\n### Windows\n- Make sure to use forward slashes (/) in configuration files\n- Python must be installed and paths configured in configs\n- DaVinci Resolve must be running before starting the server\n\n### macOS\n- Make sure scripts have execute permissions\n- Check Console.app for any Python-related errors\n- Verify environment variables are set correctly\n- DaVinci Resolve must be running before starting the server\n\n## Support\n\nFor issues and feature requests, please use the GitHub issue tracker.\n\n## Launch Options\n\nAfter installation, you have several ways to start the server:\n\n### Client-Specific Launch Scripts\n\nThe repository includes dedicated scripts for launching with specific clients:\n\n```bash\n# For Cursor integration (macOS)\nchmod +x scripts/mcp_resolve-cursor_start\n./scripts/mcp_resolve-cursor_start\n\n# For Claude Desktop integration (macOS)\nchmod +x scripts/mcp_resolve-claude_start\n./scripts/mcp_resolve-claude_start\n```\n\nThese specialized scripts:\n- Set up the proper environment for each client\n- Verify DaVinci Resolve is running\n- Configure client-specific settings\n- Start the MCP server with appropriate parameters\n\n### Pre-Launch Check\n\nBefore connecting AI assistants, verify your environment is properly configured:\n\n```bash\n# On macOS\n./scripts/check-resolve-ready.sh\n\n# On Windows\n./scripts/check-resolve-ready.bat\n```\n\nThese scripts will:\n- Verify DaVinci Resolve is running (and offer to start it)\n- Check environment variables are properly set\n- Ensure the Python environment is configured correctly\n- Validate Cursor/Claude configuration\n- Optionally launch Cursor\n\n### Universal Launcher\n\nFor advanced users, our unified launcher provides full control over both Cursor and Claude Desktop servers:\n\n```bash\n# Make the script executable (macOS only)\nchmod +x scripts/mcp_resolve_launcher.sh\n\n# Run in interactive mode\n./scripts/mcp_resolve_launcher.sh\n\n# Or use command line options\n./scripts/mcp_resolve_launcher.sh --start-cursor    # Start Cursor server (uses mcp_resolve-cursor_start)\n./scripts/mcp_resolve_launcher.sh --start-claude    # Start Claude Desktop server (uses mcp_resolve-claude_start)\n./scripts/mcp_resolve_launcher.sh --start-both      # Start both servers\n./scripts/mcp_resolve_launcher.sh --stop-all        # Stop all running servers\n./scripts/mcp_resolve_launcher.sh --status          # Show server status\n```\n\nAdditional options:\n- Force mode (skip Resolve running check): `--force`\n- Project selection: `--project \"Project Name\"`\n\n## Full Installation\n\nFor a complete manual installation:\n\n1. Clone this repository:\n   ```bash\n   git clone https://github.com/samuelgursky/davinci-resolve-mcp.git\n   cd davinci-resolve-mcp\n   ```\n\n2. Create a Python virtual environment:\n   ```bash\n   # Create virtual environment\n   python -m venv venv\n   \n   # Activate it\n   # On macOS/Linux:\n   source venv/bin/activate\n   # On Windows:\n   venv\\Scripts\\activate\n   \n   # Install dependencies from requirements.txt\n   pip install -r requirements.txt\n   \n   # Alternatively, install MCP SDK directly\n   pip install git+https://github.com/modelcontextprotocol/python-sdk.git\n   ```\n\n3. Set up DaVinci Resolve scripting environment variables:\n\n   **For macOS**:\n   ```bash\n   export RESOLVE_SCRIPT_API=\"/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting\"\n   export RESOLVE_SCRIPT_LIB=\"/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/fusionscript.so\"\n   export PYTHONPATH=\"$PYTHONPATH:$RESOLVE_SCRIPT_API/Modules/\"\n   ```\n\n   **For Windows**:\n   ```cmd\n   set RESOLVE_SCRIPT_API=C:\\ProgramData\\Blackmagic Design\\DaVinci Resolve\\Support\\Developer\\Scripting\n   set RESOLVE_SCRIPT_LIB=C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\fusionscript.dll\n   set PYTHONPATH=%PYTHONPATH%;%RESOLVE_SCRIPT_API%\\Modules\n   ```\n   \n   Alternatively, run the pre-launch check script which will set these for you:\n   ```\n   # On macOS\n   ./scripts/check-resolve-ready.sh\n   \n   # On Windows\n   ./scripts/check-resolve-ready.bat\n   ```\n\n4. Configure Cursor to use the server by creating a configuration file:\n\n   **For macOS** (`~/.cursor/mcp.json`):\n   ```json\n   {\n     \"mcpServers\": {\n       \"davinci-resolve\": {\n         \"name\": \"DaVinci Resolve MCP\",\n         \"command\": \"/path/to/your/venv/bin/python\",\n         \"args\": [\n           \"/path/to/your/davinci-resolve-mcp/src/main.py\"\n         ]\n       }\n     }\n   }\n   ```\n\n   **For Windows** (`%APPDATA%\\Cursor\\mcp.json`):\n   ```json\n   {\n     \"mcpServers\": {\n       \"davinci-resolve\": {\n         \"name\": \"DaVinci Resolve MCP\",\n         \"command\": \"C:\\\\path\\\\to\\\\venv\\\\Scripts\\\\python.exe\",\n         \"args\": [\"C:\\\\path\\\\to\\\\davinci-resolve-mcp\\\\src\\\\main.py\"]\n       }\n     }\n   }\n   ```\n\n5. Start the server using one of the client-specific scripts:\n   ```bash\n   # For Cursor\n   ./scripts/mcp_resolve-cursor_start\n   \n   # For Claude Desktop\n   ./scripts/mcp_resolve-claude_start\n   ```\n\n## Usage with AI Assistants\n\n### Using with Cursor\n\n1. Start the Cursor server using the dedicated script:\n   ```bash\n   ./scripts/mcp_resolve-cursor_start\n   ```\n   Or use the universal launcher:\n   ```bash\n   ./scripts/mcp_resolve_launcher.sh --start-cursor\n   ```\n\n2. Start Cursor and open a project.\n\n3. In Cursor's AI chat, you can now interact with DaVinci Resolve. Try commands like:\n   - \"What version of DaVinci Resolve is running?\"\n   - \"List all projects in DaVinci Resolve\"\n   - \"Create a new timeline called 'My Sequence'\"\n   - \"Add a marker at the current position\"\n\n### Using with Claude Desktop\n\n1. Create a `claude_desktop_config.json` file in your Claude Desktop configuration directory using the template in the `config-templates` directory.\n\n2. Run the Claude Desktop server using the dedicated script:\n   ```bash\n   ./scripts/mcp_resolve-claude_start\n   ```\n   Or use the universal launcher:\n   ```bash\n   ./scripts/mcp_resolve_launcher.sh --start-claude\n   ```\n\n3. In Claude Desktop, you can now interact with DaVinci Resolve using the same commands as with Cursor.\n\n## Available Features\n\n### General\n- Get DaVinci Resolve version\n- Get/switch current page (Edit, Color, Fusion, etc.)\n\n### Project Management\n- List available projects\n- Get current project name\n- Open project by name\n- Create new project\n- Save current project\n\n### Timeline Operations\n- List all timelines\n- Get current timeline info\n- Create new timeline\n- Switch to timeline by name\n- Add marker to timeline\n\n### Media Pool Operations\n- List media pool clips\n- Import media file\n- Create media bin\n- Add clip to timeline\n\n## Windows Support Notes\n\nWindows support is stable in v1.3.3 and should not require additional troubleshooting:\n- Ensure DaVinci Resolve is installed in the default location\n- Environment variables are properly set as described above\n- Windows paths may require adjustment based on your installation\n- For issues, please check the logs in the `logs/` directory\n\n## Troubleshooting\n\n### DaVinci Resolve Connection\nMake sure DaVinci Resolve is running before starting the server. If the server can't connect to Resolve, check that:\n\n1. Your environment variables are set correctly\n2. You have the correct paths for your DaVinci Resolve installation\n3. You have restarted your terminal after setting environment variables\n\n## Project Structure\n\n```\ndavinci-resolve-mcp/\n├── README.md               # This file\n├── docs/                   # Documentation\n│   ├── FEATURES.md         # Feature list and status\n│   ├── CHANGELOG.md        # Version history\n│   ├── VERSION.md          # Version information\n│   ├── TOOLS_README.md     # Tools documentation\n│   ├── PROJECT_MCP_SETUP.md # Project setup guide\n│   └── COMMIT_MESSAGE.txt  # Latest commit information\n├── config-templates/       # Configuration templates\n│   ├── sample_config.json  # Example configuration\n│   ├── cursor-mcp-example.json # Cursor config example\n│   └── mcp-project-template.json # MCP project template\n├── scripts/                # Utility scripts\n│   ├── tests/              # Test scripts\n│   │   ├── benchmark_server.py # Performance tests\n│   │   ├── test_improvements.py # Test scripts\n│   │   ├── test_custom_timeline.py # Timeline tests\n│   │   ├── create_test_timeline.py # Create test timeline\n│   │   ├── test-after-restart.sh # Test after restart (Unix)\n│   │   └── test-after-restart.bat # Test after restart (Windows)\n│   ├── batch_automation.py # Batch automation script\n│   ├── restart-server.sh   # Server restart script (Unix)\n│   ├── restart-server.bat  # Server restart script (Windows)\n│   ├── run-now.sh          # Quick start script (Unix)\n│   └── run-now.bat         # Quick start script (Windows)\n├── resolve_mcp_server.py   # Main server implementation\n├── src/                    # Source code\n│   ├── api/                # API implementation\n│   ├── features/           # Feature modules\n│   └── utils/              # Utility functions\n├── logs/                   # Log files\n├── tools/                  # Development tools\n├── assets/                 # Project assets\n└── examples/               # Example code\n```\n\n## License\n\nMIT\n\n## Acknowledgments\n\n- Blackmagic Design for DaVinci Resolve and its API\n- The MCP protocol team for enabling AI assistant integration\n\n## Author\n\nSamuel Gursky (samgursky@gmail.com)\n- GitHub: [github.com/samuelgursky](https://github.com/samuelgursky)\n\n## Future Plans\n\n- Windows and Linux support\n- Additional DaVinci Resolve features\n- Support for Claude Desktop\n\n## Development\n\nIf you'd like to contribute, please check the feature checklist in the repo and pick an unimplemented feature to work on. The code is structured with clear sections for different areas of functionality.\n\n## License\n\nMIT\n\n## Acknowledgments\n\n- Blackmagic Design for DaVinci Resolve and its API\n- The MCP protocol team for enabling AI assistant integration\n\n## Project Structure\n\nAfter cleanup, the project has the following structure:\n\n- `resolve_mcp_server.py` - The main MCP server implementation\n- `run-now.sh` - Quick start script that handles setup and runs the server\n- `setup.sh` - Complete setup script for installation\n- `check-resolve-ready.sh` - Pre-launch check to verify DaVinci Resolve is ready\n- `start-server.sh` - Script to start the server\n- `run-server.sh` - Simplified script to run the server directly\n\n**Key Directories:**\n- `src/` - Source code and modules\n- `assets/` - Project assets and resources\n- `logs/` - Log files directory\n- `scripts/` - Helper scripts\n\nWhen developing, it's recommended to use `./run-now.sh` which sets up the environment and launches the server in one step. \n\n## Changelog\n\nSee [docs/CHANGELOG.md](docs/CHANGELOG.md) for a detailed history of changes. \n\n### Cursor-Specific Setup\n\nWhen integrating with Cursor, follow these specific steps:\n\n1. Make sure DaVinci Resolve is running before starting Cursor\n\n2. Install required dependencies:\n   ```bash\n   # From the davinci-resolve-mcp directory:\n   pip install -r requirements.txt\n   ```\n   Note: This will install the MCP package and other dependencies automatically.\n\n3. Set up the MCP server configuration in Cursor:\n   \n   Create or edit `~/.cursor/mcp.json` on macOS (or `%USERPROFILE%\\.cursor\\mcp.json` on Windows):\n   \n   ```json\n   {\n     \"mcpServers\": {\n       \"davinci-resolve\": {\n         \"name\": \"DaVinci Resolve MCP\",\n         \"command\": \"/path/to/your/venv/bin/python\",\n         \"args\": [\n           \"/path/to/your/davinci-resolve-mcp/src/main.py\"\n         ]\n       }\n     }\n   }\n   ```\n   \n   **Important Notes:**\n   - Use `main.py` as the entry point (not `resolve_mcp_server.py`)\n   - Use absolute paths in the configuration\n\n4. Common issues:\n   - \"Client closed\" error: Check that paths are correct in mcp.json and dependencies are installed\n   - Connection problems: Make sure DaVinci Resolve is running before starting Cursor\n   - Environment variables: The main.py script will handle setting environment variables",
+  "tools": [
+    {
+      "name": "switch_page",
+      "description": "Switch to a specific page in DaVinci Resolve.\n    \n    Args:\n        page: The page to switch to. Options: 'media', 'cut', 'edit', 'fusion', 'color', 'fairlight', 'deliver'\n    ",
+      "inputSchema": {
+        "properties": {
+          "page": {
+            "title": "Page",
+            "type": "string"
+          }
+        },
+        "required": [
+          "page"
+        ],
+        "title": "switch_pageArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "switch_pageOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_project_setting",
+      "description": "Set a project setting to the specified value.\n    \n    Args:\n        setting_name: The name of the setting to change\n        setting_value: The new value for the setting (can be string, integer, float, or boolean)\n    ",
+      "inputSchema": {
+        "properties": {
+          "setting_name": {
+            "title": "Setting Name",
+            "type": "string"
+          },
+          "setting_value": {
+            "title": "Setting Value"
+          }
+        },
+        "required": [
+          "setting_name",
+          "setting_value"
+        ],
+        "title": "set_project_settingArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_project_settingOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "open_project",
+      "description": "Open a project by name.\n    \n    Args:\n        name: The name of the project to open\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "open_projectArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "open_projectOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_project",
+      "description": "Create a new project with the given name.\n    \n    Args:\n        name: The name for the new project\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "create_projectArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_projectOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "save_project",
+      "description": "Save the current project.\n    \n    Note that DaVinci Resolve typically auto-saves projects, so this may not be necessary.\n    ",
+      "inputSchema": {
+        "properties": {},
+        "title": "save_projectArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "save_projectOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "close_project",
+      "description": "Close the current project.\n    \n    This closes the current project without saving. If you need to save, use the save_project function first.\n    ",
+      "inputSchema": {
+        "properties": {},
+        "title": "close_projectArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "close_projectOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_timeline",
+      "description": "Create a new timeline with the given name.\n    \n    Args:\n        name: The name for the new timeline\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "create_timelineArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_timelineOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_empty_timeline",
+      "description": "Create a new timeline with the given name and custom settings.\n    \n    Args:\n        name: The name for the new timeline\n        frame_rate: Optional frame rate (e.g. \"24\", \"29.97\", \"30\", \"60\")\n        resolution_width: Optional width in pixels (e.g. 1920)\n        resolution_height: Optional height in pixels (e.g. 1080)\n        start_timecode: Optional start timecode (e.g. \"01:00:00:00\")\n        video_tracks: Optional number of video tracks (Default is project setting)\n        audio_tracks: Optional number of audio tracks (Default is project setting)\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "frame_rate": {
+            "default": null,
+            "title": "Frame Rate",
+            "type": "string"
+          },
+          "resolution_width": {
+            "default": null,
+            "title": "Resolution Width",
+            "type": "integer"
+          },
+          "resolution_height": {
+            "default": null,
+            "title": "Resolution Height",
+            "type": "integer"
+          },
+          "start_timecode": {
+            "default": null,
+            "title": "Start Timecode",
+            "type": "string"
+          },
+          "video_tracks": {
+            "default": null,
+            "title": "Video Tracks",
+            "type": "integer"
+          },
+          "audio_tracks": {
+            "default": null,
+            "title": "Audio Tracks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "create_empty_timelineArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_empty_timelineOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_timeline",
+      "description": "Delete a timeline by name.\n    \n    Args:\n        name: The name of the timeline to delete\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "delete_timelineArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_timelineOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_current_timeline",
+      "description": "Switch to a timeline by name.\n    \n    Args:\n        name: The name of the timeline to set as current\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "set_current_timelineArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_current_timelineOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_marker",
+      "description": "Add a marker at the specified frame in the current timeline.\n    \n    Args:\n        frame: The frame number to add the marker at (defaults to current position if None)\n        color: The marker color (Blue, Cyan, Green, Yellow, Red, Pink, Purple, Fuchsia, Rose, Lavender, Sky, Mint, Lemon, Sand, Cocoa, Cream)\n        note: Text note to add to the marker\n    ",
+      "inputSchema": {
+        "properties": {
+          "frame": {
+            "default": null,
+            "title": "Frame",
+            "type": "integer"
+          },
+          "color": {
+            "default": "Blue",
+            "title": "Color",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "title": "add_markerArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_markerOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "import_media",
+      "description": "Import media file into the current project's media pool.\n    \n    Args:\n        file_path: The path to the media file to import\n    ",
+      "inputSchema": {
+        "properties": {
+          "file_path": {
+            "title": "File Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_path"
+        ],
+        "title": "import_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "import_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_media",
+      "description": "Delete a media clip from the media pool by name.\n    \n    Args:\n        clip_name: Name of the clip to delete\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name"
+        ],
+        "title": "delete_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "move_media_to_bin",
+      "description": "Move a media clip to a specific bin in the media pool.\n    \n    Args:\n        clip_name: Name of the clip to move\n        bin_name: Name of the target bin\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "bin_name": {
+            "title": "Bin Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name",
+          "bin_name"
+        ],
+        "title": "move_media_to_binArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "move_media_to_binOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "auto_sync_audio",
+      "description": "Sync audio between clips with customizable settings.\n    \n    Args:\n        clip_names: List of clip names to sync\n        sync_method: Method to use for synchronization - 'waveform' or 'timecode'\n        append_mode: Whether to append the audio or replace it\n        target_bin: Optional bin to move synchronized clips to\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Clip Names",
+            "type": "array"
+          },
+          "sync_method": {
+            "default": "waveform",
+            "title": "Sync Method",
+            "type": "string"
+          },
+          "append_mode": {
+            "default": false,
+            "title": "Append Mode",
+            "type": "boolean"
+          },
+          "target_bin": {
+            "default": null,
+            "title": "Target Bin",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_names"
+        ],
+        "title": "auto_sync_audioArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "auto_sync_audioOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "unlink_clips",
+      "description": "Unlink specified clips, disconnecting them from their media files.\n    \n    Args:\n        clip_names: List of clip names to unlink\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Clip Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "clip_names"
+        ],
+        "title": "unlink_clipsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "unlink_clipsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "relink_clips",
+      "description": "Relink specified clips to their media files.\n    \n    Args:\n        clip_names: List of clip names to relink\n        media_paths: Optional list of specific media file paths to use for relinking\n        folder_path: Optional folder path to search for media files\n        recursive: Whether to search the folder path recursively\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Clip Names",
+            "type": "array"
+          },
+          "media_paths": {
+            "default": null,
+            "items": {
+              "type": "string"
+            },
+            "title": "Media Paths",
+            "type": "array"
+          },
+          "folder_path": {
+            "default": null,
+            "title": "Folder Path",
+            "type": "string"
+          },
+          "recursive": {
+            "default": false,
+            "title": "Recursive",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "clip_names"
+        ],
+        "title": "relink_clipsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "relink_clipsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_sub_clip",
+      "description": "Create a subclip from the specified clip using in and out points.\n    \n    Args:\n        clip_name: Name of the source clip\n        start_frame: Start frame (in point)\n        end_frame: End frame (out point)\n        sub_clip_name: Optional name for the subclip (defaults to original name with '_subclip')\n        bin_name: Optional bin to place the subclip in\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "start_frame": {
+            "title": "Start Frame",
+            "type": "integer"
+          },
+          "end_frame": {
+            "title": "End Frame",
+            "type": "integer"
+          },
+          "sub_clip_name": {
+            "default": null,
+            "title": "Sub Clip Name",
+            "type": "string"
+          },
+          "bin_name": {
+            "default": null,
+            "title": "Bin Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name",
+          "start_frame",
+          "end_frame"
+        ],
+        "title": "create_sub_clipArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_sub_clipOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_bin",
+      "description": "Create a new bin/folder in the media pool.\n    \n    Args:\n        name: The name for the new bin\n    ",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "create_binArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_binOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_timelines_tool",
+      "description": "List all timelines in the current project as a tool.",
+      "inputSchema": {
+        "properties": {},
+        "title": "list_timelines_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "list_timelines_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_clip_to_timeline",
+      "description": "Add a media pool clip to the timeline.\n    \n    Args:\n        clip_name: Name of the clip in the media pool\n        timeline_name: Optional timeline to target (uses current if not specified)\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "timeline_name": {
+            "default": null,
+            "title": "Timeline Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name"
+        ],
+        "title": "add_clip_to_timelineArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_clip_to_timelineOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "apply_lut",
+      "description": "Apply a LUT to a node in the color page.\n    \n    Args:\n        lut_path: Path to the LUT file to apply\n        node_index: Index of the node to apply the LUT to (uses current node if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "lut_path": {
+            "title": "Lut Path",
+            "type": "string"
+          },
+          "node_index": {
+            "default": null,
+            "title": "Node Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lut_path"
+        ],
+        "title": "apply_lutArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "apply_lutOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_color_wheel_param",
+      "description": "Set a color wheel parameter for a node.\n    \n    Args:\n        wheel: Which color wheel to adjust ('lift', 'gamma', 'gain', 'offset')\n        param: Which parameter to adjust ('red', 'green', 'blue', 'master')\n        value: The value to set (typically between -1.0 and 1.0)\n        node_index: Index of the node to set parameter for (uses current node if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "wheel": {
+            "title": "Wheel",
+            "type": "string"
+          },
+          "param": {
+            "title": "Param",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          },
+          "node_index": {
+            "default": null,
+            "title": "Node Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "wheel",
+          "param",
+          "value"
+        ],
+        "title": "set_color_wheel_paramArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_color_wheel_paramOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_node",
+      "description": "Add a new node to the current grade in the color page.\n    \n    Args:\n        node_type: Type of node to add. Options: 'serial', 'parallel', 'layer'\n        label: Optional label/name for the new node\n    ",
+      "inputSchema": {
+        "properties": {
+          "node_type": {
+            "default": "serial",
+            "title": "Node Type",
+            "type": "string"
+          },
+          "label": {
+            "default": null,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "title": "add_nodeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_nodeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "copy_grade",
+      "description": "Copy a grade from one clip to another in the color page.\n    \n    Args:\n        source_clip_name: Name of the source clip to copy grade from (uses current clip if None)\n        target_clip_name: Name of the target clip to apply grade to (uses current clip if None)\n        mode: What to copy - 'full' (entire grade), 'current_node', or 'all_nodes'\n    ",
+      "inputSchema": {
+        "properties": {
+          "source_clip_name": {
+            "default": null,
+            "title": "Source Clip Name",
+            "type": "string"
+          },
+          "target_clip_name": {
+            "default": null,
+            "title": "Target Clip Name",
+            "type": "string"
+          },
+          "mode": {
+            "default": "full",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "copy_gradeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "copy_gradeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_to_render_queue",
+      "description": "Add a timeline to the render queue with the specified preset.\n    \n    Args:\n        preset_name: Name of the render preset to use\n        timeline_name: Name of the timeline to render (uses current if None)\n        use_in_out_range: Whether to render only the in/out range instead of entire timeline\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_name": {
+            "title": "Preset Name",
+            "type": "string"
+          },
+          "timeline_name": {
+            "default": null,
+            "title": "Timeline Name",
+            "type": "string"
+          },
+          "use_in_out_range": {
+            "default": false,
+            "title": "Use In Out Range",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "preset_name"
+        ],
+        "title": "add_to_render_queueArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_to_render_queueOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "start_render",
+      "description": "Start rendering the jobs in the render queue.",
+      "inputSchema": {
+        "properties": {},
+        "title": "start_renderArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "start_renderOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "clear_render_queue",
+      "description": "Clear all jobs from the render queue.",
+      "inputSchema": {
+        "properties": {},
+        "title": "clear_render_queueArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "clear_render_queueOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "link_proxy_media",
+      "description": "Link a proxy media file to a clip.\n    \n    Args:\n        clip_name: Name of the clip to link proxy to\n        proxy_file_path: Path to the proxy media file\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "proxy_file_path": {
+            "title": "Proxy File Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name",
+          "proxy_file_path"
+        ],
+        "title": "link_proxy_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "link_proxy_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "unlink_proxy_media",
+      "description": "Unlink proxy media from a clip.\n    \n    Args:\n        clip_name: Name of the clip to unlink proxy from\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name"
+        ],
+        "title": "unlink_proxy_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "unlink_proxy_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "replace_clip",
+      "description": "Replace a clip with another media file.\n    \n    Args:\n        clip_name: Name of the clip to be replaced\n        replacement_path: Path to the replacement media file\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "replacement_path": {
+            "title": "Replacement Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name",
+          "replacement_path"
+        ],
+        "title": "replace_clipArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "replace_clipOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "transcribe_audio",
+      "description": "Transcribe audio for a clip.\n    \n    Args:\n        clip_name: Name of the clip to transcribe\n        language: Language code for transcription (default: en-US)\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "language": {
+            "default": "en-US",
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name"
+        ],
+        "title": "transcribe_audioArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "transcribe_audioOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "clear_transcription",
+      "description": "Clear audio transcription for a clip.\n    \n    Args:\n        clip_name: Name of the clip to clear transcription from\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "title": "Clip Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clip_name"
+        ],
+        "title": "clear_transcriptionArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "clear_transcriptionOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_folder",
+      "description": "Export a folder to a DRB file or other format.\n    \n    Args:\n        folder_name: Name of the folder to export\n        export_path: Path to save the exported file\n        export_type: Export format (DRB is default and currently the only supported option)\n    ",
+      "inputSchema": {
+        "properties": {
+          "folder_name": {
+            "title": "Folder Name",
+            "type": "string"
+          },
+          "export_path": {
+            "title": "Export Path",
+            "type": "string"
+          },
+          "export_type": {
+            "default": "DRB",
+            "title": "Export Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folder_name",
+          "export_path"
+        ],
+        "title": "export_folderArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "export_folderOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "transcribe_folder_audio",
+      "description": "Transcribe audio for all clips in a folder.\n    \n    Args:\n        folder_name: Name of the folder containing clips to transcribe\n        language: Language code for transcription (default: en-US)\n    ",
+      "inputSchema": {
+        "properties": {
+          "folder_name": {
+            "title": "Folder Name",
+            "type": "string"
+          },
+          "language": {
+            "default": "en-US",
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folder_name"
+        ],
+        "title": "transcribe_folder_audioArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "transcribe_folder_audioOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "clear_folder_transcription",
+      "description": "Clear audio transcription for all clips in a folder.\n    \n    Args:\n        folder_name: Name of the folder to clear transcriptions from\n    ",
+      "inputSchema": {
+        "properties": {
+          "folder_name": {
+            "title": "Folder Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folder_name"
+        ],
+        "title": "clear_folder_transcriptionArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "clear_folder_transcriptionOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_cache_mode",
+      "description": "Set cache mode for the current project.\n    \n    Args:\n        mode: Cache mode to set. Options: 'auto', 'on', 'off'\n    ",
+      "inputSchema": {
+        "properties": {
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "set_cache_modeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_cache_modeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_optimized_media_mode",
+      "description": "Set optimized media mode for the current project.\n    \n    Args:\n        mode: Optimized media mode to set. Options: 'auto', 'on', 'off'\n    ",
+      "inputSchema": {
+        "properties": {
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "set_optimized_media_modeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_optimized_media_modeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_proxy_mode",
+      "description": "Set proxy media mode for the current project.\n    \n    Args:\n        mode: Proxy mode to set. Options: 'auto', 'on', 'off'\n    ",
+      "inputSchema": {
+        "properties": {
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "set_proxy_modeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_proxy_modeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_proxy_quality",
+      "description": "Set proxy media quality for the current project.\n    \n    Args:\n        quality: Proxy quality to set. Options: 'quarter', 'half', 'threeQuarter', 'full'\n    ",
+      "inputSchema": {
+        "properties": {
+          "quality": {
+            "title": "Quality",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quality"
+        ],
+        "title": "set_proxy_qualityArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_proxy_qualityOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_cache_path",
+      "description": "Set cache file path for the current project.\n    \n    Args:\n        path_type: Type of cache path to set. Options: 'local', 'network'\n        path: File system path for the cache\n    ",
+      "inputSchema": {
+        "properties": {
+          "path_type": {
+            "title": "Path Type",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path_type",
+          "path"
+        ],
+        "title": "set_cache_pathArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_cache_pathOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "generate_optimized_media",
+      "description": "Generate optimized media for specified clips or all clips if none specified.\n    \n    Args:\n        clip_names: Optional list of clip names. If None, processes all clips in media pool\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_names": {
+            "default": null,
+            "items": {
+              "type": "string"
+            },
+            "title": "Clip Names",
+            "type": "array"
+          }
+        },
+        "title": "generate_optimized_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "generate_optimized_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_optimized_media",
+      "description": "Delete optimized media for specified clips or all clips if none specified.\n    \n    Args:\n        clip_names: Optional list of clip names. If None, processes all clips in media pool\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_names": {
+            "default": null,
+            "items": {
+              "type": "string"
+            },
+            "title": "Clip Names",
+            "type": "array"
+          }
+        },
+        "title": "delete_optimized_mediaArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_optimized_mediaOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_transform",
+      "description": "Set a transform property for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        property_name: The name of the property to set. Options include:\n                      'Pan', 'Tilt', 'ZoomX', 'ZoomY', 'Rotation', 'AnchorPointX', \n                      'AnchorPointY', 'Pitch', 'Yaw'\n        property_value: The value to set for the property\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "property_value": {
+            "title": "Property Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "property_name",
+          "property_value"
+        ],
+        "title": "set_timeline_item_transformArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_transformOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_crop",
+      "description": "Set a crop property for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        crop_type: The type of crop to set. Options: 'Left', 'Right', 'Top', 'Bottom'\n        crop_value: The value to set for the crop (typically 0.0 to 1.0)\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "crop_type": {
+            "title": "Crop Type",
+            "type": "string"
+          },
+          "crop_value": {
+            "title": "Crop Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "crop_type",
+          "crop_value"
+        ],
+        "title": "set_timeline_item_cropArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_cropOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_composite",
+      "description": "Set composite properties for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        composite_mode: Optional composite mode to set (e.g., 'Normal', 'Add', 'Multiply')\n        opacity: Optional opacity value to set (0.0 to 1.0)\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "composite_mode": {
+            "default": null,
+            "title": "Composite Mode",
+            "type": "string"
+          },
+          "opacity": {
+            "default": null,
+            "title": "Opacity",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timeline_item_id"
+        ],
+        "title": "set_timeline_item_compositeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_compositeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_retime",
+      "description": "Set retiming properties for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        speed: Optional speed factor (e.g., 0.5 for 50%, 2.0 for 200%)\n        process: Optional retime process. Options: 'NearestFrame', 'FrameBlend', 'OpticalFlow'\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "speed": {
+            "default": null,
+            "title": "Speed",
+            "type": "number"
+          },
+          "process": {
+            "default": null,
+            "title": "Process",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timeline_item_id"
+        ],
+        "title": "set_timeline_item_retimeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_retimeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_stabilization",
+      "description": "Set stabilization properties for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        enabled: Optional boolean to enable/disable stabilization\n        method: Optional stabilization method. Options: 'Perspective', 'Similarity', 'Translation'\n        strength: Optional strength value (0.0 to 1.0)\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "enabled": {
+            "default": null,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "method": {
+            "default": null,
+            "title": "Method",
+            "type": "string"
+          },
+          "strength": {
+            "default": null,
+            "title": "Strength",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timeline_item_id"
+        ],
+        "title": "set_timeline_item_stabilizationArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_stabilizationOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_item_audio",
+      "description": "Set audio properties for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to modify\n        volume: Optional volume level (usually 0.0 to 2.0, where 1.0 is unity gain)\n        pan: Optional pan value (-1.0 to 1.0, where -1.0 is left, 0 is center, 1.0 is right)\n        eq_enabled: Optional boolean to enable/disable EQ\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "volume": {
+            "default": null,
+            "title": "Volume",
+            "type": "number"
+          },
+          "pan": {
+            "default": null,
+            "title": "Pan",
+            "type": "number"
+          },
+          "eq_enabled": {
+            "default": null,
+            "title": "Eq Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "timeline_item_id"
+        ],
+        "title": "set_timeline_item_audioArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_item_audioOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_keyframe",
+      "description": "Add a keyframe at the specified frame for a timeline item property.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item to add keyframe to\n        property_name: The name of the property to keyframe (e.g., 'Pan', 'ZoomX')\n        frame: Frame position for the keyframe\n        value: Value to set at the keyframe\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "frame": {
+            "title": "Frame",
+            "type": "integer"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "property_name",
+          "frame",
+          "value"
+        ],
+        "title": "add_keyframeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_keyframeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "modify_keyframe",
+      "description": "Modify an existing keyframe by changing its value or frame position.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item\n        property_name: The name of the property with keyframe\n        frame: Current frame position of the keyframe to modify\n        new_value: Optional new value for the keyframe\n        new_frame: Optional new frame position for the keyframe\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "frame": {
+            "title": "Frame",
+            "type": "integer"
+          },
+          "new_value": {
+            "default": null,
+            "title": "New Value",
+            "type": "number"
+          },
+          "new_frame": {
+            "default": null,
+            "title": "New Frame",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "property_name",
+          "frame"
+        ],
+        "title": "modify_keyframeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "modify_keyframeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_keyframe",
+      "description": "Delete a keyframe at the specified frame for a timeline item property.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item\n        property_name: The name of the property with keyframe to delete\n        frame: Frame position of the keyframe to delete\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "frame": {
+            "title": "Frame",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "property_name",
+          "frame"
+        ],
+        "title": "delete_keyframeArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_keyframeOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_keyframe_interpolation",
+      "description": "Set the interpolation type for a keyframe.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item\n        property_name: The name of the property with keyframe\n        frame: Frame position of the keyframe\n        interpolation_type: Type of interpolation. Options: 'Linear', 'Bezier', 'Ease-In', 'Ease-Out'\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "frame": {
+            "title": "Frame",
+            "type": "integer"
+          },
+          "interpolation_type": {
+            "title": "Interpolation Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timeline_item_id",
+          "property_name",
+          "frame",
+          "interpolation_type"
+        ],
+        "title": "set_keyframe_interpolationArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_keyframe_interpolationOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "enable_keyframes",
+      "description": "Enable keyframe mode for a timeline item.\n    \n    Args:\n        timeline_item_id: The ID of the timeline item\n        keyframe_mode: Keyframe mode to enable. Options: 'All', 'Color', 'Sizing'\n    ",
+      "inputSchema": {
+        "properties": {
+          "timeline_item_id": {
+            "title": "Timeline Item Id",
+            "type": "string"
+          },
+          "keyframe_mode": {
+            "default": "All",
+            "title": "Keyframe Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timeline_item_id"
+        ],
+        "title": "enable_keyframesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "enable_keyframesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "save_color_preset",
+      "description": "Save a color preset from the specified clip.\n    \n    Args:\n        clip_name: Name of the clip to save preset from (uses current clip if None)\n        preset_name: Name to give the preset (uses clip name if None)\n        album_name: Album to save the preset to (default: \"DaVinci Resolve\")\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "default": null,
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "preset_name": {
+            "default": null,
+            "title": "Preset Name",
+            "type": "string"
+          },
+          "album_name": {
+            "default": "DaVinci Resolve",
+            "title": "Album Name",
+            "type": "string"
+          }
+        },
+        "title": "save_color_presetArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "save_color_presetOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "apply_color_preset",
+      "description": "Apply a color preset to the specified clip.\n    \n    Args:\n        preset_id: ID of the preset to apply (if known)\n        preset_name: Name of the preset to apply (searches in album)\n        clip_name: Name of the clip to apply preset to (uses current clip if None)\n        album_name: Album containing the preset (default: \"DaVinci Resolve\")\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_id": {
+            "default": null,
+            "title": "Preset Id",
+            "type": "string"
+          },
+          "preset_name": {
+            "default": null,
+            "title": "Preset Name",
+            "type": "string"
+          },
+          "clip_name": {
+            "default": null,
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "album_name": {
+            "default": "DaVinci Resolve",
+            "title": "Album Name",
+            "type": "string"
+          }
+        },
+        "title": "apply_color_presetArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "apply_color_presetOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_color_preset",
+      "description": "Delete a color preset.\n    \n    Args:\n        preset_id: ID of the preset to delete (if known)\n        preset_name: Name of the preset to delete (searches in album)\n        album_name: Album containing the preset (default: \"DaVinci Resolve\")\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_id": {
+            "default": null,
+            "title": "Preset Id",
+            "type": "string"
+          },
+          "preset_name": {
+            "default": null,
+            "title": "Preset Name",
+            "type": "string"
+          },
+          "album_name": {
+            "default": "DaVinci Resolve",
+            "title": "Album Name",
+            "type": "string"
+          }
+        },
+        "title": "delete_color_presetArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_color_presetOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_color_preset_album",
+      "description": "Create a new album for color presets.\n    \n    Args:\n        album_name: Name for the new album\n    ",
+      "inputSchema": {
+        "properties": {
+          "album_name": {
+            "title": "Album Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "album_name"
+        ],
+        "title": "create_color_preset_albumArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_color_preset_albumOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_color_preset_album",
+      "description": "Delete a color preset album.\n    \n    Args:\n        album_name: Name of the album to delete\n    ",
+      "inputSchema": {
+        "properties": {
+          "album_name": {
+            "title": "Album Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "album_name"
+        ],
+        "title": "delete_color_preset_albumArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_color_preset_albumOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_lut",
+      "description": "Export a LUT from the current clip's grade.\n    \n    Args:\n        clip_name: Name of the clip to export grade from (uses current clip if None)\n        export_path: Path to save the LUT file (generated if None)\n        lut_format: Format of the LUT. Options: 'Cube', 'Davinci', '3dl', 'Panasonic'\n        lut_size: Size of the LUT. Options: '17Point', '33Point', '65Point'\n    ",
+      "inputSchema": {
+        "properties": {
+          "clip_name": {
+            "default": null,
+            "title": "Clip Name",
+            "type": "string"
+          },
+          "export_path": {
+            "default": null,
+            "title": "Export Path",
+            "type": "string"
+          },
+          "lut_format": {
+            "default": "Cube",
+            "title": "Lut Format",
+            "type": "string"
+          },
+          "lut_size": {
+            "default": "33Point",
+            "title": "Lut Size",
+            "type": "string"
+          }
+        },
+        "title": "export_lutArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "export_lutOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_all_powergrade_luts",
+      "description": "Export all PowerGrade presets as LUT files.\n    \n    Args:\n        export_dir: Directory to save the exported LUTs\n    ",
+      "inputSchema": {
+        "properties": {
+          "export_dir": {
+            "title": "Export Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "export_dir"
+        ],
+        "title": "export_all_powergrade_lutsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "export_all_powergrade_lutsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "object_help",
+      "description": "\n    Get human-readable help for a DaVinci Resolve API object.\n    \n    Args:\n        object_type: Type of object to get help for ('resolve', 'project_manager', \n                     'project', 'media_pool', 'timeline', 'media_storage')\n    ",
+      "inputSchema": {
+        "properties": {
+          "object_type": {
+            "title": "Object Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object_type"
+        ],
+        "title": "object_helpArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "object_helpOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "inspect_custom_object",
+      "description": "\n    Inspect a custom DaVinci Resolve API object by path.\n    \n    Args:\n        object_path: Path to the object using dot notation (e.g., 'resolve.GetMediaStorage()')\n    ",
+      "inputSchema": {
+        "properties": {
+          "object_path": {
+            "title": "Object Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "object_path"
+        ],
+        "title": "inspect_custom_objectArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "inspect_custom_objectOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "save_layout_preset_tool",
+      "description": "\n    Save the current UI layout as a preset.\n    \n    Args:\n        preset_name: Name for the saved preset\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_name": {
+            "title": "Preset Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_name"
+        ],
+        "title": "save_layout_preset_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "save_layout_preset_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "load_layout_preset_tool",
+      "description": "\n    Load a UI layout preset.\n    \n    Args:\n        preset_name: Name of the preset to load\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_name": {
+            "title": "Preset Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_name"
+        ],
+        "title": "load_layout_preset_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "load_layout_preset_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_layout_preset_tool",
+      "description": "\n    Export a layout preset to a file.\n    \n    Args:\n        preset_name: Name of the preset to export\n        export_path: Path to export the preset file to\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_name": {
+            "title": "Preset Name",
+            "type": "string"
+          },
+          "export_path": {
+            "title": "Export Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_name",
+          "export_path"
+        ],
+        "title": "export_layout_preset_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "export_layout_preset_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "import_layout_preset_tool",
+      "description": "\n    Import a layout preset from a file.\n    \n    Args:\n        import_path: Path to the preset file to import\n        preset_name: Name to save the imported preset as (uses filename if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "import_path": {
+            "title": "Import Path",
+            "type": "string"
+          },
+          "preset_name": {
+            "default": null,
+            "title": "Preset Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "import_path"
+        ],
+        "title": "import_layout_preset_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "import_layout_preset_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_layout_preset_tool",
+      "description": "\n    Delete a layout preset.\n    \n    Args:\n        preset_name: Name of the preset to delete\n    ",
+      "inputSchema": {
+        "properties": {
+          "preset_name": {
+            "title": "Preset Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset_name"
+        ],
+        "title": "delete_layout_preset_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_layout_preset_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "quit_app",
+      "description": "\n    Quit DaVinci Resolve application.\n    \n    Args:\n        force: Whether to force quit even if unsaved changes (potentially dangerous)\n        save_project: Whether to save the project before quitting\n    ",
+      "inputSchema": {
+        "properties": {
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          },
+          "save_project": {
+            "default": true,
+            "title": "Save Project",
+            "type": "boolean"
+          }
+        },
+        "title": "quit_appArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "quit_appOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "restart_app",
+      "description": "\n    Restart DaVinci Resolve application.\n    \n    Args:\n        wait_seconds: Seconds to wait between quit and restart\n    ",
+      "inputSchema": {
+        "properties": {
+          "wait_seconds": {
+            "default": 5,
+            "title": "Wait Seconds",
+            "type": "integer"
+          }
+        },
+        "title": "restart_appArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "restart_appOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "open_settings",
+      "description": "Open the Project Settings dialog in DaVinci Resolve.",
+      "inputSchema": {
+        "properties": {},
+        "title": "open_settingsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "open_settingsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "open_app_preferences",
+      "description": "Open the Preferences dialog in DaVinci Resolve.",
+      "inputSchema": {
+        "properties": {},
+        "title": "open_app_preferencesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "open_app_preferencesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_cloud_project_tool",
+      "description": "Create a new cloud project.\n    \n    Args:\n        project_name: Name for the new cloud project\n        folder_path: Optional path for the cloud project folder\n    ",
+      "inputSchema": {
+        "properties": {
+          "project_name": {
+            "title": "Project Name",
+            "type": "string"
+          },
+          "folder_path": {
+            "default": null,
+            "title": "Folder Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_name"
+        ],
+        "title": "create_cloud_project_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_cloud_project_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "import_cloud_project_tool",
+      "description": "Import a project from DaVinci Resolve cloud.\n    \n    Args:\n        cloud_id: Cloud ID or reference of the project to import\n        project_name: Optional custom name for the imported project (uses original name if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "cloud_id": {
+            "title": "Cloud Id",
+            "type": "string"
+          },
+          "project_name": {
+            "default": null,
+            "title": "Project Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cloud_id"
+        ],
+        "title": "import_cloud_project_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "import_cloud_project_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "restore_cloud_project_tool",
+      "description": "Restore a project from DaVinci Resolve cloud.\n    \n    Args:\n        cloud_id: Cloud ID or reference of the project to restore\n        project_name: Optional custom name for the restored project (uses original name if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "cloud_id": {
+            "title": "Cloud Id",
+            "type": "string"
+          },
+          "project_name": {
+            "default": null,
+            "title": "Project Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cloud_id"
+        ],
+        "title": "restore_cloud_project_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "restore_cloud_project_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "export_project_to_cloud_tool",
+      "description": "Export current or specified project to DaVinci Resolve cloud.\n    \n    Args:\n        project_name: Optional name of project to export (uses current project if None)\n    ",
+      "inputSchema": {
+        "properties": {
+          "project_name": {
+            "default": null,
+            "title": "Project Name",
+            "type": "string"
+          }
+        },
+        "title": "export_project_to_cloud_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "export_project_to_cloud_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "add_user_to_cloud_project_tool",
+      "description": "Add a user to a cloud project with specified permissions.\n    \n    Args:\n        cloud_id: Cloud ID of the project\n        user_email: Email of the user to add\n        permissions: Permission level (viewer, editor, admin)\n    ",
+      "inputSchema": {
+        "properties": {
+          "cloud_id": {
+            "title": "Cloud Id",
+            "type": "string"
+          },
+          "user_email": {
+            "title": "User Email",
+            "type": "string"
+          },
+          "permissions": {
+            "default": "viewer",
+            "title": "Permissions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cloud_id",
+          "user_email"
+        ],
+        "title": "add_user_to_cloud_project_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "add_user_to_cloud_project_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "remove_user_from_cloud_project_tool",
+      "description": "Remove a user from a cloud project.\n    \n    Args:\n        cloud_id: Cloud ID of the project\n        user_email: Email of the user to remove\n    ",
+      "inputSchema": {
+        "properties": {
+          "cloud_id": {
+            "title": "Cloud Id",
+            "type": "string"
+          },
+          "user_email": {
+            "title": "User Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cloud_id",
+          "user_email"
+        ],
+        "title": "remove_user_from_cloud_project_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "remove_user_from_cloud_project_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_project_property_tool",
+      "description": "Set a project property value.\n    \n    Args:\n        property_name: Name of the property to set\n        property_value: Value to set for the property\n    ",
+      "inputSchema": {
+        "properties": {
+          "property_name": {
+            "title": "Property Name",
+            "type": "string"
+          },
+          "property_value": {
+            "title": "Property Value"
+          }
+        },
+        "required": [
+          "property_name",
+          "property_value"
+        ],
+        "title": "set_project_property_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_project_property_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_timeline_format_tool",
+      "description": "Set timeline format (resolution and frame rate).\n    \n    Args:\n        width: Timeline width in pixels\n        height: Timeline height in pixels\n        frame_rate: Timeline frame rate\n        interlaced: Whether the timeline should use interlaced processing\n    ",
+      "inputSchema": {
+        "properties": {
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "frame_rate": {
+            "title": "Frame Rate",
+            "type": "number"
+          },
+          "interlaced": {
+            "default": false,
+            "title": "Interlaced",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "width",
+          "height",
+          "frame_rate"
+        ],
+        "title": "set_timeline_format_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_timeline_format_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_superscale_settings_tool",
+      "description": "Set SuperScale settings for the current project.\n    \n    Args:\n        enabled: Whether SuperScale is enabled\n        quality: SuperScale quality (0=Auto, 1=Better Quality, 2=Smoother)\n    ",
+      "inputSchema": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "quality": {
+            "default": 0,
+            "title": "Quality",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "set_superscale_settings_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_superscale_settings_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_color_science_mode_tool",
+      "description": "Set color science mode for the current project.\n    \n    Args:\n        mode: Color science mode ('YRGB', 'YRGB Color Managed', 'ACEScct', or numeric value)\n    ",
+      "inputSchema": {
+        "properties": {
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "set_color_science_mode_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_color_science_mode_toolOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "set_color_space_tool",
+      "description": "Set timeline color space and gamma.\n    \n    Args:\n        color_space: Timeline color space (e.g., 'Rec.709', 'DCI-P3 D65', 'Rec.2020')\n        gamma: Timeline gamma (e.g., 'Rec.709 Gamma', 'Gamma 2.4')\n    ",
+      "inputSchema": {
+        "properties": {
+          "color_space": {
+            "title": "Color Space",
+            "type": "string"
+          },
+          "gamma": {
+            "default": null,
+            "title": "Gamma",
+            "type": "string"
+          }
+        },
+        "required": [
+          "color_space"
+        ],
+        "title": "set_color_space_toolArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "set_color_space_toolOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\n# Install necessary packages\napt-get update\napt-get install -y git python3 python3-pip python3-venv\n\n# Clone the repository\ngit clone https://github.com/samuelgursky/davinci-resolve-mcp.git\ncd davinci-resolve-mcp\n\n# Create and activate a Python virtual environment\npython3 -m venv venv\nsource venv/bin/activate\n\n# Install dependencies\npip install -r requirements.txt\n\n# Alternatively, install MCP SDK directly if needed:\n# pip install git+https://github.com/modelcontextprotocol/python-sdk.git\n\n# Create a script to run the MCP server\ncat <<EOF > /run_mcp.sh\n#!/bin/bash\nsource $(pwd)/venv/bin/activate\npython3 $(pwd)/src/main.py\nEOF\n\n# Make the run script executable\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": "MCP server integration for DaVinci Resolve",
+  "name": "davinci-resolve-mcp"
+}
+{
+  "repository_url": "https://github.com/qiniu/qiniu-mcp-server",
+  "repository_readme": "# Qiniu MCP Server\n\n## 概述\n\n基于七牛云产品构建的 Model Context Protocol (MCP) Server，支持用户在 AI 大模型客户端的上下文中通过该 MCP\nServer 来访问七牛云存储、智能多媒体服务等。\n\n关于访问七牛云存储详细情况请参考 [基于 MCP 使用大模型访问七牛云存储](https://developer.qiniu.com/kodo/12914/mcp-aimodel-kodo)。\n\n能力集：\n- 存储\n  - 获取 Bucket 列表\n  - 获取 Bucket 中的文件列表\n  - 上传本地文件，以及给出文件内容进行上传\n  - 读取文件内容\n  - 获取文件下载链接\n- 智能多媒体\n  - 图片缩放\n  - 图片切圆角\n- CDN\n  - 根据链接刷新文件\n  - 根据链接预取文件\n\n## 环境要求\n\n- Python 3.12 或更高版本\n- uv 包管理器\n\n如果还没有安装 uv，可以使用以下命令安装：\n```bash\n# Mac，推荐使用 brew 安装\nbrew install uv\n\n\n# Linux & Mac\n# 1. 安装\ncurl -LsSf https://astral.sh/uv/install.sh | sh\n# 2. 安装完成后，请确保将软件包安装路径（包含 uv 和 uvx 可执行文件的目录）添加到系统的 PATH 环境变量中。\n# 假设安装包路径为 /Users/xxx/.local/bin（见安装执行输出）\n### 临时生效（当前会话），在当前终端中执行以下命令：\nexport PATH=\"/Users/xxx/.local/bin:$PATH\"\n### 永久生效（推荐），在当前终端中执行以下命令：\necho 'export PATH=\"/Users/xxx/.local/bin:$PATH\"' >> ~/.bash_profile\nsource ~/.bash_profile\n\n\n# Windows\npowershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"\n```\n\n具体安装方式参考 [uv 安装](https://docs.astral.sh/uv/getting-started/installation/#pypi)\n\n## 在 Cline 中使用：\n\n步骤：\n\n1. 在 vscode 下载 Cline 插件（下载后 Cline 插件后在侧边栏会增加 Cline 的图标）\n2. 配置大模型\n3. 配置 qiniu MCP\n    1. 点击 Cline 图标进入 Cline 插件，选择 MCP Server 模块\n    2. 选择 installed，点击 Advanced MCP Settings 配置 MCP Server，参考下面配置信息\n   ```\n   {\n     \"mcpServers\": {\n       \"qiniu\": {\n         \"command\": \"uvx\",\n         \"args\": [\n           \"qiniu-mcp-server\"\n         ],\n         \"env\": {\n           \"QINIU_ACCESS_KEY\": \"YOUR_ACCESS_KEY\",\n           \"QINIU_SECRET_KEY\": \"YOUR_SECRET_KEY\",\n           \"QINIU_REGION_NAME\": \"YOUR_REGION_NAME\",\n           \"QINIU_ENDPOINT_URL\": \"YOUR_ENDPOINT_URL\",\n           \"QINIU_BUCKETS\": \"YOUR_BUCKET_A,YOUR_BUCKET_B\"\n        },\n         \"disabled\": false\n       }\n     }\n   }\n   ```\n    3. 点击 qiniu MCP Server 的链接开关进行连接\n4. 在 Cline 中创建一个聊天窗口，此时我们可以和 AI 进行交互来使用 qiniu-mcp-server ，下面给出几个示例：\n    - 列举 qiniu 的资源信息\n    - 列举 qiniu 中所有的 Bucket\n    - 列举 qiniu 中 xxx Bucket 的文件\n    - 读取 qiniu xxx Bucket 中 yyy 的文件内容\n    - 对 qiniu xxx Bucket 中 yyy 的图片切个宽200像素的圆角\n    - 刷新下 qiniu 的这个 CDN 链接：https://developer.qiniu.com/test.txt\n\n注：\ncursor 中创建 MCP Server 可直接使用上述配置。\nclaude 中使用时可能会遇到：Error: spawn uvx ENOENT 错误，解决方案：command 中 参数填写 uvx 的绝对路径，eg: /usr/local/bin/uvx\n\n## 开发\n1. 克隆仓库：\n\n```bash\n# 克隆项目并进入目录\ngit clone git@github.com:qiniu/qiniu-mcp-server.git\ncd qiniu-mcp-server\n```\n\n2. 创建并激活虚拟环境：\n\n```bash\nuv venv\nsource .venv/bin/activate  # Linux/macOS\n# 或\n.venv\\Scripts\\activate  # Windows\n```\n\n3. 安装依赖：\n\n```bash\nuv pip install -e .\n```\n\n4. 配置\n\n复制环境变量模板：\n```bash\ncp .env.example .env\n```\n\n编辑 `.env` 文件，配置以下参数：\n```bash\n# S3/Kodo 认证信息\nQINIU_ACCESS_KEY=your_access_key\nQINIU_SECRET_KEY=your_secret_key\n\n# 区域信息\nQINIU_REGION_NAME=your_region\nQINIU_ENDPOINT_URL=endpoint_url # eg:https://s3.your_region.qiniucs.com\n\n# 配置 bucket，多个 bucket 使用逗号隔开，建议最多配置 20 个 bucket\nQINIU_BUCKETS=bucket1,bucket2,bucket3\n```\n\n扩展功能，首先在 core 目录下新增一个业务包目录（eg: 存储 -> storage），在此业务包目录下完成功能拓展。\n在业务包目录下的 `__init__.py` 文件中定义 load 函数用于注册业务工具或者资源，最后在 `core` 目录下的 `__init__.py`\n中调用此 load 函数完成工具或资源的注册。\n\n```shell\ncore\n├── __init__.py # 各个业务工具或者资源加载\n└── storage # 存储业务目录\n    ├── __init__.py # 加载存储工具或者资源\n    ├── resource.py # 存储资源扩展\n    ├── storage.py # 存储工具类\n    └── tools.py # 存储工具扩展\n```\n\n## 测试\n\n### 使用 Model Control Protocol Inspector 测试\n\n强烈推荐使用 [Model Control Protocol Inspector](https://github.com/modelcontextprotocol/inspector) 进行测试。\n\n```shell\n# node 版本为：v22.4.0\nnpx @modelcontextprotocol/inspector uv --directory . run qiniu-mcp-server\n```\n\n### 本地启动 MCP Server 示例\n\n1. 使用标准输入输出（stdio）模式启动（默认）：\n\n```bash\nuv --directory . run qiniu-mcp-server\n```\n\n2. 使用 SSE 模式启动（用于 Web 应用）：\n\n```bash\nuv --directory . run qiniu-mcp-server --transport sse --port 8000\n```\n\n\n\n\n",
+  "tools": [
+    {
+      "name": "version",
+      "description": "qiniu mcp server version info.",
+      "inputSchema": {
+        "type": "object",
+        "required": []
+      }
+    },
+    {
+      "name": "list_buckets",
+      "description": "Return the Bucket you configured based on the conditions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "description": "Bucket prefix. The listed Buckets will be filtered based on this prefix, and only those matching the prefix will be output."
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "list_objects",
+      "description": "List objects in Qiniu Cloud, list a part each time, you can set start_after to continue listing, when the number of listed objects is less than max_keys, it means that all files are listed. start_after can be the key of the last file in the previous listing.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "description": "Qiniu Cloud Storage bucket Name"
+          },
+          "max_keys": {
+            "type": "integer",
+            "description": "Sets the max number of keys returned, default: 20"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Specify the prefix of the operation response key. Only keys that meet this prefix will be listed."
+          },
+          "start_after": {
+            "type": "string",
+            "description": "start_after is where you want Qiniu Cloud to start listing from. Qiniu Cloud starts listing after this specified key. start_after can be any key in the bucket."
+          }
+        },
+        "required": [
+          "bucket"
+        ]
+      }
+    },
+    {
+      "name": "get_object",
+      "description": "Get an object contents from Qiniu Cloud bucket. In the GetObject request, specify the full key name for the object.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "description": "Qiniu Cloud Storage bucket Name"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the object to get."
+          }
+        },
+        "required": [
+          "bucket",
+          "key"
+        ]
+      }
+    },
+    {
+      "name": "upload_text_data",
+      "description": "Upload text data to Qiniu bucket.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "description": "Qiniu Cloud Storage bucket Name"
+          },
+          "key": {
+            "type": "string",
+            "description": "The key under which a file is saved in Qiniu Cloud Storage serves as the unique identifier for the file within that space, typically using the filename."
+          },
+          "data": {
+            "type": "string",
+            "description": "The data to upload."
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "Whether to overwrite the existing object if it already exists."
+          }
+        },
+        "required": [
+          "bucket",
+          "key",
+          "data"
+        ]
+      }
+    },
+    {
+      "name": "upload_local_file",
+      "description": "Upload a local file to Qiniu bucket.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "description": "Qiniu Cloud Storage bucket Name"
+          },
+          "key": {
+            "type": "string",
+            "description": "The key under which a file is saved in Qiniu Cloud Storage serves as the unique identifier for the file within that space, typically using the filename."
+          },
+          "file_path": {
+            "type": "string",
+            "description": "The file path of file to upload."
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "Whether to overwrite the existing object if it already exists."
+          }
+        },
+        "required": [
+          "bucket",
+          "key",
+          "file_path"
+        ]
+      }
+    },
+    {
+      "name": "get_object_url",
+      "description": "Get the file download URL, and note that the Bucket where the file is located must be bound to a domain name. If using Qiniu Cloud test domain, HTTPS access will not be available, and users need to make adjustments for this themselves.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "description": "Qiniu Cloud Storage bucket Name"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key of the object to get."
+          },
+          "disable_ssl": {
+            "type": "boolean",
+            "description": "Whether to disable SSL. By default, it is not disabled (HTTP protocol is used). If disabled, the HTTP protocol will be used."
+          },
+          "expires": {
+            "type": "integer",
+            "description": "Token expiration time (in seconds) for download links. When the bucket is private, a signed Token is required to access file objects. Public buckets do not require Token signing."
+          }
+        },
+        "required": [
+          "bucket",
+          "key"
+        ]
+      }
+    },
+    {
+      "name": "cdn_refresh",
+      "description": "This function marks resources cached on CDN nodes as expired. When users access these resources again, the CDN nodes will fetch the latest version from the origin server and store them anew.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://",
+              "examples": [
+                "http://bar.foo.com/index.html"
+              ]
+            },
+            "maxItems": 60,
+            "description": "List of exact URLs to refresh (max 60 items). Must be full URLs with protocol, e.g. 'http://example.com/path/page.html'"
+          },
+          "dirs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^https?://.*/(\\*|$)",
+              "examples": [
+                "http://bar.foo.com/dir/",
+                "http://bar.foo.com/images/*"
+              ]
+            },
+            "maxItems": 10,
+            "description": "List of directory patterns to refresh (max 10 items). Must end with '/' or '/*' to indicate directory scope"
+          }
+        }
+      }
+    },
+    {
+      "name": "cdn_prefetch_urls",
+      "description": "Newly added resources are proactively retrieved by the CDN and stored on its cache nodes in advance. Users simply submit the resource URLs, and the CDN automatically triggers the prefetch process.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urls": {
+            "type": "array",
+            "description": "List of individual URLs to prefetch (max 60 items). Must be full URLs with protocol, e.g. 'http://example.com/file.zip'",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://",
+              "examples": [
+                "https://cdn.example.com/images/photo.jpg",
+                "http://static.example.com/downloads/app.exe"
+              ]
+            },
+            "maxItems": 60,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "urls"
+        ]
+      }
+    },
+    {
+      "name": "image_scale_by_percent",
+      "description": "Image scaling tool that resizes images based on a percentage and returns information about the scaled image.\n            The information includes the object_url of the scaled image, which users can directly use for HTTP GET requests to retrieve the image content or open in a browser to view the file.\n            The image must be stored in a Qiniu Cloud Bucket.\n            Supported original image formats: psd, jpeg, png, gif, webp, tiff, bmp, avif, heic. Image width and height cannot exceed 30,000 pixels, and total pixels cannot exceed 150 million.\n            ",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "object_url": {
+            "type": "string",
+            "description": "The URL of the image. This can be a URL obtained via the GetObjectURL tool or a URL generated by other Fop tools. Length Constraints: Minimum length of 1."
+          },
+          "percent": {
+            "type": "integer",
+            "description": "Scaling percentage, range [1,999]. For example: 90 means the image width and height are reduced to 90% of the original; 200 means the width and height are enlarged to 200% of the original.",
+            "minimum": 1,
+            "maximum": 999
+          }
+        },
+        "required": [
+          "object_url",
+          "percent"
+        ]
+      }
+    },
+    {
+      "name": "image_scale_by_size",
+      "description": "Image scaling tool that resizes images based on a specified width or height and returns information about the scaled image.\n            The information includes the object_url of the scaled image, which users can directly use for HTTP GET requests to retrieve the image content or open in a browser to view the file.\n            The image must be stored in a Qiniu Cloud Bucket.\n            Supported original image formats: psd, jpeg, png, gif, webp, tiff, bmp, avif, heic. Image width and height cannot exceed 30,000 pixels, and total pixels cannot exceed 150 million.\n            ",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "object_url": {
+            "type": "string",
+            "description": "The URL of the image. This can be a URL obtained via the GetObjectURL tool or a URL generated by other Fop tools. Length Constraints: Minimum length of 1."
+          },
+          "width": {
+            "type": "integer",
+            "description": "Specifies the width for image scaling. The image will be scaled to the specified width, and the height will be adjusted proportionally.",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "description": "Specifies the height for image scaling. The image will be scaled to the specified height, and the width will be adjusted proportionally.",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "object_url"
+        ]
+      }
+    },
+    {
+      "name": "image_round_corner",
+      "description": "Image rounded corner tool that processes images based on width, height, and corner radius, returning information about the processed image.\n            If only radius_x or radius_y is set, the other parameter will be assigned the same value, meaning horizontal and vertical parameters will be identical.\n            The information includes the object_url of the processed image, which users can directly use for HTTP GET requests to retrieve the image content or open in a browser to view the file.\n            The image must be stored in a Qiniu Cloud Bucket.\n            Supported original image formats: psd, jpeg, png, gif, webp, tiff, bmp, avif, heic. Image width and height cannot exceed 30,000 pixels, and total pixels cannot exceed 150 million.\n            Corner radius supports pixels and percentages, but cannot be negative. Pixels are represented by numbers, e.g., 200 means 200px; percentages use !xp, e.g., !25p means 25%.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "object_url": {
+            "type": "string",
+            "description": "The URL of the image. This can be a URL obtained via the GetObjectURL tool or a URL generated by other Fop tools. Length Constraints: Minimum length of 1."
+          },
+          "radius_x": {
+            "type": "string",
+            "description": "Parameter for horizontal corner size. Can use: pixel values (e.g., 200 for 200px) or percentages (e.g., !25p for 25%), all non-negative values."
+          },
+          "radius_y": {
+            "type": "string",
+            "description": "Parameter for vertical corner size. Can use: pixel values (e.g., 200 for 200px) or percentages (e.g., !25p for 25%), all non-negative values."
+          }
+        },
+        "required": [
+          "object_url"
+        ]
+      }
+    },
+    {
+      "name": "image_info",
+      "description": "Retrieves basic image information, including image format, size, and color model.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "object_url": {
+            "type": "string",
+            "description": "The URL of the image. This can be a URL obtained via the GetObjectURL tool or a URL generated by other Fop tools. Length Constraints: Minimum length of 1."
+          }
+        },
+        "required": [
+          "object_url"
+        ]
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\n# Install necessary packages\napt-get update\napt-get install -y git python3 python3-pip python3-venv curl\n\n# Clone the MCP server repository\ngit clone https://github.com/qiniu/qiniu-mcp-server.git\ncd qiniu-mcp-server\n\n# Install uv package manager for Linux\ncurl -LsSf https://astral.sh/uv/install.sh | sh\nexport PATH=\"/root/.local/bin:$PATH\"\n\n# Create and activate virtual environment\npython3 -m venv .venv\nsource .venv/bin/activate\n\n# Install server dependencies\n/root/.local/bin/uv pip install -e .\n\n# Create and setup the environment configuration\ncp .env.example .env\n\n# Create script to run the MCP server\ncat <<EOF > /run_mcp.sh\n#!/bin/bash\nsource $(pwd)/.venv/bin/activate\n/root/.local/bin/uv --directory $(pwd) run qiniu-mcp-server\nEOF\n\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": null,
+  "name": "qiniu-mcp-server"
+}
+{
+  "repository_url": "https://github.com/rohitg00/kubectl-mcp-server",
+  "repository_readme": "# Kubectl MCP Server\n\nA Model Context Protocol (MCP) server for Kubernetes that enables AI assistants like Claude, Cursor, and others to interact with Kubernetes clusters through natural language.\n\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)\n[![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)](https://kubernetes.io/)\n[![MCP](https://img.shields.io/badge/MCP-compatible-green.svg)](https://github.com/modelcontextprotocol/modelcontextprotocol)\n[![PyPI version](https://badge.fury.io/py/kubectl-mcp-tool.svg)](https://pypi.org/project/kubectl-mcp-tool/)\n\n## 🎥 Live Demo - Watch `kubectl-mcp-tool` in Action with Claude!\n![Claude MCP](./docs/claude/claude-mcp.gif)\n\n## 🎥 Live Demo - Watch `kubectl-mcp-tool` in Action with Cursor!\n![Cursor MCP](./docs/cursor/cursor-mcp.gif)\n\n## 🎥 Live Demo - Watch `kubectl-mcp-tool` in Action with Windsurf!\n![Windsurf MCP](./docs/windsurf/windsurf-mcp.gif)\n\n\n## Features\n\n### Core Kubernetes Operations\n- [x] Connect to a Kubernetes cluster\n- [x] List and manage pods, services, deployments, and nodes\n- [x] Create, delete, and describe pods and other resources\n- [x] Get pod logs and Kubernetes events\n- [x] Support for Helm v3 operations (installation, upgrades, uninstallation)\n- [x] kubectl explain and api-resources support\n- [x] Choose namespace for next commands (memory persistence)\n- [x] Port forward to pods\n- [x] Scale deployments and statefulsets\n- [x] Execute commands in containers\n- [x] Manage ConfigMaps and Secrets\n- [x] Rollback deployments to previous versions\n- [x] Ingress and NetworkPolicy management\n- [x] Context switching between clusters\n\n### Natural Language Processing\n- [x] Process natural language queries for kubectl operations\n- [x] Context-aware commands with memory of previous operations\n- [x] Human-friendly explanations of Kubernetes concepts\n- [x] Intelligent command construction from intent\n- [x] Fallback to kubectl when specialized tools aren't available\n- [x] Mock data support for offline/testing scenarios\n- [x] Namespace-aware query handling\n\n### Monitoring\n- [x] Cluster health monitoring\n- [x] Resource utilization tracking\n- [x] Pod status and health checks\n- [x] Event monitoring and alerting\n- [x] Node capacity and allocation analysis\n- [x] Historical performance tracking\n- [x] Resource usage statistics via kubectl top\n- [x] Container readiness and liveness tracking\n\n### Security\n- [x] RBAC validation and verification\n- [x] Security context auditing\n- [x] Secure connections to Kubernetes API\n- [x] Credentials management\n- [x] Network policy assessment\n- [x] Container security scanning\n- [x] Security best practices enforcement\n- [x] Role and ClusterRole management\n- [x] ServiceAccount creation and binding\n- [x] PodSecurityPolicy analysis\n- [x] RBAC permissions auditing\n- [x] Security context validation\n\n### Diagnostics\n- [x] Cluster diagnostics and troubleshooting\n- [x] Configuration validation\n- [x] Error analysis and recovery suggestions\n- [x] Connection status monitoring\n- [x] Log analysis and pattern detection\n- [x] Resource constraint identification\n- [x] Pod health check diagnostics\n- [x] Common error pattern identification\n- [x] Resource validation for misconfigurations\n- [x] Detailed liveness and readiness probe validation\n\n### Advanced Features\n- [x] Multiple transport protocols support (stdio, SSE)\n- [x] Integration with multiple AI assistants\n- [x] Extensible tool framework\n- [x] Custom resource definition support\n- [x] Cross-namespace operations\n- [x] Batch operations on multiple resources\n- [x] Intelligent resource relationship mapping\n- [x] Error explanation with recovery suggestions\n- [x] Volume management and identification\n\n## Architecture\n\n### Model Context Protocol (MCP) Integration\n\nThe Kubectl MCP Tool implements the [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/spec), enabling AI assistants to interact with Kubernetes clusters through a standardized interface. The architecture consists of:\n\n1. **MCP Server**: A compliant server that handles requests from MCP clients (AI assistants)\n2. **Tools Registry**: Registers Kubernetes operations as MCP tools with schemas\n3. **Transport Layer**: Supports stdio, SSE, and HTTP transport methods\n4. **Core Operations**: Translates tool calls to Kubernetes API operations\n5. **Response Formatter**: Converts Kubernetes responses to MCP-compliant responses\n\n### Request Flow\n\n![Request Flow](./image.png)\n\n### Dual Mode Operation\n\nThe tool operates in two modes:\n\n1. **CLI Mode**: Direct command-line interface for executing Kubernetes operations\n2. **Server Mode**: Running as an MCP server to handle requests from AI assistants\n\n## Installation\n\nFor detailed installation instructions, please see the [Installation Guide](./docs/INSTALLATION.md).\n\nYou can install kubectl-mcp-tool directly from PyPI:\n\n```bash\npip install kubectl-mcp-tool\n```\n\nFor a specific version:\n\n```bash\npip install kubectl-mcp-tool==1.1.1\n```\n\nThe package is available on PyPI: [https://pypi.org/project/kubectl-mcp-tool/1.1.1/](https://pypi.org/project/kubectl-mcp-tool/1.1.1/)\n\n### Prerequisites\n\n- Python 3.9+\n- kubectl CLI installed and configured\n- Access to a Kubernetes cluster\n- pip (Python package manager)\n\n### Global Installation\n\n```bash\n# Install latest version from PyPI\npip install kubectl-mcp-tool\n\n# Or install development version from GitHub\npip install git+https://github.com/rohitg00/kubectl-mcp-server.git\n```\n\n### Local Development Installation\n\n```bash\n# Clone the repository\ngit clone https://github.com/rohitg00/kubectl-mcp-server.git\ncd kubectl-mcp-server\n\n# Install in development mode\npip install -e .\n```\n\n### Verifying Installation\n\nAfter installation, verify the tool is working correctly:\n\n```bash\nkubectl-mcp --help\n```\n\nNote: This tool is designed to work as an MCP server that AI assistants connect to, not as a direct kubectl replacement. The primary command available is `kubectl-mcp serve` which starts the MCP server.\n\n## Docker Image\n\nIf you prefer using Docker, a pre-built image is available on Docker Hub:\n\n```bash\n# Pull the latest image\ndocker pull rohitghumare64/kubectl-mcp-server:latest\n```\n\n### Running the image\n\nThe server inside the container listens on port **8000**. Bind any free host port to 8000 and mount your kubeconfig:\n\n```bash\n# Replace 8081 with any free port on your host\n# Mount your local ~/.kube directory for cluster credentials\n\ndocker run -p 8081:8000 \\\n           -v $HOME/.kube:/root/.kube \\\n           rohitghumare64/kubectl-mcp-server:latest\n```\n\n* `-p 8081:8000` maps host port 8081 → container port 8000.\n* `-v $HOME/.kube:/root/.kube` mounts your kubeconfig so the server can reach the cluster.\n\n### Building a multi-architecture image (AMD64 & ARM64)\n\nIf you want to build and push a multi-arch image (so it runs on both x86_64 and Apple Silicon), use Docker Buildx:\n\n```bash\n# Ensure Buildx and QEMU are installed once per machine\n# docker buildx create --name multiarch --use\n# docker buildx inspect --bootstrap\n\n# Build and push for linux/amd64 and linux/arm64\n# (replace <your_username> if you're publishing to your own registry)\n\ndocker buildx build \\\n  --platform linux/amd64,linux/arm64 \\\n  -t rohitghumare64/kubectl-mcp-server:latest \\\n  --push .\n```\n\nThe published image will contain a manifest list with both architectures, and Docker will automatically pull the correct variant on each machine.\n\n### Configuration\n\nThe MCP server is allowed to access these paths to read your Kubernetes configuration:\n\n```yaml\nrun:\n  volumes:\n    - '{{kubectl-mcp-server.kubeconfig}}:/root/.kube'\nconfig:\n  description: The MCP server is allowed to access this path\n  parameters:\n    type: object\n    properties:\n      kubeconfig:\n        type: string\n        default:\n          $HOME/.kube\n    required:\n      - kubeconfig\n```\n\nThis configuration allows users to add their kubeconfig directory to the container, enabling the MCP server to authenticate with their Kubernetes cluster.\n\n## Usage with AI Assistants\n\n### Using the MCP Server\n\nThe MCP Server (`kubectl_mcp_tool.mcp_server`) is a robust implementation built on the FastMCP SDK that provides enhanced compatibility across different AI assistants:\n\n> **Note**: If you encounter any errors with the MCP Server implementation, you can fall back to using the minimal wrapper by replacing `kubectl_mcp_tool.mcp_server` with `kubectl_mcp_tool.minimal_wrapper` in your configuration. The minimal wrapper provides basic capabilities with simpler implementation.\n\n1. **Direct Configuration**\n   ```json\n   {\n     \"mcpServers\": {\n       \"kubernetes\": {\n         \"command\": \"python\",\n         \"args\": [\"-m\", \"kubectl_mcp_tool.mcp_server\"],\n         \"env\": {\n           \"KUBECONFIG\": \"/path/to/your/.kube/config\",\n           \"PATH\": \"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\",\n           \"MCP_LOG_FILE\": \"/path/to/logs/debug.log\",\n           \"MCP_DEBUG\": \"1\"\n         }\n       }\n     }\n   }\n   ```\n\n2. **Key Environment Variables**\n   - `MCP_LOG_FILE`: Path to log file (recommended to avoid stdout pollution)\n   - `MCP_DEBUG`: Set to \"1\" for verbose logging\n   - `MCP_TEST_MOCK_MODE`: Set to \"1\" to use mock data instead of real cluster\n   - `KUBECONFIG`: Path to your Kubernetes config file\n   - `KUBECTL_MCP_LOG_LEVEL`: Set to \"DEBUG\", \"INFO\", \"WARNING\", or \"ERROR\"\n\n3. **Testing the MCP Server**\n   You can test if the server is working correctly with:\n   ```bash\n   python -m kubectl_mcp_tool.simple_ping\n   ```\n   This will attempt to connect to the server and execute a ping command.\n\n   Alternatively, you can directly run the server with:\n   ```bash\n   python -m kubectl_mcp_tool\n   ```\n\n### Claude Desktop\n\nAdd the following to your Claude Desktop configuration at `~/Library/Application\\ Support/Claude/claude_desktop_config.json` (Windows: `%APPDATA%\\Claude\\mcp.json`):\n\n```json\n{\n  \"mcpServers\": {\n    \"kubernetes\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"kubectl_mcp_tool.mcp_server\"], \n      \"env\": {\n        \"KUBECONFIG\": \"$HOME/.kube/config\" // or whatever your path is for the config file\n      }\n    }\n  }\n}\n```\n\n### Cursor AI\n\nAdd the following to your Cursor AI settings under MCP by adding a new global MCP server:\n\n```json\n{\n  \"mcpServers\": {\n    \"kubernetes\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"kubectl_mcp_tool.mcp_server\"],\n      \"env\": {\n        \"KUBECONFIG\": \"/path/to/your/.kube/config\",\n        \"PATH\": \"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin\"\n      }\n    }\n  }\n}\n```\n\nSave this configuration to `~/.cursor/mcp.json` for global settings.\n\n> **Note**: Replace `/path/to/your/.kube/config` with the actual path to your kubeconfig file. On most systems, this is `~/.kube/config`.\n\n### Windsurf\n\nAdd the following to your Windsurf configuration at `~/.config/windsurf/mcp.json` (Windows: `%APPDATA%\\WindSurf\\mcp.json`):\n\n```json\n{\n  \"mcpServers\": {\n    \"kubernetes\": {\n      \"command\": \"python\",\n      \"args\": [\"-m\", \"kubectl_mcp_tool.mcp_server\"],\n      \"env\": {\n        \"KUBECONFIG\": \"/path/to/your/.kube/config\"\n      }\n    }\n  }\n}\n```\n\n### Automatic Configuration\n\nFor automatic configuration of all supported AI assistants, run the provided installation script:\n\n```bash\nbash install.sh\n```",
+  "tools": [
+    {
+      "name": "get_pods",
+      "description": "Get all pods in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_podsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_podsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_namespaces",
+      "description": "Get all Kubernetes namespaces.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_namespacesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_namespacesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_services",
+      "description": "Get all services in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_servicesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_servicesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_nodes",
+      "description": "Get all nodes in the cluster.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_nodesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_nodesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_configmaps",
+      "description": "Get all ConfigMaps in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_configmapsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_configmapsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_secrets",
+      "description": "Get all Secrets in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_secretsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_secretsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "install_helm_chart",
+      "description": "Install a Helm chart.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "chart": {
+            "title": "Chart",
+            "type": "string"
+          },
+          "namespace": {
+            "title": "Namespace",
+            "type": "string"
+          },
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Repo"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Values"
+          }
+        },
+        "required": [
+          "name",
+          "chart",
+          "namespace"
+        ],
+        "title": "install_helm_chartArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "install_helm_chartOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "upgrade_helm_chart",
+      "description": "Upgrade a Helm release.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "chart": {
+            "title": "Chart",
+            "type": "string"
+          },
+          "namespace": {
+            "title": "Namespace",
+            "type": "string"
+          },
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Repo"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Values"
+          }
+        },
+        "required": [
+          "name",
+          "chart",
+          "namespace"
+        ],
+        "title": "upgrade_helm_chartArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "upgrade_helm_chartOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "uninstall_helm_chart",
+      "description": "Uninstall a Helm release.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "namespace": {
+            "title": "Namespace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "namespace"
+        ],
+        "title": "uninstall_helm_chartArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "uninstall_helm_chartOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_rbac_roles",
+      "description": "Get all RBAC roles in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_rbac_rolesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_rbac_rolesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_cluster_roles",
+      "description": "Get all cluster-wide RBAC roles.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_cluster_rolesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_cluster_rolesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_events",
+      "description": "Get all events in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_eventsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_eventsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_resource_usage",
+      "description": "Get resource usage statistics via kubectl top.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_resource_usageArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_resource_usageOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "switch_context",
+      "description": "Switch current kubeconfig context.",
+      "inputSchema": {
+        "properties": {
+          "context_name": {
+            "title": "Context Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "context_name"
+        ],
+        "title": "switch_contextArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "switch_contextOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_current_context",
+      "description": "Get current kubeconfig context.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_current_contextArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_current_contextOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "kubectl_explain",
+      "description": "Explain a Kubernetes resource using kubectl explain.",
+      "inputSchema": {
+        "properties": {
+          "resource": {
+            "title": "Resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource"
+        ],
+        "title": "kubectl_explainArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "kubectl_explainOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_api_resources",
+      "description": "List Kubernetes API resources.",
+      "inputSchema": {
+        "properties": {},
+        "title": "get_api_resourcesArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_api_resourcesOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "health_check",
+      "description": "Check cluster health by pinging the API server.",
+      "inputSchema": {
+        "properties": {},
+        "title": "health_checkArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "health_checkOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_pod_events",
+      "description": "Get events for a specific pod.",
+      "inputSchema": {
+        "properties": {
+          "pod_name": {
+            "title": "Pod Name",
+            "type": "string"
+          },
+          "namespace": {
+            "default": "default",
+            "title": "Namespace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pod_name"
+        ],
+        "title": "get_pod_eventsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_pod_eventsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "check_pod_health",
+      "description": "Check the health status of a pod.",
+      "inputSchema": {
+        "properties": {
+          "pod_name": {
+            "title": "Pod Name",
+            "type": "string"
+          },
+          "namespace": {
+            "default": "default",
+            "title": "Namespace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pod_name"
+        ],
+        "title": "check_pod_healthArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "check_pod_healthOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_deployments",
+      "description": "Get all deployments in the specified namespace.",
+      "inputSchema": {
+        "properties": {
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Namespace"
+          }
+        },
+        "title": "get_deploymentsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_deploymentsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "create_deployment",
+      "description": "Create a new deployment.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "image": {
+            "title": "Image",
+            "type": "string"
+          },
+          "replicas": {
+            "title": "Replicas",
+            "type": "integer"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "default",
+            "title": "Namespace"
+          }
+        },
+        "required": [
+          "name",
+          "image",
+          "replicas"
+        ],
+        "title": "create_deploymentArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "create_deploymentOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "delete_resource",
+      "description": "Delete a Kubernetes resource.",
+      "inputSchema": {
+        "properties": {
+          "resource_type": {
+            "title": "Resource Type",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "default",
+            "title": "Namespace"
+          }
+        },
+        "required": [
+          "resource_type",
+          "name"
+        ],
+        "title": "delete_resourceArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "delete_resourceOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_logs",
+      "description": "Get logs from a pod.",
+      "inputSchema": {
+        "properties": {
+          "pod_name": {
+            "title": "Pod Name",
+            "type": "string"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "default",
+            "title": "Namespace"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Container"
+          },
+          "tail": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tail"
+          }
+        },
+        "required": [
+          "pod_name"
+        ],
+        "title": "get_logsArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "get_logsOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "port_forward",
+      "description": "Forward local port to pod port.",
+      "inputSchema": {
+        "properties": {
+          "pod_name": {
+            "title": "Pod Name",
+            "type": "string"
+          },
+          "local_port": {
+            "title": "Local Port",
+            "type": "integer"
+          },
+          "pod_port": {
+            "title": "Pod Port",
+            "type": "integer"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "default",
+            "title": "Namespace"
+          }
+        },
+        "required": [
+          "pod_name",
+          "local_port",
+          "pod_port"
+        ],
+        "title": "port_forwardArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "port_forwardOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "scale_deployment",
+      "description": "Scale a deployment.",
+      "inputSchema": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "replicas": {
+            "title": "Replicas",
+            "type": "integer"
+          },
+          "namespace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "default",
+            "title": "Namespace"
+          }
+        },
+        "required": [
+          "name",
+          "replicas"
+        ],
+        "title": "scale_deploymentArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "scale_deploymentOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "apt update\napt install -y git python3 python3-pip python3-venv\n\ngit clone https://github.com/rohitg00/kubectl-mcp-server\ncd kubectl-mcp-server\n\npython3 -m venv venv\n. venv/bin/activate\n\npip install -e .\n\ncat <<EOL > /run_mcp.sh\n#!/bin/bash\n. $(pwd)/venv/bin/activate\npython3 -m kubectl_mcp_tool.mcp_server\nEOL\n\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": "Chat with your Kubernetes Cluster using AI tools and IDEs like Claude and Cursor!",
+  "name": "kubectl-mcp-server"
+}
+{
+  "repository_url": "https://github.com/maxim-saplin/mcp_safe_local_python_executor",
+  "repository_readme": "# Safe Local Python Executor\n\nAn MCP server (stdio transport) that wraps Hugging Face's [`LocalPythonExecutor`](https://github.com/huggingface/smolagents/blob/main/src/smolagents/local_python_executor.py)\n(from the [`smolagents`](https://huggingface.co/docs/smolagents/en/index) framework). It is a custom Python runtime that \nprovides basic isolation/security when running Python code generated by LLMs locally. It does not require Docker or VM.\nThis package allows to expose the Python executor via MCP (Model Context Protocol) as a tool for LLM apps like Claude Desktop, Cursor or any other MCP compatible client.\nIn case of Claude Desktop this tool is an easy way to add a missing Code Interpreter (available as a plugin in ChatGPT for quite a while already).\n\n<img width=\"1032\" alt=\"image\" src=\"https://github.com/user-attachments/assets/3b820bfc-970a-4315-8f2d-970591c6fdae\" />\n\n## Features\n\n- Exposes `run_python` tool\n- Safer execution of Python code compared to direct use of Python `eva()l`\n- Ran via uv in Python venv\n- No file I/O ops are allowed\n- Restricted list of imports\n    - collections\n    - datetime\n    - itertools\n    - math\n    - queue\n    - random\n    - re\n    - stat\n    - statistics\n    - time\n    - unicodedata\n\n## Security\n\nBe careful with execution of code produced by LLM on your machine, stay away from MCP servers that run Python via command line or using `eval()`. The safest option is using a VM or a docker container, though it requires some effort to set-up, consumes resources/slower. There're 3rd party servcices providing Python runtime, though they require registration, API keys etc.\n\n`LocalPythonExecutor` provides a good balance between direct use of local Python environment (which is easier to set-up) AND remote execution in Dokcer container or a VM/3rd party service (which is safe). Hugginng Face team has invested time into creating a quick and safe option to run LLM generated code used by their code agents. This MCP server builds upon it:\n\n>To add a first layer of security, code execution in smolagents is not performed by the vanilla Python interpreter. We have re-built a more secure LocalPythonExecutor from the ground up.\n\nRead more [here](https://huggingface.co/docs/smolagents/en/tutorials/secure_code_execution#local-code-execution).\n\n## Installation and Execution\n\n### Installing via Smithery\n\nTo install Safe Local Python Executor for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@maxim-saplin/mcp_safe_local_python_executor):\n\n```bash\nnpx -y @smithery/cli install @maxim-saplin/mcp_safe_local_python_executor --client claude\n```\n\n### Installing Manually\n1. Install `uv` (e.h. `brew install uv` on macOS or use [official docs](https://docs.astral.sh/uv/getting-started/installation/#__tabbed_1_2))\n2. Clone the repo, change the directory `cd mcp_safe_local_python_executor`\n3. The server can be started via command line `uv run mcp_server.py`, venv will be created automatically, depedencies (smollagents, mcp) will be installed\n\n\n## Configuring Claude Desktop\n\n1. Make sure you have Claude for Desktop installed (download from [claude.ai](https://claude.ai/desktop))\n2. Edit your Claude for Desktop configuration file:\n   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`\n   - Windows: `%APPDATA%\\Claude\\claude_desktop_config.json`\n   - Or open Claude Desktop -> Settings -> Developer -> click \"Edit Config\" button\n\n3. Add the following configuration:\n\n```json\n{\n    \"mcpServers\": {\n        \"safe-local-python-executor\": {\n            \"command\": \"uv\",\n            \"args\": [\n                \"--directory\", \n                \"/path/to/mcp_local_python_executor/\",\n                \"run\",\n                \"mcp_server.py\"\n            ]\n        }\n    }\n}\n```\n\n4. Restart Claude for Desktop\n5. The Python executor tool will now be available in Claude (you'll see hammer icon in the message input field)\n\n## Example Prompts\n\nOnce configured, you can use prompts like:\n\n- \"Calculate the factorial of 5 using Python\"\n- \"Create a list of prime numbers up to 100\"\n- \"Solve this equation (use Python): x^2 + 5x + 6 = 0\"\n\n\n## Development\n\nClone the repo. Use `uv` to create venv, install dev dependencies, run tests:\n\n```\nuv venv .venv\nuv sync --group dev\npython -m pytest tests/\n```\n\n-----------------------\n\n<a href=\"https://glama.ai/mcp/servers/@maxim-saplin/mcp_safe_local_python_executor\">\n  <img width=\"380\" height=\"200\" src=\"https://glama.ai/mcp/servers/@maxim-saplin/mcp_safe_local_python_executor/badge\" />\n</a>\n\n[![smithery badge](https://smithery.ai/badge/@maxim-saplin/mcp_safe_local_python_executor)](https://smithery.ai/server/@maxim-saplin/mcp_safe_local_python_executor)\n\n[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/maxim-saplin-mcp-safe-local-python-executor-badge.png)](https://mseep.ai/app/maxim-saplin-mcp-safe-local-python-executor)\n\n",
+  "tools": [
+    {
+      "name": "run_python",
+      "description": "Execute Python code in a secure sandbox environment.\n    \n    This tool allows running simple Python code for calculations and data manipulations.\n    The execution environment is restricted for security purposes. Make sure you create a single file\n    that can be executed in one go and it returns a result.\n\n    Default allowed imports:\n    - math\n    - random \n    - datetime\n    - time\n    - json\n    - re\n    - string\n    - collections\n    - itertools\n    - functools\n    - operator\n    \n    Args:\n        code: The Python code to execute. Must be valid Python 3 code. The result must be stored in a variable called `result`. E.g.:\n        ```python\n        import math\n        result = math.sqrt(16)\n        ```\n        \n    Returns:\n        A dictionary with execution results containing:\n        - result: The final value or None if no value is returned\n        - logs: Any output from print statements\n    ",
+      "inputSchema": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "run_pythonArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "run_pythonOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\n# Install git\napt-get update\napt-get install -y git\n\n# Clone the repository containing the MCP server's code\ngit clone https://github.com/maxim-saplin/mcp_safe_local_python_executor.git\ncd mcp_safe_local_python_executor\n\n# Install Python3, pip, and python3-venv\napt-get install -y python3 python3-pip python3-venv\n\n# Create a python3 virtual environment inside the cloned repository\npython3 -m venv venv\n\n# Activate the python3 virtual environment\nsource venv/bin/activate\n\n# Install required Python packages (as per README, uv may handle this but manual step added for clarity)\npip install smolagents mcp\n\n# Generate an executable script to launch the MCP server\necho '#!/bin/bash' > /run_mcp.sh\necho 'source /mcp_safe_local_python_executor/venv/bin/activate' >> /run_mcp.sh\necho 'cd /mcp_safe_local_python_executor' >> /run_mcp.sh\necho 'python3 mcp_server.py' >> /run_mcp.sh\n\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": "Stdio MCP Server wrapping custom Python runtime (LocalPythonExecutor) from Hugging Faces' `smolagents` framework. The runtime combines the ease of setup (compared to docker, VM, cloud runtimes) while providing safeguards and limiting operations/imports that are allowed inside the runtime.",
+  "name": "mcp_safe_local_python_executor"
+}
+{
+  "repository_url": "https://github.com/misiektoja/kill-process-mcp",
+  "repository_readme": "# kill-process-mcp 🔫\n\nCross-platform **MCP** (Model Context Protocol) server exposing tools to **list and kill OS processes** via natural language queries.\n\nPerfect for shy ninjas who just want rogue processes gone!\n\n> **\"Find and nuke the damn CPU glutton choking my system!\"**\n\n<a href=\"https://glama.ai/mcp/servers/@misiektoja/kill-process-mcp\">\n  <img width=\"380\" height=\"200\" src=\"https://glama.ai/mcp/servers/@misiektoja/kill-process-mcp/badge\" alt=\"kill-process-mcp MCP server\" />\n</a>\n\n<a id=\"demo\"></a>\n## Demo\n\n![kill-process-mcp-demo](https://raw.githubusercontent.com/misiektoja/kill-process-mcp/refs/heads/main/assets/kill-process-mcp-demo.gif)\n\n<a id=\"tools\"></a>\n## Tools\n\nThe following tools are exposed to MCP clients:\n\n- `process_list`: Lists running processes sorted by CPU or memory with optional name, user, status, CPU/memory thresholds, system-process filtering, sort order and limit\n- `process_kill`: Terminates the selected process (with extreme prejudice!)\n\n<a id=\"requirements\"></a>\n## Requirements\n\n* MCP-compatible LLM client (like [Claude Desktop](https://claude.ai/download))\n* OS: macOS/Windows/Linux\n* Python 3.13 or higher\n* [uv](https://github.com/astral-sh/uv)\n* Libraries: `mcp` `psutil`\n\n<a id=\"installation\"></a>\n## Installation\n\n<a id=\"1-clone-the-repo-and-install\"></a>\n### 1. Clone the repo and install\n\n```sh\ngit clone https://github.com/misiektoja/kill-process-mcp.git\ncd kill-process-mcp\n```\n\nInstall `uv` if missing:\n\n```sh\npip install uv\n\n# or on macOS: \nbrew install uv\n```\n\nInstall dependencies:\n\n```sh\nuv sync\n```\n\n<a id=\"2-configure-mcp-client\"></a>\n### 2. Configure MCP Client\n\nRegister the `kill-process-mcp` as an MCP server in your client.\n\nFor example, in Claude Desktop add the following to `claude_desktop_config.json` file:\n\n\n  ```json\n{\n    \"mcpServers\":\n    {\n        \"kill-process-mcp\":\n        {\n            \"command\": \"uv\",\n            \"args\":\n            [\n                \"run\",\n                \"--directory\",\n                \"/path/to/kill-process-mcp\",\n                \"kill_process_mcp.py\"\n            ],\n            \"type\": \"stdio\"\n        }\n    }\n}\n  ```\n\nDefault `claude_desktop_config.json` location:\n- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`\n- Windows: `%APPDATA%\\Claude\\claude_desktop_config.json`\n\nReplace `/path/to/kill-process-mcp` with the actual path of your project folder (remember to escape backslash characters if you're on Windows, e.g.: `C:\\\\path\\\\to\\\\kill-process-mcp`)\n\nRestart your LLM client and it should be able to talk to the `kill-process-mcp` server.\n\nIn `Claude Desktop` you can check if the server is installed by going to **Profile → Settings → Integrations**.\n\n<a id=\"example-hit-contracts\"></a>\n## Example Hit Contracts\n\nHere are some example prompts you can use with your MCP-compatible AI assistant when interacting with this MCP server:\n\n- Kill the damn process slowing down my system!\n- Check my top 5 CPU parasites and flag any that look like malware\n- List the 3 greediest processes by RAM usage\n- Exterminate every process with Spotify in its name\n- List Alice's Python processes, max 10 entries\n- Which processes are over 2% CPU and 100 MB RAM\n- **anything else your imagination brings ...**\n\n<a id=\"disclaimer\"></a>\n## Disclaimer\n\nThis MCP server is armed and dangerous. If you snipe the wrong process, that's on you. \n\nProceed with caution.\n\n<a id=\"change-log\"></a>\n## Change Log\n\nSee [RELEASE_NOTES.md](https://github.com/misiektoja/kill-process-mcp/blob/main/RELEASE_NOTES.md) for details.\n\n<a id=\"license\"></a>\n## License\n\nLicensed under GPLv3. See [LICENSE](https://github.com/misiektoja/kill-process-mcp/blob/main/LICENSE).",
+  "tools": [
+    {
+      "name": "process_list",
+      "description": "List running processes sorted by CPU or memory with optional name, user, status, CPU/memory thresholds, system-process filtering, sort order and limit.",
+      "inputSchema": {
+        "$defs": {
+          "Context": {
+            "description": "Context object providing access to MCP capabilities.\n\nThis provides a cleaner interface to MCP's RequestContext functionality.\nIt gets injected into tool and resource functions that request it via type hints.\n\nTo use context in a tool function, add a parameter with the Context type annotation:\n\n```python\n@server.tool()\ndef my_tool(x: int, ctx: Context) -> str:\n    # Log messages to the client\n    ctx.info(f\"Processing {x}\")\n    ctx.debug(\"Debug info\")\n    ctx.warning(\"Warning message\")\n    ctx.error(\"Error message\")\n\n    # Report progress\n    ctx.report_progress(50, 100)\n\n    # Access resources\n    data = ctx.read_resource(\"resource://data\")\n\n    # Get request info\n    request_id = ctx.request_id\n    client_id = ctx.client_id\n\n    return str(x)\n```\n\nThe context parameter name can be anything as long as it's annotated with Context.\nThe context is optional - tools that don't need it can omit the parameter.",
+            "properties": {},
+            "title": "Context",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sort_by": {
+            "default": "cpu",
+            "enum": [
+              "cpu",
+              "memory"
+            ],
+            "title": "Sort By",
+            "type": "string"
+          },
+          "duration": {
+            "default": 2,
+            "title": "Duration",
+            "type": "integer"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          },
+          "name_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name Filter"
+          },
+          "user_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "User Filter"
+          },
+          "status_filter": {
+            "anyOf": [
+              {
+                "enum": [
+                  "running",
+                  "sleeping",
+                  "stopped",
+                  "zombie"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status Filter"
+          },
+          "min_cpu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Cpu"
+          },
+          "min_memory": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Memory"
+          },
+          "include_system": {
+            "default": false,
+            "title": "Include System",
+            "type": "boolean"
+          },
+          "sort_asc": {
+            "default": false,
+            "title": "Sort Asc",
+            "type": "boolean"
+          },
+          "ctx": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Context"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "title": "process_listArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Result",
+            "type": "array"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "process_listOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "process_kill",
+      "description": "Kill the process identified by the given PID",
+      "inputSchema": {
+        "$defs": {
+          "Context": {
+            "description": "Context object providing access to MCP capabilities.\n\nThis provides a cleaner interface to MCP's RequestContext functionality.\nIt gets injected into tool and resource functions that request it via type hints.\n\nTo use context in a tool function, add a parameter with the Context type annotation:\n\n```python\n@server.tool()\ndef my_tool(x: int, ctx: Context) -> str:\n    # Log messages to the client\n    ctx.info(f\"Processing {x}\")\n    ctx.debug(\"Debug info\")\n    ctx.warning(\"Warning message\")\n    ctx.error(\"Error message\")\n\n    # Report progress\n    ctx.report_progress(50, 100)\n\n    # Access resources\n    data = ctx.read_resource(\"resource://data\")\n\n    # Get request info\n    request_id = ctx.request_id\n    client_id = ctx.client_id\n\n    return str(x)\n```\n\nThe context parameter name can be anything as long as it's annotated with Context.\nThe context is optional - tools that don't need it can omit the parameter.",
+            "properties": {},
+            "title": "Context",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "pid": {
+            "title": "Pid",
+            "type": "integer"
+          },
+          "ctx": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Context"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "pid"
+        ],
+        "title": "process_killArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "process_killOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "setup_script": "#!/bin/bash\n\n# Install prerequisites\napt-get update\napt-get install -y git python3 python3-pip python3-venv\n\n# Clone the repository\ngit clone https://github.com/misiektoja/kill-process-mcp.git\ncd kill-process-mcp\n\n# Set up a virtual environment\npython3 -m venv venv\nsource venv/bin/activate\n\n# Install required packages\npip install uv\npip install mcp psutil\n\n# Install dependencies using `uv`\nuv sync\n\n# Create a script to run the MCP server\necho '#!/bin/bash' > /run_mcp.sh\necho 'source /kill-process-mcp/venv/bin/activate' >> /run_mcp.sh\necho 'uv run --directory /kill-process-mcp kill_process_mcp.py' >> /run_mcp.sh\nchmod +x /run_mcp.sh",
+  "language": "Python",
+  "description": "Cross-platform MCP (Model Context Protocol) server exposing tools to list and terminate OS processes via natural language queries",
+  "name": "kill-process-mcp"
+}
