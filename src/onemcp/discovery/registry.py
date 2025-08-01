@@ -1,16 +1,15 @@
 from typing import Optional
+from urllib.parse import quote
 
+import mcp.types as types
 import requests
-
 from .registry_api import RegistryInterface, ServerEntry, ToolEntry
 
 
 class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
-    def __init__(
-        self, base_url: str = "https://4k6k502m-8001.usw2.devtunnels.ms"
-    ) -> None:
+    def __init__(self, base_url: str = "https://4k6k502m-8001.usw2.devtunnels.ms") -> None:
         self.base_url = base_url
 
     def health_check(self) -> Optional[tuple[int, str]]:
@@ -41,6 +40,23 @@ class Registry(RegistryInterface):
             print(f"Error searching tools: {e}")
             return []
 
+    def get_server(self, url: str) -> ServerEntry | None:
+        try:
+            response = requests.get(f"{self.base_url}/server/{quote(url, safe='')}")
+            result = response.json()
+
+            entry = ServerEntry(
+                name=result.get("name", ""), url=result.get("repository_url", ""), installation_instructions=result.get("setup_script", "")
+            )
+            for tool in result.get("tools", []):
+                t = types.Tool(name=tool.get("name", ""), description=tool.get("description", ""), inputSchema=tool.get("inputSchema", {}))
+                entry.tools.append(t)
+
+            return entry
+        except Exception as e:
+            print(f"Error getting server: {e}")
+            return None
+
     def list_servers(self) -> list[ServerEntry]:
         try:
             response = requests.get(f"{self.base_url}/servers")
@@ -48,9 +64,7 @@ class Registry(RegistryInterface):
 
             servers = []
             for _, server in enumerate(result["servers"], 1):
-                entry = ServerEntry(
-                    name=server.get("filename", ""), url=server.get("codebase_url", "")
-                )
+                entry = ServerEntry(name=server.get("filename", ""), url=server.get("codebase_url", ""))
                 servers.append(entry)
             return servers
         except Exception as e:
@@ -59,9 +73,7 @@ class Registry(RegistryInterface):
 
     def register_server(self, server_data: ServerEntry) -> Optional[tuple[int, str]]:
         try:
-            response = requests.post(
-                f"{self.base_url}/register_server", json=server_data
-            )
+            response = requests.post(f"{self.base_url}/register_server", json=server_data)
             return response.status_code, response.json()
         except Exception as e:
             print(f"Error registering server: {e}")
@@ -77,3 +89,12 @@ class Registry(RegistryInterface):
         except Exception as e:
             print(f"Error unregistering server: {e}")
             return None
+
+
+# main for testing purposes
+if __name__ == "__main__":
+    registry = Registry()
+    print(registry.health_check())
+
+    test = registry.list_servers()
+    print(registry.get_server("https://github.com/guillochon/mlb-api-mcp"))

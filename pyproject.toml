@@ -36,6 +36,8 @@ dependencies = [
     "types-requests",
     "types-tqdm",
     "uvicorn[standard]>=0.24.0",
+    "qdrant_client>=1.15.1",
+    "sentence_transformers>=5.0.0"
 ]
 
 [project.optional-dependencies]
