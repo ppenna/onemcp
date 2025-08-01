@@ -213,9 +213,7 @@ class McpServer:
         tools_resp = self._read_until_id(container, expect_id=2)
 
         if "error" in tools_resp:
-            logger.error(
-                f"Failed to call tool from MCP server: {tools_resp['error']}"
-            )
+            logger.error(f"Failed to call tool from MCP server: {tools_resp['error']}")
             raise RuntimeError(f"Tool execution error: {tools_resp['error']}")
 
         logger.debug(f"Tools resp: {tools_resp}")

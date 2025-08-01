@@ -3,25 +3,27 @@ from __future__ import annotations
 
 import json
 import os
-import requests
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from src.onemcp.util.env import ONEMCP_SRC_ROOT
+from typing import Any, Callable
+
+import requests
 from tqdm import tqdm
-from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from src.onemcp.util.env import ONEMCP_SRC_ROOT
 
 
 @dataclass
 class ProcessResult:
     index: int
-    repository_url: Optional[str]
+    repository_url: str | None
     ok: bool
-    error: Optional[str] = None
-    data: Optional[Any] = None  # whatever your pipeline returns
+    error: str | None = None
+    data: Any | None = None  # whatever your pipeline returns
 
 
-def load_entries(json_path: str | Path) -> List[Dict[str, Any]]:
+def load_entries(json_path: str | Path) -> list[dict[str, Any]]:
     """
     Load the JSON file containing a list of entries into memory.
     """
@@ -36,11 +38,11 @@ def load_entries(json_path: str | Path) -> List[Dict[str, Any]]:
 
 
 def process_all(
-    entries: List[Dict[str, Any]],
-    process_fn: Callable[[Dict[str, Any]], Any],
+    entries: list[dict[str, Any]],
+    process_fn: Callable[[dict[str, Any]], Any],
     progress: bool = True,
     show_every: int = 100,  # used by fallback progress only
-) -> Tuple[List[ProcessResult], Dict[str, Any]]:
+) -> tuple[list[ProcessResult], dict[str, Any]]:
     """
     Run `process_fn` on each entry and track progress, successes, and failures.
 
@@ -50,32 +52,24 @@ def process_all(
           - summary: dict with counts and elapsed seconds
     """
     total = len(entries)
-    results: List[ProcessResult] = []
+    results: list[ProcessResult] = []
     ok_count = 0
     fail_count = 0
     start_time = time.time()
 
-    # Choose progress strategy
-    if progress and tqdm is not None:
-        bar = tqdm(total=total, unit="entry", dynamic_ncols=True)
-        update_bar = lambda: bar.set_postfix(ok=ok_count, fail=fail_count, refresh=False)
-    else:
-        bar = None
-        last_shown = -1
+    bar = tqdm(total=total, unit="entry", dynamic_ncols=True)
 
-        def update_bar() -> None:
-            nonlocal last_shown
-            processed = ok_count + fail_count
-            if processed != last_shown and (processed % show_every == 0 or processed == total):
-                last_shown = processed
-                print(f"Processed {processed}/{total}  (ok={ok_count}, fail={fail_count})")
+    def update_bar() -> None:
+        bar.set_postfix(ok=ok_count, fail=fail_count, refresh=False)
 
     try:
         for i, entry in enumerate(entries):
             repo = entry.get("repository_url")
             try:
                 data = process_fn(entry)  # <-- your custom pipeline
-                results.append(ProcessResult(index=i, repository_url=repo, ok=True, data=data))
+                results.append(
+                    ProcessResult(index=i, repository_url=repo, ok=True, data=data)
+                )
                 ok_count += 1
             except Exception as e:
                 results.append(
@@ -83,11 +77,8 @@ def process_all(
                 )
                 fail_count += 1
 
-            if bar is not None:
-                bar.update(1)
-                bar.set_postfix(ok=ok_count, fail=fail_count, refresh=False)
-            else:
-                update_bar()
+            bar.update(1)
+            bar.set_postfix(ok=ok_count, fail=fail_count, refresh=False)
     finally:
         if bar is not None:
             bar.close()
@@ -116,7 +107,7 @@ if __name__ == "__main__":
         "discovery",
         "github_extraction",
         "awesome_mcp_servers",
-        "awesome_mcp_servers.json"
+        "awesome_mcp_servers.json",
     )
     entries = load_entries(json_path)
 
@@ -125,7 +116,7 @@ if __name__ == "__main__":
 
     print("Processing {len(entries)} entries...")
 
-    def process_entry(entry: Dict[str, Any]) -> Any:
+    def process_entry(entry: dict[str, Any]) -> Any:
         """
         Do whatever processing you need for each entry.
         Return any data you want to keep.

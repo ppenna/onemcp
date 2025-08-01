@@ -40,7 +40,9 @@ class DockerContainer:
         """
         return self.proc.pid
 
-    def _ensure_container_up(self, name: str, attempts: int = 5, wait_seconds: float = 1.0) -> None:
+    def _ensure_container_up(
+        self, name: str, attempts: int = 5, wait_seconds: float = 1.0
+    ) -> None:
         """
         Check up to `attempts` times (waiting `wait_seconds` each time) whether
         the Docker container `name` is running.
@@ -53,7 +55,8 @@ class DockerContainer:
         for _ in range(attempts):
             proc = subprocess.run(
                 ["docker", "inspect", "-f", "{{.State.Running}}", name],
-                capture_output=True, text=True
+                capture_output=True,
+                text=True,
             )
 
             if proc.returncode == 0 and proc.stdout.strip().lower() == "true":
@@ -160,7 +163,7 @@ class DockerContainer:
         self.proc.stdin.write(data)
         self.proc.stdin.flush()
 
-    def read(self, timeout: int = 5) -> str:
+    def read(self, timeout: int = 5) -> Any:
         if self.proc.stdout is None:
             raise DockerSandboxError("Docker container has no STDIN")
 

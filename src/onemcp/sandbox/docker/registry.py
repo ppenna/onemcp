@@ -11,9 +11,7 @@ import tempfile
 import uuid
 from pathlib import Path
 from typing import Any, Optional
-from urllib.parse import urlparse
 
-import requests
 from openai import OpenAI
 
 from src.onemcp.sandbox.docker.sandbox import DockerContainer
@@ -31,7 +29,9 @@ INSTALL_MCP_DOCKERFILE_PATH = os.path.join(
 SETUP_SCRIPT_TEMPLATE_PATH = os.path.join(
     ONEMCP_SRC_ROOT, "sandbox", "try-install-mcp-server.sh"
 )
-USE_HEURISTIC_DISCOVERY = os.getenv("USE_HEURISTIC_DISCOVERY", "false").lower() == "true"
+USE_HEURISTIC_DISCOVERY = (
+    os.getenv("USE_HEURISTIC_DISCOVERY", "false").lower() == "true"
+)
 
 
 class ReadmeNotFound(Exception):
@@ -60,7 +60,9 @@ class DockerSandboxRegistry:
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
-    async def discover(self, repository_url: str, repository_readme: str) -> dict[str, Any]:
+    async def discover(
+        self, repository_url: str, repository_readme: str
+    ) -> dict[str, Any]:
         """Discover capabilities and setup instructions for an MCP Server.
 
         Args:
@@ -74,8 +76,9 @@ class DockerSandboxRegistry:
             logger.info(f"Discovering MCP server at {repository_url}")
 
             # Analyze repository structure
-            discovery_info = await self._analyze_repository(repository_url,
-                                                            repository_readme)
+            discovery_info = await self._analyze_repository(
+                repository_url, repository_readme
+            )
 
             return {
                 "response_code": "200",
@@ -147,7 +150,7 @@ class DockerSandboxRegistry:
                     "error_description": f"Failed to start sandbox: {str(e)}",
                 }
 
-    async def call_tool(self, sandbox_id: str, body: dict[str, Any]) -> list[dict[str, Any]]:
+    async def call_tool(self, sandbox_id: str, body: dict[str, Any]) -> dict[str, Any]:
         """Call a tool exposed by an MCP server running in `sandbox_id`.
 
         Args:
@@ -156,16 +159,25 @@ class DockerSandboxRegistry:
         Returns:
             The response for the tool execution.
         """
-        logger.info("Calling tool {} for sandbox ID: {}".format(body["params"]["name"],
-                                                                sandbox_id))
-        (container, instance) = self.instances.get(sandbox_id)
+        logger.info(
+            "Calling tool {} for sandbox ID: {}".format(
+                body["params"]["name"], sandbox_id
+            )
+        )
 
-        logger.info(f"Body: {body}")
-        response = instance.call_tool(container, body)
+        (container, instance) = self.instances.get(sandbox_id, [None, None])
+
+        if instance is not None and container is not None:
+            response = instance.call_tool(container, body)
+        else:
+            return {
+                "response_code": "404",
+                "error_description": f"Sandbox {sandbox_id} not found",
+            }
 
         return {"response": response}
 
-    async def get_tools(self, sandbox_id: str) -> list[dict[str, Any]]:
+    async def get_tools(self, sandbox_id: str) -> dict[str, Any]:
         """Get the tools exposed by an MCP server.
 
         Args:
@@ -175,13 +187,18 @@ class DockerSandboxRegistry:
             List of available tools
         """
         logger.info(f"Getting tools for sandbox ID: {sandbox_id}")
-        (container, instance) = self.instances.get(sandbox_id)
+        (container, instance) = self.instances.get(sandbox_id, [None, None])
 
-        tools = instance.get_tools(container)
-        logger.info(f"Got tools: {tools}")
+        if container is not None and instance is not None:
+            tools = instance.get_tools(container)
+            logger.info(f"Got tools: {tools}")
+        else:
+            return {
+                "response_code": "404",
+                "error_description": f"Sandbox {sandbox_id} not found",
+            }
 
         return {"tools": tools}
-
 
     async def stop(self, sandbox_id: str) -> dict[str, Any]:
         """Stop a running sandbox instance.
@@ -314,7 +331,9 @@ class DockerSandboxRegistry:
         )
         return setup_script
 
-    async def _analyze_repository(self, repository_url: str, repository_readme: str) -> dict[str, Any]:
+    async def _analyze_repository(
+        self, repository_url: str, repository_readme: str
+    ) -> dict[str, Any]:
         """Analyze repository to extract MCP server information.
 
         Args:
@@ -351,22 +370,28 @@ class DockerSandboxRegistry:
 
         # Start docker container
         response = await self.start(bootstrap_metadata)
-        sandbox_id = response.get("sandbox_id")
+        sandbox_id = response.get("sandbox_id", "")
 
-        (container, instance) = self.instances.get(sandbox_id)
-        tools = None
+        (container, instance) = self.instances.get(sandbox_id, [None, None])
         try:
-            tools = instance.get_tools(container)
+            if container is not None and instance is not None:
+                tools = instance.get_tools(container)
+            else:
+                return {
+                    "response_code": "404",
+                    "error_description": f"Sandbox {sandbox_id} not found",
+                }
         except Exception:
-            logger.error(f"Error getting tools for sandbox {sandbox_id} from repo {repository_url}")
+            logger.error(
+                f"Error getting tools for sandbox {sandbox_id} from repo {repository_url}"
+            )
 
-        await self.stop(sandbox_id)
-
-        if tools is None:
             return {
                 "response_code": "500",
                 "error_description": "Failed to retrieve tools from MCP server",
             }
+
+        await self.stop(sandbox_id)
 
         print(f"Got tools: {tools}")
 

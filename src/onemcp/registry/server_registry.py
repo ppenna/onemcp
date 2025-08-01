@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
-
 
 BASE_URL: str = "https://1cpgs0fc-8001.usw2.devtunnels.ms"
 
@@ -40,7 +39,7 @@ class ServerRegistry:
             path = "/" + path
         return self.base_url.rstrip("/") + path
 
-    def _parse_json(self, resp: requests.Response) -> Dict[str, Any]:
+    def _parse_json(self, resp: requests.Response) -> Any:
         try:
             return resp.json()
         except ValueError as e:
@@ -53,7 +52,7 @@ class ServerRegistry:
         if 200 <= resp.status_code < 300:
             return
         # Try to extract error JSON for better diagnostics
-        body: Optional[Dict[str, Any]] = None
+        body: dict[str, Any] | None = None
         try:
             body = resp.json()
         except Exception:
@@ -63,7 +62,7 @@ class ServerRegistry:
             f"HTTP {resp.status_code} for {resp.request.method} {resp.request.url}\n{detail}"
         )
 
-    def _get_json(self, path: str) -> Dict[str, Any]:
+    def _get_json(self, path: str) -> Any:
         try:
             resp = self._session.get(self._url(path), timeout=self.timeout)
         except requests.RequestException as e:
@@ -71,7 +70,7 @@ class ServerRegistry:
         self._check_status(resp)
         return self._parse_json(resp)
 
-    def _post_json(self, path: str, *, json: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_json(self, path: str, *, json: dict[str, Any]) -> Any:
         try:
             resp = self._session.post(self._url(path), json=json, timeout=self.timeout)
         except requests.RequestException as e:
@@ -79,9 +78,11 @@ class ServerRegistry:
         self._check_status(resp)
         return self._parse_json(resp)
 
-    def _delete_json(self, path: str, *, json: Dict[str, Any]) -> Dict[str, Any]:
+    def _delete_json(self, path: str, *, json: dict[str, Any]) -> Any:
         try:
-            resp = self._session.delete(self._url(path), json=json, timeout=self.timeout)
+            resp = self._session.delete(
+                self._url(path), json=json, timeout=self.timeout
+            )
         except requests.RequestException as e:
             raise ServerRegistryError(f"DELETE {path} failed: {e}") from e
         self._check_status(resp)
@@ -95,7 +96,7 @@ class ServerRegistry:
     # Public API
     # --------------------------------------------------------------------------
 
-    def health(self) -> Dict[str, Any]:
+    def health(self) -> Any:
         """GET /health -> dict"""
         return self._get_json("/health")
 
@@ -103,8 +104,8 @@ class ServerRegistry:
         self,
         codebase_url: str,
         description: str,
-        tools: List[Dict[str, str]],
-    ) -> Dict[str, Any]:
+        tools: list[dict[str, str]],
+    ) -> Any:
         """
         POST /register_server with:
           {
@@ -120,16 +121,16 @@ class ServerRegistry:
         }
         return self._post_json("/register_server", json=payload)
 
-    def find_tools(self, query: str, k: int = 3) -> Dict[str, Any]:
+    def find_tools(self, query: str, k: int = 3) -> Any:
         """POST /find_tools -> dict(result); payload: {"query": str, "k": int}"""
         payload = {"query": query, "k": k}
         return self._post_json("/find_tools", json=payload)
 
-    def list_servers(self) -> Dict[str, Any]:
+    def list_servers(self) -> Any:
         """GET /servers -> dict(result)"""
         return self._get_json("/servers")
 
-    def unregister_server(self, codebase_url: str) -> Dict[str, Any]:
+    def unregister_server(self, codebase_url: str) -> Any:
         """DELETE /unregister_server with {"codebase_url": "..."}"""
         payload = {"codebase_url": codebase_url}
         return self._delete_json("/unregister_server", json=payload)
@@ -139,4 +140,3 @@ class ServerRegistry:
         data = self.list_servers()
         servers = data.get("servers", [])
         return any(s.get("codebase_url") == codebase_url for s in servers)
-
