@@ -80,10 +80,16 @@ async def sandbox_endpoint(
 async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
     """Handle DISCOVER message type.
 
-    Expected payload:
+    JSON payload on success:
     {
-        "repository_url": "<URL>",
-        "repository_readme": "<README_CONTENTS>"
+        "tools": "<JSON Object>",
+        "setup_script": "<TEXT>"
+    }
+
+    JSON payload on error:
+    {
+        "response_code": "400",
+        "error_description": "<ERROR_DESCRIPTION>"
     }
     """
     if "repository_url" not in body:

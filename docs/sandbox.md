@@ -10,8 +10,9 @@ to test the discover API, you may run:
 
 ```bash
 DISCOVER_JSON=$(jq -n \
-    --arg repository_url "https://github.com/githejie/mcp-server-calculator" \
-    '{repository_url: $repository_url}'
+  --arg repository_url "https://github.com/githejie/mcp-server-calculator" \
+  --arg repository_readme "" \
+  '{repository_url: $repository_url, repository_readme: $repository_readme}'
 )
 curl \
   -X POST \

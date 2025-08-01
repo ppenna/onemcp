@@ -399,6 +399,7 @@ class DockerSandboxRegistry:
             "overview": overview,
             "tools": tools,
             "bootstrap_metadata": bootstrap_metadata,
+            "setup_script": setup_script,
         }
 
     def _start_docker_container(
