@@ -32,14 +32,15 @@ from onemcp import Registry, ToolEntry
 class MockSandbox:
     """A mock sandbox for testing purposes."""
 
-    async def call_tool(self, name: str, args: dict[str, Any], context: Context) -> Any:
-        print(f"Mock call to tool: {name} with args: {args} and context: {context}")
-        return f"Mock response from {name} with args {args} and context {context}"
-
-    async def run_server(self, name: str, instructions: str) -> None:
+    async def call_tool(self, sandbox_id: str, name: str, args: dict[str, Any]) -> Any:
         print(
-            f"Mock sandbox server {name} is running with instructions: {instructions}"
+            f"Mock call to tool: {name} with args: {args} and sandbox_id: {sandbox_id}"
         )
+        return f"Mock response from {name} with args {args} and sandbox_id {sandbox_id}"
+
+    async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
+        print(f"Mock sandbox server is running with metadata: {bootstrap_metadata}")
+        return "sanbox-server-id"
 
 
 class LocalState:
@@ -47,9 +48,12 @@ class LocalState:
 
     def __init__(self) -> None:
         self._dynamic_tools: list[types.Tool] = []
-        self._lookup_tools: dict[str, types.Tool] = {}
+        self._lookup_tools: dict[str, tuple[str, types.Tool]] = {}
         self._available_servers: set[str] = set()
         self._available_tools: dict[str, list[types.Tool]] = {}
+        self._id_url_map: dict[str, str] = {}
+        self._url_id_map: dict[str, str] = {}
+
         # self._rag = QdrantClient(":memory:")  # Create in-memory Qdrant instance
         # self._encoder = SentenceTransformer("thenlper/gte-small")
 
@@ -75,12 +79,16 @@ class LocalState:
     def has_server(self, server: str) -> bool:
         return server in self._available_servers
 
-    def add_server(self, server: str, tools: list[types.Tool]) -> None:
-        self._available_servers.add(server)
-        self._available_tools[server] = tools
+    def add_server(
+        self, sandbox_id: str, server_url: str, tools: list[types.Tool]
+    ) -> None:
+        self._available_servers.add(server_url)
+        self._available_tools[server_url] = tools
+        self._id_url_map[sandbox_id] = server_url
+        self._url_id_map[server_url] = sandbox_id
 
         for tool in tools:
-            self._lookup_tools[tool.name] = tool
+            self._lookup_tools[tool.name] = (sandbox_id, tool)
 
         # self._rag.upload_points(
         #     collection_name="tools",
@@ -112,7 +120,7 @@ class LocalState:
         # return results.points
         return []
 
-    def get_tool(self, name: str) -> types.Tool | None:
+    def get_tool(self, name: str) -> tuple[str, types.Tool] | None:
         """Get a tool by name."""
         if name in self._lookup_tools:
             return self._lookup_tools[name]
@@ -233,11 +241,8 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     for server in servers:
         registry_server = registry.get_server(server)
         if registry_server:
-            await sandbox.run_server(
-                name=registry_server.name,
-                instructions=registry_server.installation_instructions,
-            )
-            local_state.add_server(server, registry_server.tools)
+            sandbox_id = await sandbox.run_server(registry_server.bootstrap_metadata)
+            local_state.add_server(sandbox_id, server, registry_server.tools)
 
     # servers are already installed, so just add the tools
     local_state.clear_dynamic()
@@ -245,7 +250,7 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     for tool in suggested_tools:
         entry = local_state.get_tool(tool.tool_name)
         if entry:
-            local_state.add_dynamic(entry)
+            local_state.add_dynamic(entry[1])
 
     await ctx.request_context.session.send_tool_list_changed()
 
@@ -263,7 +268,7 @@ async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
 
     if tool:
         sandbox = MockSandbox()
-        return await sandbox.call_tool(name, args, ctx)
+        return await sandbox.call_tool(tool[0], name, args)
 
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "

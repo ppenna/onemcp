@@ -5,12 +5,12 @@ import mcp.types as types
 
 
 class ServerEntry:
-    __slots__ = ("name", "url", "installation_instructions", "tools")
+    __slots__ = ("name", "url", "bootstrap_metadata", "tools")
 
-    def __init__(self, name: str, url: str, installation_instructions: str = ""):
+    def __init__(self, name: str, url: str, bootstrap_metadata: dict[str, str]):
         self.name = name
         self.url = url
-        self.installation_instructions = installation_instructions
+        self.bootstrap_metadata = bootstrap_metadata
         self.tools: list[types.Tool] = []
 
 
