@@ -124,7 +124,7 @@ class DockerSandboxRegistry:
                     status="running",
                 )
 
-                tools = instance.get_tools(container)
+                tools = container.get_tools()
                 if tools is None:
                     return {
                         "response_code": "500",
@@ -183,6 +183,37 @@ class DockerSandboxRegistry:
                     "response_code": "500",
                     "error_description": f"Failed to stop sandbox: {str(e)}",
                 }
+
+    async def call_tool(self, sandbox_id: str, tool_name: str, tool_args: dict[str, Any]) -> dict[str, Any]:
+        """Call a tool in a running sandbox instance.
+
+        Args:
+            sandbox_id: ID of the sandbox to stop
+            tool_name: Name of the tool to call
+            tool_args: Arguments for the tool
+
+        Returns:
+            Dictionary containing tool response
+        """
+        async with self._lock:
+                if sandbox_id not in self.instances:
+                    return {
+                        "response_code": "404",
+                        "error_description": f"Sandbox {sandbox_id} not found",
+                    }
+                container, instance = self.instances[sandbox_id]
+
+        try:
+            response = await container.call_tool(tool_name, tool_args)
+            return {"response_code": "200", "data": response}
+
+        except Exception as e:
+            logger.error(f"Failed to call tool {tool_name} in sandbox {sandbox_id}: {e}")
+            return {
+                "response_code": "500",
+                "error_description": f"Failed to call tool {tool_name} in sandbox {sandbox_id}: {str(e)}",
+            }
+
 
     async def cleanup_all(self) -> None:
         """Stop all running sandbox instances."""

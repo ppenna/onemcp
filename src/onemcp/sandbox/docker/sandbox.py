@@ -11,6 +11,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +41,7 @@ class DockerContainer:
         """
         return self.proc.pid
 
-    def start(
+    async def start(
         self, sandbox_id: str, bootstrap_metadata: dict[str, Any], port: int
     ) -> None:
         # Create temporary directory for this sandbox
@@ -52,43 +55,33 @@ class DockerContainer:
             )
 
             # Run Docker container
-            run_cmd = [
-                "docker",
+            docker_params = [
                 "run",
                 "-i",
                 "-p",
                 f"{port}:8000",  # Port mapping
                 "--name",
                 self.name,
+                container_image_tag
             ]
 
-            # Add environment variables (if any are provided)
-            env_vars = bootstrap_metadata.get("environment_variables", {})
-            for key, value in env_vars.items():
-                run_cmd.extend(["-e", f"{key}={value}"])
-
-            # Set working directory if specified
-            working_dir = bootstrap_metadata.get("working_directory", "/app")
-            run_cmd.extend(["-w", working_dir])
-
-            # Add image tag
-            run_cmd.append(container_image_tag)
-
-            # Add entrypoint if specified
-            entrypoint = bootstrap_metadata.get("entrypoint")
-            if entrypoint:
-                run_cmd.extend(entrypoint.split())
-
-            logger.info(f"Starting Docker container: {' '.join(run_cmd)}")
+            logger.info(f"Starting Docker container: docker {' '.join(docker_params)}")
 
             self.port = port
-            self.proc = subprocess.Popen(
-                run_cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                text=True,
-                bufsize=1,
+            server_params = StdioServerParameters(
+                command="docker",
+                args=docker_params,
+                env=None,
             )
+
+            stdio_transport = stdio_client(server_params)
+            self.stdio, self.write = stdio_transport
+            self.session = ClientSession(self.stdio, self.write)
+
+            await self.session.initialize()
+
+            response = await self.session.list_tools()
+            self.tools = response.tools
 
         except Exception as e:
             # Clean up on failure
@@ -112,6 +105,33 @@ class DockerContainer:
         except Exception as e:
             logger.error(f"Failed to stop container {self.name}: {e}")
             raise DockerSandboxError(f"Failed to stop container: {e}") from e
+
+
+    def get_tools(self) -> Any:
+        return self.tools
+
+
+    async def call_tool(self, tool_name: str, *args: Any) -> Any:
+        """
+        Call a tool in the Docker container.
+
+        Args:
+            tool_name (str): The name of the tool to call.
+            *args: Arguments to pass to the tool.
+
+        Returns:
+            Any: The result of the tool call.
+        """
+        if not self.session:
+            raise DockerSandboxError("Session is not initialized")
+
+        try:
+            response = await self.session.call_tool(tool_name, *args)
+            return response
+        except Exception as e:
+            logger.error(f"Failed to call tool {tool_name}: {e}")
+            raise DockerSandboxError(f"Tool call failed: {e}") from e
+
 
     def write(self, data: str) -> None:
         if self.proc.stdin is None:

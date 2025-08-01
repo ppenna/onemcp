@@ -131,6 +131,41 @@ async def handle_stop(body: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+async def handle_call_tool(body: dict[str, Any]) -> dict[str, Any]:
+    """Handle tool calls in the sandbox.
+
+    Expected payload:
+    {
+        "sandbox_id": "...",
+        "tool_name": "...",
+        "args": [...]
+    }
+    """
+    if "sandbox_id" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: sandbox_id",
+        }
+    sandbox_id = body["sandbox_id"]
+
+    if "tool_name" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: tool_name",
+        }
+    tool_name = body["tool_name"]
+
+    if "tool_args" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: tool_args",
+        }
+    tool_args = body["tool_args"]
+
+    result = await sandbox.call_tool(sandbox_id, tool_name, tool_args)
+    return result
+
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""

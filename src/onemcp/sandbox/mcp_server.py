@@ -143,7 +143,7 @@ class McpServer:
                 # Notification received; ignore and continue reading.
                 pass
 
-    def get_tools(self, container: DockerContainer) -> Any:
+    def deprecated_get_tools(self, container: DockerContainer) -> Any:
         """
         Queries the MCP server running in the specified Docker container for its list of tools.
 
