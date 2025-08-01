@@ -37,15 +37,15 @@ class LocalState:
         self._lookup_tools: dict[str, types.Tool] = {}
         self._available_servers: set[str] = set()
         self._available_tools: dict[str, list[types.Tool]] = {}
-        self._rag = QdrantClient(":memory:") # Create in-memory Qdrant instance
+        self._rag = QdrantClient(":memory:")  # Create in-memory Qdrant instance
         self._encoder = SentenceTransformer("thenlper/gte-small")
 
         self._rag.create_collection(
             collection_name="tools",
             vectors_config=models.VectorParams(
                 size=self._encoder.get_sentence_embedding_dimension(),
-                distance=models.Distance.COSINE
-            )
+                distance=models.Distance.COSINE,
+            ),
         )
 
     @property
@@ -74,10 +74,11 @@ class LocalState:
                 models.PointStruct(
                     id=(server, tool.name),
                     vector=self._encoder.encode(tool.description).tolist(),
-                payload=tool
-            ) for i, tool in enumerate(tools)
-        ]
-    )
+                    payload=tool,
+                )
+                for i, tool in enumerate(tools)
+            ],
+        )
 
     def remove_server(self, server: str):
         if server in self._available_servers:
@@ -91,22 +92,22 @@ class LocalState:
     def find_tools(self, query: str, k: int = 3) -> list[types.Tool]:
         """Find tools by fuzzy search."""
         results = self._rag.query_points(
-            collection_name="tools",
-            query=self._encoder.encode(query).tolist(),
-            limit=3
+            collection_name="tools", query=self._encoder.encode(query).tolist(), limit=3
         )
 
         return results.points
-    
+
     def get_tool(self, name: str) -> types.Tool | None:
         """Get a tool by name."""
         if name in self._lookup_tools:
             return self._lookup_tools[name]
         return None
 
+
 logger = logging.getLogger(__name__)
 server = FastMCP("OneMCP")
 local_state = LocalState()
+
 
 def extract_code_blocks(markdown_text: str) -> list[dict]:
     """Extract code blocks from markdown text."""
@@ -120,7 +121,10 @@ def extract_code_blocks(markdown_text: str) -> list[dict]:
     ]
     return code_blocks
 
-async def guess_required_tool_descriptions(prompt: str, files: list[str], context: Context) -> list[str]:
+
+async def guess_required_tool_descriptions(
+    prompt: str, files: list[str], context: Context
+) -> list[str]:
     """Guess high-level required tool descriptions based on the prompt."""
 
     # Get the path to the prompt template relative to this file
@@ -162,6 +166,7 @@ async def guess_required_tool_descriptions(prompt: str, files: list[str], contex
 
     return extracted_tools
 
+
 ##
 ## The OneMCP tool
 ##
@@ -169,7 +174,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     """Takes the user prompt and suggests which MCP tools would be appropriate."""
 
     # 1. Extract tool descriptions from the prompt
-    extracted_tool_descriptions = await guess_required_tool_descriptions(prompt, files, ctx)
+    extracted_tool_descriptions = await guess_required_tool_descriptions(
+        prompt, files, ctx
+    )
     print(f"Extracted tools: {', '.join(extracted_tool_descriptions)}")
 
     output = "Suggested tools based on your query:\n"
@@ -195,7 +202,9 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
             output += f"\n'{tool_description}':"
 
             for entry in found_registry_tools:
-                print(f"Found registry tool: {entry.tool_name} on server: {entry.server_name}")
+                print(
+                    f"Found registry tool: {entry.tool_name} on server: {entry.server_name}"
+                )
                 output += f"\n- {entry.tool_name} ({entry.server_name})"
 
                 suggested_tools.add(entry)
@@ -234,7 +243,9 @@ async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
 
     if tool:
         # TODO: call the sandbox MCP proxy with the tool name and args
-        print(f"Calling sandbox MCP proxy for tool: {tool.name} with schema: {tool.inputSchema}")
+        print(
+            f"Calling sandbox MCP proxy for tool: {tool.name} with schema: {tool.inputSchema}"
+        )
 
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "
@@ -318,17 +329,6 @@ if __name__ == "__main__":
     server._mcp_server.list_tools()(my_list_tools)
     server._mcp_server.call_tool()(my_call_tool)
     server.run(transport="streamable-http")
-
-
-
-
-
-
-
-
-
-
-
 
 
 # @server.tool()

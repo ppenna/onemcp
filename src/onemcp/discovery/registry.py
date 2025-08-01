@@ -9,7 +9,9 @@ from .registry_api import RegistryInterface, ServerEntry, ToolEntry
 class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
-    def __init__(self, base_url: str = "https://4k6k502m-8001.usw2.devtunnels.ms") -> None:
+    def __init__(
+        self, base_url: str = "https://4k6k502m-8001.usw2.devtunnels.ms"
+    ) -> None:
         self.base_url = base_url
 
     def health_check(self) -> Optional[tuple[int, str]]:
@@ -46,10 +48,16 @@ class Registry(RegistryInterface):
             result = response.json()
 
             entry = ServerEntry(
-                name=result.get("name", ""), url=result.get("repository_url", ""), installation_instructions=result.get("setup_script", "")
+                name=result.get("name", ""),
+                url=result.get("repository_url", ""),
+                installation_instructions=result.get("setup_script", ""),
             )
             for tool in result.get("tools", []):
-                t = types.Tool(name=tool.get("name", ""), description=tool.get("description", ""), inputSchema=tool.get("inputSchema", {}))
+                t = types.Tool(
+                    name=tool.get("name", ""),
+                    description=tool.get("description", ""),
+                    inputSchema=tool.get("inputSchema", {}),
+                )
                 entry.tools.append(t)
 
             return entry
@@ -64,7 +72,9 @@ class Registry(RegistryInterface):
 
             servers = []
             for _, server in enumerate(result["servers"], 1):
-                entry = ServerEntry(name=server.get("filename", ""), url=server.get("codebase_url", ""))
+                entry = ServerEntry(
+                    name=server.get("filename", ""), url=server.get("codebase_url", "")
+                )
                 servers.append(entry)
             return servers
         except Exception as e:
@@ -73,7 +83,9 @@ class Registry(RegistryInterface):
 
     def register_server(self, server_data: ServerEntry) -> Optional[tuple[int, str]]:
         try:
-            response = requests.post(f"{self.base_url}/register_server", json=server_data)
+            response = requests.post(
+                f"{self.base_url}/register_server", json=server_data
+            )
             return response.status_code, response.json()
         except Exception as e:
             print(f"Error registering server: {e}")
