@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 import mcp.types as types
 import requests
+
 from .registry_api import RegistryInterface, ServerEntry, ToolEntry
 
 
