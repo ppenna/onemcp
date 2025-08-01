@@ -153,6 +153,7 @@ if __name__ == "__main__":
     prompt_path = (
         pathlib.Path(__file__).parent.parent.parent.parent
         / "assets"
+        / "test"
         / "explored-mcp-server.json"
     )
 
@@ -177,5 +178,6 @@ if __name__ == "__main__":
 
     # server_data is a json array, want to register each server
     for server in server_data:
+        server["repository_url"] = server["bootstrap_metadata"]["repository_url"]
         print(f"Registering server: {server['repository_url']}")
         registry._post_json("/register_server", json=server)
