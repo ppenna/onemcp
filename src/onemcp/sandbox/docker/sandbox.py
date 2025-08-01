@@ -85,9 +85,12 @@ class DockerContainer:
 
         try:
             # Get the container image tag from bootstrap metadata
-            container_image_tag = bootstrap_metadata.get(
-                "container_image_tag", "onemcp-default"
-            )
+            container_image_tag = bootstrap_metadata.get("container_image_tag")
+            if not container_image_tag:
+                # TODO: build the container image.
+                raise DockerSandboxError(
+                    "Missing required field: container_image_tag in bootstrap metadata"
+                )
 
             # Run Docker container
             run_cmd = [
