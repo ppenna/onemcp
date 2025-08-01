@@ -28,7 +28,7 @@ from onemcp import Registry
 
 logger = logging.getLogger(__name__)
 server = FastMCP("OneMCP")
-dynamic_tools = []
+dynamic_tools = [] # type: ignore[assignment]
 
 
 def extract_code_blocks(markdown_text: str) -> list[dict]:
