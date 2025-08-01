@@ -1,4 +1,5 @@
-FROM ubuntu:24.04
+# TODO: make the bae image configurable to support multi-language MCPs
+FROM onemcp/base/python:v1
 ARG SCRIPT_PATH
 
 RUN --mount=from=scriptctx,src=${SCRIPT_PATH},target=/tmp/install_mcp.sh \
