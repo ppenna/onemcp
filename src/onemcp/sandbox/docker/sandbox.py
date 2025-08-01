@@ -156,6 +156,40 @@ class DockerContainer:
             logger.error(f"Failed to stop container {self.name}: {e}")
             raise DockerSandboxError(f"Failed to stop container: {e}") from e
 
+    async def remove(self) -> None:
+        try:
+            # Remove the container
+            remove_cmd = ["docker", "rm", "-f", self.name]
+            result = await asyncio.create_subprocess_exec(
+                *remove_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await result.communicate()
+
+            logger.info(f"Removed container {self.name}")
+
+        except Exception as e:
+            logger.error(f"Failed to remove container {self.name}: {e}")
+            raise DockerSandboxError(f"Failed to remove container: {e}") from e
+
+    async def prune_images(self) -> None:
+        try:
+            # Remove orphaned images
+            remove_cmd = ["docker", "image", "prune", "-a", "-f"]
+            result = await asyncio.create_subprocess_exec(
+                *remove_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await result.communicate()
+
+            logger.info("Removed orphaned Docker images")
+
+        except Exception as e:
+            logger.error(f"Failed to remove orphaned Docker images: {e}")
+            raise DockerSandboxError(f"Failed to remove orphaned images: {e}") from e
+
     def write(self, data: str) -> None:
         if self.proc.stdin is None:
             raise DockerSandboxError("Docker container has no STDIN")
