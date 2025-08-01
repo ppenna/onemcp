@@ -16,7 +16,7 @@ DEFAULT_PROTOCOL_VERSION: str = "2024-11-05"
 DEFAULT_READ_DELAY: float = 0.01
 
 # Default timeout for reading data from a container.
-DEFAULT_READ_TIMEOUT: float = 30.0
+DEFAULT_READ_TIMEOUT: float = 60.0
 
 logger = logging.getLogger(__name__)
 
