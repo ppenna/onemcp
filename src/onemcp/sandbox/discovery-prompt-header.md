@@ -16,10 +16,13 @@ The script you generate should include at least the following steps:
 * Clone the repository containing the MCP server's code
 * Install python3, pip, and python3-venv
 * Create a python3 virtual environment inside the cloned repository
+* Install fastmcp in the virtual environment using `pip install fastmcp`
 * Activate the python3 virtual environment created in the previous step
 * Follow the instructions in the README file to install and configure the MCP server
-* Generate an executable script in `/run_mcp.sh` to launch the MCP ser  ver.
+* Generate an executable script in `/run_mcp.sh` to launch the MCP server.
     - Make sure to acticate the virtual environment in the cloned repository using the absolute path to the virtual environment's `activate` script.
     - Make sure to use the `python3` command from the virtual environment to run the MCP server.
+    - If you have a choice between STDIO, HTTP, or SSE, **use the STDIO option**.
+    - Remember to change directory into wherever you need to be to run the MCP server. This involves rerunning any change-directory commands in the README that precede the instruction saying how to run the MCP server.
 
 Assume you're running in a Docker container on Ubuntu 24.04. So, for instance, you don't need to use `sudo`.
