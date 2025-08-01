@@ -176,6 +176,7 @@ class McpServer:
             )
             raise RuntimeError(f"Tools retrieval error: {tools_resp['error']}")
 
+        logger.debug(f"Tools response: {tools_resp}")
         result = tools_resp.get("result", {})
         tools = result.get("tools", [])
 
