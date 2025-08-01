@@ -8,7 +8,9 @@ The Registry exposes an API to query available servers based on a task descripti
 
 
 # Sandbox
-The Sandbox provides functions that wrap Docker commands to create, start, and stop containers.  However, the most important task that the sandbox performs is the discovery of *how* to run an MCP server from a given url (e.g., github, file folder).
+The Sandbox provides functions that wrap Docker commands to create, start, and stop containers. More importantly, however, the sandbox acts as a MCP proxy around all the running servers and can reroute function calls to each server appropriately.  In this way, it can safely host MCP servers that run via stdio or http.
+
+Lastly, the sandbox performs is the discovery of *how* to run an MCP server from a given url (e.g., github, file folder).
 
 
 # Orchestration
@@ -24,7 +26,7 @@ The Orchestrator is installed via a VS Code extension, which launches a local MC
 When a user submits a prompt, the Orchestrator:
 1. Analyze the prompt to determine the required tasks.
 2. Collects relevant tools for each task and augments the user's prompt with a subset of these tools for the LLM to use.
-
+3. Dynamically add these tools to vscode (within the Orchestrator) so that any calls to these functions will be routed through sandbox via the orchestrator.
 
 For each task, it will:
 1. Checks locally running servers for the best match.

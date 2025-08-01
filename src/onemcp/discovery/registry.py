@@ -1,5 +1,7 @@
 from typing import Optional
+from urllib.parse import quote
 
+import mcp.types as types
 import requests
 
 from .registry_api import RegistryInterface, ServerEntry, ToolEntry
@@ -41,6 +43,30 @@ class Registry(RegistryInterface):
             print(f"Error searching tools: {e}")
             return []
 
+    def get_server(self, url: str) -> ServerEntry | None:
+        try:
+            response = requests.get(f"{self.base_url}/server/{quote(url, safe='')}")
+            result = response.json()
+
+            entry = ServerEntry(
+                name=result.get("name", ""),
+                url=result.get("repository_url", ""),
+                installation_instructions=result.get("setup_script", ""),
+            )
+            for tool in result.get("tools", []):
+                t = types.Tool(
+                    name=tool.get("name", ""),
+                    description=tool.get("description", ""),
+                    inputSchema=tool.get("inputSchema", {}),
+                    annotations=None,
+                )
+                entry.tools.append(t)
+
+            return entry
+        except Exception as e:
+            print(f"Error getting server: {e}")
+            return None
+
     def list_servers(self) -> list[ServerEntry]:
         try:
             response = requests.get(f"{self.base_url}/servers")
@@ -77,3 +103,12 @@ class Registry(RegistryInterface):
         except Exception as e:
             print(f"Error unregistering server: {e}")
             return None
+
+
+# main for testing purposes
+if __name__ == "__main__":
+    registry = Registry()
+    print(registry.health_check())
+
+    test = registry.list_servers()
+    print(registry.get_server("https://github.com/guillochon/mlb-api-mcp"))
