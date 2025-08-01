@@ -1,0 +1,102 @@
+{
+  "repository_url": "https://github.com/guillochon/mlb-api-mcp",
+  "description": "MLB API MCP Server - A comprehensive bridge between AI applications and MLB data sources, enabling seamless integration of baseball statistics, game information, player data, and more. Provides access to current standings, schedules, player stats (traditional and sabermetric like WAR, wOBA, wRC+), team information, live game data, highlights, and advanced Statcast analytics. Built with FastMCP and Python 3.10+.",
+  "tools": [
+    {
+      "name": "get_mlb_standings",
+      "description": "Get current MLB standings for a given season with flexible filtering by league (AL, NL, or both), season, and date."
+    },
+    {
+      "name": "get_mlb_schedule",
+      "description": "Get MLB game schedules for specific date ranges, sport ID, or teams with comprehensive filtering options."
+    },
+    {
+      "name": "get_mlb_team_info",
+      "description": "Get detailed information about a specific MLB team by ID or name, including metadata and roster information."
+    },
+    {
+      "name": "get_mlb_player_info",
+      "description": "Get detailed biographical information about a specific player by their MLBAM ID."
+    },
+    {
+      "name": "get_mlb_boxscore",
+      "description": "Get complete game boxscores for a specific game by game ID, with optional timecode and field filtering."
+    },
+    {
+      "name": "get_mlb_linescore",
+      "description": "Get inning-by-inning game scores and linescore information for a specific game."
+    },
+    {
+      "name": "get_mlb_game_highlights",
+      "description": "Get video highlights and key moments for a specific game by game ID."
+    },
+    {
+      "name": "get_mlb_game_scoring_plays",
+      "description": "Get play-by-play data for a specific game with optional filtering by event type (e.g., 'scoring_play', 'home_run')."
+    },
+    {
+      "name": "get_mlb_game_pace",
+      "description": "Get game duration and pace statistics for a given season and sport."
+    },
+    {
+      "name": "get_mlb_game_lineup",
+      "description": "Get detailed lineup information for a specific game, including batting order, positions, and substitutions."
+    },
+    {
+      "name": "get_multiple_mlb_player_stats",
+      "description": "Get traditional player statistics for multiple players with filtering by group (hitting/pitching), type, and season."
+    },
+    {
+      "name": "get_mlb_sabermetrics",
+      "description": "Get advanced sabermetric statistics (WAR, wOBA, wRC+, etc.) for multiple players for a specific season."
+    },
+    {
+      "name": "get_mlb_roster",
+      "description": "Get team rosters with various roster types (40Man, fullSeason, etc.) and optional date filtering."
+    },
+    {
+      "name": "get_mlb_search_players",
+      "description": "Search for MLB players by name with configurable search parameters and sport filtering."
+    },
+    {
+      "name": "get_mlb_search_teams",
+      "description": "Search for MLB teams by name with flexible search key options (name, ID, or all)."
+    },
+    {
+      "name": "get_mlb_players",
+      "description": "Get all players for a specific sport and season with comprehensive player listings."
+    },
+    {
+      "name": "get_mlb_teams",
+      "description": "Get all teams for a specific sport and season with detailed team information."
+    },
+    {
+      "name": "get_mlb_draft",
+      "description": "Get comprehensive draft information and player selections for a specific year."
+    },
+    {
+      "name": "get_mlb_awards",
+      "description": "Get award recipients and detailed information for specific MLB awards by award ID."
+    },
+    {
+      "name": "get_statcast_batter",
+      "description": "Retrieve advanced MLB Statcast data for a single batter over a specified date range with detailed analytics."
+    },
+    {
+      "name": "get_statcast_pitcher",
+      "description": "Retrieve advanced MLB Statcast data for a single pitcher over a specified date range with detailed analytics."
+    },
+    {
+      "name": "get_statcast_team",
+      "description": "Retrieve comprehensive MLB Statcast data for all players on a team over a date range with customizable field selection."
+    },
+    {
+      "name": "get_current_date",
+      "description": "Get the current date in YYYY-MM-DD format for use with other MLB API functions."
+    },
+    {
+      "name": "get_current_time",
+      "description": "Get the current time in HH:MM:SS format for timestamping and scheduling purposes."
+    }
+  ]
+}

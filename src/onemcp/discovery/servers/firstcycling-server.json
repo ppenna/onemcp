@@ -1,0 +1,86 @@
+{
+  "repository_url": "https://github.com/r-huijts/firstcycling-mcp",
+  "description": "FirstCycling MCP Server - A comprehensive Model Context Protocol server that provides rich access to professional cycling data from FirstCycling. Enables analysis of rider performance, career progression, race results, historical cycling data, team information, and cycling competitions. Perfect for sports journalism, cycling education, rider analysis, and race research. Built with Python 3.10+ and uses web scraping to access FirstCycling data.",
+  "tools": [
+    {
+      "name": "get_rider_info",
+      "description": "Get basic biographical information about a professional cyclist including nationality, birthdate, weight, height, and current team affiliation."
+    },
+    {
+      "name": "get_rider_best_results",
+      "description": "Retrieve a rider's best career results sorted by importance, highlighting their most significant achievements and victories."
+    },
+    {
+      "name": "get_rider_grand_tour_results",
+      "description": "Get a rider's comprehensive results in Grand Tours (Tour de France, Giro d'Italia, Vuelta a España) throughout their career."
+    },
+    {
+      "name": "get_rider_monument_results",
+      "description": "Retrieve a rider's results in cycling's Monument classics (Milan-San Remo, Tour of Flanders, Paris-Roubaix, Liège-Bastogne-Liège, Tour of Lombardy)."
+    },
+    {
+      "name": "get_rider_team_and_ranking",
+      "description": "Get a rider's complete team history and UCI ranking evolution over time, showing career progression and transfers."
+    },
+    {
+      "name": "get_rider_race_history",
+      "description": "Retrieve a rider's complete race participation history with optional year filtering for detailed career analysis."
+    },
+    {
+      "name": "get_rider_one_day_races",
+      "description": "Get a rider's results in one-day races with optional year filtering to analyze performance in classics and one-day events."
+    },
+    {
+      "name": "get_rider_stage_races",
+      "description": "Get a rider's results in multi-day stage races with optional year filtering, covering Grand Tours, World Tour stage races, and other multi-stage events."
+    },
+    {
+      "name": "get_rider_teams",
+      "description": "Retrieve the complete team history of a rider throughout their professional career, including all team transfers and contracts."
+    },
+    {
+      "name": "get_rider_victories",
+      "description": "Get a comprehensive list of a rider's career victories with optional filters for WorldTour or UCI races to focus on specific competition levels."
+    },
+    {
+      "name": "get_race_results",
+      "description": "Retrieve detailed results for a specific race edition by race ID and year, including final standings and stage-by-stage results."
+    },
+    {
+      "name": "get_race_overview",
+      "description": "Get general information about a race including its history, records, past winners, and significance in professional cycling."
+    },
+    {
+      "name": "get_race_stage_profiles",
+      "description": "Retrieve stage profiles and detailed information for multi-stage races, including elevation profiles and stage characteristics."
+    },
+    {
+      "name": "get_race_startlist",
+      "description": "Get the startlist for a specific race edition with detailed or basic team information, showing participating riders and teams."
+    },
+    {
+      "name": "get_race_victory_table",
+      "description": "Retrieve the all-time victory table for a race showing riders with the most wins and their historical dominance."
+    },
+    {
+      "name": "get_race_year_by_year",
+      "description": "Get comprehensive year-by-year results for a race with optional classification filter to track historical winners and trends."
+    },
+    {
+      "name": "get_race_youngest_oldest_winners",
+      "description": "Retrieve information about the youngest and oldest winners of a race for interesting historical context and records."
+    },
+    {
+      "name": "get_race_stage_victories",
+      "description": "Get detailed information about stage victories in multi-stage races, including stage winners and sprint/mountain classifications."
+    },
+    {
+      "name": "search_rider",
+      "description": "Search for professional cyclists by name, returning their IDs and basic information for further detailed queries."
+    },
+    {
+      "name": "search_race",
+      "description": "Search for cycling races by name, returning their IDs and basic information to enable detailed race data retrieval."
+    }
+  ]
+}
