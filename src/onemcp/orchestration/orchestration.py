@@ -48,7 +48,7 @@ class LocalState:
 
     def __init__(self) -> None:
         self._dynamic_tools: list[types.Tool] = []
-        self._lookup_tools: dict[str, types.Tool] = {}
+        self._lookup_tools: dict[str, tuple[str, types.Tool]] = {}
         self._available_servers: set[str] = set()
         self._available_tools: dict[str, list[types.Tool]] = {}
         self._id_url_map: dict[str, str] = {}
@@ -88,8 +88,7 @@ class LocalState:
         self._url_id_map[server_url] = sandbox_id
 
         for tool in tools:
-            self._lookup_tools[tool.name] = tool
-            tool.sandbox_id = sandbox_id
+            self._lookup_tools[tool.name] = (sandbox_id, tool)
 
         # self._rag.upload_points(
         #     collection_name="tools",
@@ -121,7 +120,7 @@ class LocalState:
         # return results.points
         return []
 
-    def get_tool(self, name: str) -> types.Tool | None:
+    def get_tool(self, name: str) -> tuple[str, types.Tool] | None:
         """Get a tool by name."""
         if name in self._lookup_tools:
             return self._lookup_tools[name]
@@ -251,7 +250,7 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
     for tool in suggested_tools:
         entry = local_state.get_tool(tool.tool_name)
         if entry:
-            local_state.add_dynamic(entry)
+            local_state.add_dynamic(entry[1])
 
     await ctx.request_context.session.send_tool_list_changed()
 
@@ -269,7 +268,7 @@ async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
 
     if tool:
         sandbox = MockSandbox()
-        return await sandbox.call_tool(tool.sandbox_id, name, args)
+        return await sandbox.call_tool(tool[0], name, args)
 
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "
