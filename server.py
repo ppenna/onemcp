@@ -19,7 +19,7 @@ def initialize(protocol_version="2024-11-05"):
         "method": "initialize",
         "params": {
             "protocolVersion": protocol_version,
-            "capabilities": {},        # minimal; add if your client supports more
+            "capabilities": {},  # minimal; add if your client supports more
             "clientInfo": {"name": "cli-mcp", "version": "0.1"},
         },
     }
@@ -69,10 +69,16 @@ def read_until_id(proc, expect_id, timeout=5.0):
 
 def main():
     ap = argparse.ArgumentParser(description="List MCP tools from a stdio server")
-    ap.add_argument("--cmd", default="python3 -m mcp_server_calculator",
-                    help='Command to launch the MCP server (default: "python3 -m mcp_server_calculator")')
-    ap.add_argument("--protocol", default="2024-11-05",
-                    help="MCP protocolVersion to send in initialize (default: 2024-11-05)")
+    ap.add_argument(
+        "--cmd",
+        default="python3 -m mcp_server_calculator",
+        help='Command to launch the MCP server (default: "python3 -m mcp_server_calculator")',
+    )
+    ap.add_argument(
+        "--protocol",
+        default="2024-11-05",
+        help="MCP protocolVersion to send in initialize (default: 2024-11-05)",
+    )
     args = ap.parse_args()
 
     # Start the server with stdin/stdout piped

@@ -110,6 +110,25 @@ ignore_missing_imports = true
 module = "tests.*"
 disallow_untyped_defs = false
 
+[[tool.mypy.overrides]]
+module = "onemcp.discovery.indexing_api"
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = [
+    "chromadb",
+    "chromadb.*",
+    "fastapi",
+    "fastapi.*",
+    "pydantic",
+    "pydantic.*",
+    "uvicorn",
+    "uvicorn.*",
+    "mcp",
+    "mcp.*"
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]

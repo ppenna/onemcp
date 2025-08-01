@@ -208,3 +208,7 @@ __marimo__/
 
 # IDEs
 .vscode/
+
+chroma/
+src/onemcp/discovery/chroma/
+src/onemcp/discovery/servers/chroma_mcpservers_db/
