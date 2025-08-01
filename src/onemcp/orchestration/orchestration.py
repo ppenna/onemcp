@@ -32,7 +32,7 @@ from onemcp import Registry, ToolEntry
 class LocalState:
     """A simple class to hold local state for the MCP server."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._dynamic_tools: list[types.Tool] = []
         self._lookup_tools: dict[str, types.Tool] = {}
         self._available_servers: set[str] = set()
@@ -52,11 +52,11 @@ class LocalState:
     def dynamic_tools(self) -> list[types.Tool]:
         return self._dynamic_tools
 
-    def clear_dynamic(self):
+    def clear_dynamic(self) -> None:
         self._dynamic_tools.clear()
         self._lookup_tools.clear()
 
-    def add_dynamic(self, tool: types.Tool):
+    def add_dynamic(self, tool: types.Tool) -> None:
         self._dynamic_tools.append(tool)
         self._lookup_tools[tool.name] = tool
 
@@ -80,7 +80,7 @@ class LocalState:
         #     ],
         # )
 
-    def remove_server(self, server: str):
+    def remove_server(self, server: str) -> None:
         if server in self._available_servers:
             self._available_servers.remove(server)
             self._available_tools.pop(server, None)

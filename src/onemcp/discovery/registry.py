@@ -58,6 +58,7 @@ class Registry(RegistryInterface):
                     name=tool.get("name", ""),
                     description=tool.get("description", ""),
                     inputSchema=tool.get("inputSchema", {}),
+                    annotations=None,
                 )
                 entry.tools.append(t)
 
