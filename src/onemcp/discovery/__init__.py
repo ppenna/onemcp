@@ -1,4 +1,11 @@
-# Copyright(c) Microsoft Corporation.
-# Licensed under the MIT License.
+"""
+OneMCP Discovery Module
 
-"""Discovery module for OneMCP."""
+This module provides interfaces and implementations for discovering and managing MCP servers.
+"""
+
+from .mock_registry import MockRegistry
+from .registry import Registry
+from .registry_api import RegistryInterface, ServerEntry, ToolEntry
+
+__all__ = ["Registry", "RegistryInterface", "ServerEntry", "ToolEntry", "MockRegistry"]
