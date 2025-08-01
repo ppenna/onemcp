@@ -91,7 +91,7 @@ class IndexingAPI:
                 # Validate that repository_url is present
                 if "repository_url" not in request:
                     raise HTTPException(
-                        status_code=422, 
+                        status_code=422,
                         detail="Missing required field: repository_url"
                     )
 
@@ -359,8 +359,9 @@ def create_app(db_name: str = "chroma_mcpservers_db") -> FastAPI:
 
 # For development/testing
 if __name__ == "__main__":
-    import uvicorn
     import argparse
+
+    import uvicorn
     parser = argparse.ArgumentParser(description="Run the OneMCP Indexing API")
     parser.add_argument("--port", type=int, default=8001, help="Port to run the API on")
 
