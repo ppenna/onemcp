@@ -153,15 +153,16 @@ if __name__ == "__main__":
     prompt_path = (
         pathlib.Path(__file__).parent.parent.parent.parent
         / "assets"
-        / "test"
         / "explored-mcp-server.json"
     )
+
+    print(f"Loading server data from: {prompt_path}")
 
     # open json file and fix any json errors
     with open(prompt_path, encoding="utf-8") as f:
         # load as text first to ensure it's valid JSON
         json_text = f.read()
-        json_text = re.sub("}\r\n{", "},\r\n{", json_text)
+        json_text = re.sub("}\n{", "},\n{", json_text)
         json_text = "[" + json_text + "]"
 
         server_data = json.loads(json_text)

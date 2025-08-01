@@ -3,16 +3,12 @@ import logging
 import pathlib
 import re
 import sys
-
-import pydantic_core
-
-sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
-
 from collections.abc import Sequence
 from itertools import chain
 from typing import Any
 
 import mcp.types as types
+import pydantic_core
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.prompts import base
 from mcp.server.fastmcp.server import Context
@@ -24,9 +20,14 @@ from mcp.types import (
     TextContent,
 )
 
+from onemcp import Registry, ToolEntry
+from onemcp.sandbox.api import SandboxAPI
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent.parent))
+
+
 # from qdrant_client import QdrantClient, models
 # from sentence_transformers import SentenceTransformer
-from onemcp import Registry, ToolEntry
 
 
 class MockSandbox:
@@ -36,11 +37,20 @@ class MockSandbox:
         print(
             f"Mock call to tool: {name} with args: {args} and sandbox_id: {sandbox_id}"
         )
-        return f"Mock response from {name} with args {args} and sandbox_id {sandbox_id}"
+        api = SandboxAPI()
+
+        response = api.call_tool(sandbox_id=sandbox_id, tool_name=name, arguments=args)
+
+        return response
 
     async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
         print(f"Mock sandbox server is running with metadata: {bootstrap_metadata}")
-        return "sanbox-server-id"
+        api = SandboxAPI()
+        response = api.start_sandbox(bootstrap_metadata)
+        if not response:
+            raise RuntimeError("Failed to start sandbox server")
+        sandbox_id: str = response
+        return sandbox_id
 
 
 class LocalState:
@@ -191,7 +201,7 @@ async def guess_required_tool_descriptions(
 
 
 ##
-## The OneMCP tool
+# The OneMCP tool
 ##
 async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
     """Takes the user prompt and suggests which MCP tools would be appropriate."""
