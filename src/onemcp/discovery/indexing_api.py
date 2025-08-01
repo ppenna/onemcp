@@ -91,8 +91,7 @@ class IndexingAPI:
                 # Validate that repository_url is present
                 if "repository_url" not in request:
                     raise HTTPException(
-                        status_code=422,
-                        detail="Missing required field: repository_url"
+                        status_code=422, detail="Missing required field: repository_url"
                     )
 
                 # Use the request data as-is
@@ -362,6 +361,7 @@ if __name__ == "__main__":
     import argparse
 
     import uvicorn
+
     parser = argparse.ArgumentParser(description="Run the OneMCP Indexing API")
     parser.add_argument("--port", type=int, default=8001, help="Port to run the API on")
 

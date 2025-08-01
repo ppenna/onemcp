@@ -56,45 +56,33 @@ def test_api() -> None:
 
     print("\n2.2. Testing server registration...")
     test_server2 = {
-  "repository_url": "https://github.com/githejie/mcp-server-calculator",
-  "repository_readme": "",
-  "tools": [
-    {
-      "name": "calculate",
-      "description": "Calculates/evaluates the given expression.",
-      "inputSchema": {
-        "properties": {
-          "expression": {
-            "title": "Expression",
-            "type": "string"
-          }
-        },
-        "required": [
-          "expression"
+        "repository_url": "https://github.com/githejie/mcp-server-calculator",
+        "repository_readme": "",
+        "tools": [
+            {
+                "name": "calculate",
+                "description": "Calculates/evaluates the given expression.",
+                "inputSchema": {
+                    "properties": {
+                        "expression": {"title": "Expression", "type": "string"}
+                    },
+                    "required": ["expression"],
+                    "title": "calculateArguments",
+                    "type": "object",
+                },
+                "outputSchema": {
+                    "properties": {"result": {"title": "Result", "type": "string"}},
+                    "required": ["result"],
+                    "title": "calculateOutput",
+                    "type": "object",
+                },
+            }
         ],
-        "title": "calculateArguments",
-        "type": "object"
-      },
-      "outputSchema": {
-        "properties": {
-          "result": {
-            "title": "Result",
-            "type": "string"
-          }
-        },
-        "required": [
-          "result"
-        ],
-        "title": "calculateOutput",
-        "type": "object"
-      }
+        "setup_script": '#!/bin/bash\n\nREPOSITORY_URL=https://github.com/githejie/mcp-server-calculator\n\nif [ -z "${REPOSITORY_URL}" ]; then\n    echo "Error: REPOSITORY_URL is not set. Please provide a valid repository URL." >&2\n    exit 1\nfi\nREPOSITORY_NAME=$(basename "${REPOSITORY_URL}" .git)\n\n# Install necessary packages\napt update\napt install -y git python3 python3-pip python3-venv curl\n\n# Clone the repository\ngit clone ${REPOSITORY_URL}\ncd "${REPOSITORY_NAME}"\n\n# Create and activate a virtual environment\npython3 -m venv venv\nsource venv/bin/activate\n\n# Install the MCP server using pip inside the virtual environment\npip install .\n\n# Final fallback: try to extract from pyproject.toml or setup.py\nif [ -f "pyproject.toml" ]; then\n    PACKAGE_NAME=$(grep -E "^name\\s*=" pyproject.toml | sed \'s/.*=\\s*["\\x27]\\([^"\\x27]*\\)["\\x27].*/\\1/\' | tr \'-\' \'_\')\nfi\n\nif [ -z "${PACKAGE_NAME}" ] && [ -f "setup.py" ]; then\n    PACKAGE_NAME=$(python3 setup.py --name 2>/dev/null | tr \'-\' \'_\')\nfi\n\nif [ -z "${PACKAGE_NAME}" ]; then\n    echo "Warning: Could not determine package name. Using default value \'default_package_name\'." >&2\n    PACKAGE_NAME="default_package_name"\nfi\n# Generate a script to run the MCP server\necho "#!/bin/bash\nsource $(pwd)/venv/bin/activate\npython3 -m ${PACKAGE_NAME}" > /run_mcp.sh\nchmod +x /run_mcp.sh\n',
+        "language": "Python",
+        "description": "A Model Context Protocol server for calculating.",
+        "name": "mcp-server-calculator",
     }
-  ],
-  "setup_script": "#!/bin/bash\n\nREPOSITORY_URL=https://github.com/githejie/mcp-server-calculator\n\nif [ -z \"${REPOSITORY_URL}\" ]; then\n    echo \"Error: REPOSITORY_URL is not set. Please provide a valid repository URL.\" >&2\n    exit 1\nfi\nREPOSITORY_NAME=$(basename \"${REPOSITORY_URL}\" .git)\n\n# Install necessary packages\napt update\napt install -y git python3 python3-pip python3-venv curl\n\n# Clone the repository\ngit clone ${REPOSITORY_URL}\ncd \"${REPOSITORY_NAME}\"\n\n# Create and activate a virtual environment\npython3 -m venv venv\nsource venv/bin/activate\n\n# Install the MCP server using pip inside the virtual environment\npip install .\n\n# Final fallback: try to extract from pyproject.toml or setup.py\nif [ -f \"pyproject.toml\" ]; then\n    PACKAGE_NAME=$(grep -E \"^name\\s*=\" pyproject.toml | sed 's/.*=\\s*[\"\\x27]\\([^\"\\x27]*\\)[\"\\x27].*/\\1/' | tr '-' '_')\nfi\n\nif [ -z \"${PACKAGE_NAME}\" ] && [ -f \"setup.py\" ]; then\n    PACKAGE_NAME=$(python3 setup.py --name 2>/dev/null | tr '-' '_')\nfi\n\nif [ -z \"${PACKAGE_NAME}\" ]; then\n    echo \"Warning: Could not determine package name. Using default value 'default_package_name'.\" >&2\n    PACKAGE_NAME=\"default_package_name\"\nfi\n# Generate a script to run the MCP server\necho \"#!/bin/bash\nsource $(pwd)/venv/bin/activate\npython3 -m ${PACKAGE_NAME}\" > /run_mcp.sh\nchmod +x /run_mcp.sh\n",
-  "language": "Python",
-  "description": "A Model Context Protocol server for calculating.",
-  "name": "mcp-server-calculator"
-}
 
     try:
         response = requests.post(f"{base_url}/register_server", json=test_server2)
@@ -222,7 +210,6 @@ def test_api() -> None:
 
     except Exception as e:
         print(f"❌ Error verifying removal: {e}")
-
 
     print("\n9. Testing server unregistration (cleanup)...")
     unregister_request = {"repository_url": test_server2["repository_url"]}
