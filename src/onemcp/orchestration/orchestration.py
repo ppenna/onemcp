@@ -23,8 +23,8 @@ from mcp.types import (
     SamplingMessage,
     TextContent,
 )
-from qdrant_client import QdrantClient, models
-from sentence_transformers import SentenceTransformer
+# from qdrant_client import QdrantClient, models
+# from sentence_transformers import SentenceTransformer
 
 from onemcp import Registry
 
@@ -37,16 +37,16 @@ class LocalState:
         self._lookup_tools: dict[str, types.Tool] = {}
         self._available_servers: set[str] = set()
         self._available_tools: dict[str, list[types.Tool]] = {}
-        self._rag = QdrantClient(":memory:")  # Create in-memory Qdrant instance
-        self._encoder = SentenceTransformer("thenlper/gte-small")
+        # self._rag = QdrantClient(":memory:")  # Create in-memory Qdrant instance
+        # self._encoder = SentenceTransformer("thenlper/gte-small")
 
-        self._rag.create_collection(
-            collection_name="tools",
-            vectors_config=models.VectorParams(
-                size=self._encoder.get_sentence_embedding_dimension(),
-                distance=models.Distance.COSINE,
-            ),
-        )
+        # self._rag.create_collection(
+        #     collection_name="tools",
+        #     vectors_config=models.VectorParams(
+        #         size=self._encoder.get_sentence_embedding_dimension(),
+        #         distance=models.Distance.COSINE,
+        #     ),
+        # )
 
     @property
     def dynamic_tools(self) -> list[types.Tool]:
@@ -68,17 +68,17 @@ class LocalState:
         self._available_servers.add(server)
         self._available_tools[server] = tools
 
-        self._rag.upload_points(
-            collection_name="tools",
-            points=[
-                models.PointStruct(
-                    id=(server, tool.name),
-                    vector=self._encoder.encode(tool.description).tolist(),
-                    payload=tool,
-                )
-                for i, tool in enumerate(tools)
-            ],
-        )
+        # self._rag.upload_points(
+        #     collection_name="tools",
+        #     points=[
+        #         models.PointStruct(
+        #             id=(server, tool.name),
+        #             vector=self._encoder.encode(tool.description).tolist(),
+        #             payload=tool,
+        #         )
+        #         for i, tool in enumerate(tools)
+        #     ],
+        # )
 
     def remove_server(self, server: str):
         if server in self._available_servers:
@@ -91,11 +91,12 @@ class LocalState:
     # lookup tools by fuzzy search
     def find_tools(self, query: str, k: int = 3) -> list[types.Tool]:
         """Find tools by fuzzy search."""
-        results = self._rag.query_points(
-            collection_name="tools", query=self._encoder.encode(query).tolist(), limit=3
-        )
+        # results = self._rag.query_points(
+        #     collection_name="tools", query=self._encoder.encode(query).tolist(), limit=3
+        # )
 
-        return results.points
+        # return results.points
+        return []
 
     def get_tool(self, name: str) -> types.Tool | None:
         """Get a tool by name."""
