@@ -47,7 +47,7 @@ class DockerSandboxError(Exception):
 class DockerSandboxRegistry:
     """Docker-based sandbox for MCP servers."""
 
-    def __init__(self, base_port: int = 8000, max_instances: int = 10):
+    def __init__(self, base_port: int = 9000, max_instances: int = 10):
         """Initialize the Docker sandbox.
 
         Args:
