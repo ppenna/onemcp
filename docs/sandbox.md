@@ -1,4 +1,4 @@
-## Sandbox Subsystem
+# Sandbox - Quick Start Guide
 
 To run the sandbox HTTP server, from the root of the directory, run:
 
