@@ -60,11 +60,12 @@ class DockerSandboxRegistry:
         self.used_ports: set = set()
         self._lock = asyncio.Lock()
 
-    async def discover(self, repository_url: str) -> dict[str, Any]:
+    async def discover(self, repository_url: str, repository_readme: str) -> dict[str, Any]:
         """Discover capabilities and setup instructions for an MCP Server.
 
         Args:
             repository_url: URL of the repository to discover
+            repository_readme: Contents of the repository's README
 
         Returns:
             Dictionary containing discovery information
@@ -73,13 +74,13 @@ class DockerSandboxRegistry:
             logger.info(f"Discovering MCP server at {repository_url}")
 
             # Analyze repository structure
-            discovery_info = await self._analyze_repository(repository_url)
+            discovery_info = await self._analyze_repository(repository_url,
+                                                            repository_readme)
 
             return {
                 "response_code": "200",
-                "overview": discovery_info["overview"],
                 "tools": discovery_info["tools"],
-                "bootstrap_metadata": discovery_info["bootstrap_metadata"],
+                "setup_script": discovery_info["setup_script"],
             }
 
         except Exception as e:
@@ -128,13 +129,6 @@ class DockerSandboxRegistry:
                     status="running",
                 )
 
-                tools = instance.get_tools(container)
-                if tools is None:
-                    return {
-                        "response_code": "500",
-                        "error_description": "Failed to retrieve tools from MCP server",
-                    }
-
                 self.instances[sandbox_id] = (container, instance)
                 self.used_ports.add(port)
 
@@ -152,6 +146,24 @@ class DockerSandboxRegistry:
                     "response_code": "500",
                     "error_description": f"Failed to start sandbox: {str(e)}",
                 }
+
+    async def get_tools(self, sandbox_id: str) -> list[dict[str, Any]]:
+        """Get the tools exposed by an MCP server.
+
+        Args:
+            sandbox_id: ID of the sandbox to query
+
+        Returns:
+            List of available tools
+        """
+        logger.info(f"Getting tools for sandbox ID: {sandbox_id}")
+        (container, instance) = self.instances.get(sandbox_id)
+
+        tools = await instance.get_tools(container)
+        logger.info(f"Got tools: {tools}")
+
+        return tools
+
 
     async def stop(self, sandbox_id: str) -> dict[str, Any]:
         """Stop a running sandbox instance.
@@ -201,65 +213,9 @@ class DockerSandboxRegistry:
                 return port
         return None
 
-    def _parse_repo_url(self, url: str) -> tuple[str, str]:
-        """Extract (owner, repo) from a GitHub repository URL."""
-        url = url.strip()
-
-        # SSH: git@github.com:owner/repo(.git)
-        if url.startswith("git@github.com:"):
-            path = url.split("git@github.com:")[1]
-            if path.endswith(".git"):
-                path = path[:-4]
-            owner, repo = path.split("/", 1)
-            return owner, repo
-
-        # HTTPS: https://github.com/owner/repo(.git)[/...]
-        parsed = urlparse(url)
-        if parsed.netloc not in {"github.com", "www.github.com"}:
-            raise ValueError("URL must be a github.com repository URL")
-        parts = [p for p in parsed.path.split("/") if p]
-        if len(parts) < 2:
-            raise ValueError(
-                "Repository URL must be like https://github.com/<owner>/<repo>"
-            )
-        owner, repo = parts[0], parts[1]
-        if repo.endswith(".git"):
-            repo = repo[:-4]
-        return owner, repo
-
-    def _get_repo_readme(
-        self, repo_url: str, token: Optional[str] = None, timeout: int = 20
-    ) -> str:
-        """
-        Return the root README text for a GitHub repository URL.
-
-        Works for public repos; for private repos pass a token or set GITHUB_TOKEN.
-        """
-        owner, repo = self._parse_repo_url(repo_url)
-        headers = {
-            "Accept": "application/vnd.github.v3.raw",
-            "User-Agent": "readme-minimal/1.0",
-        }
-        token = token or os.getenv("GITHUB_TOKEN")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-
-        url = f"https://api.github.com/repos/{owner}/{repo}/readme"
-        r = requests.get(url, headers=headers, timeout=timeout)
-        if r.status_code == 404:
-            raise ReadmeNotFound("No README found in the repository root.")
-        r.raise_for_status()
-        return r.text
-
-    def _build_prompt(self, repository_url: str) -> str:
-        try:
-            readme_text = self._get_repo_readme(repository_url)
-        except ReadmeNotFound:
-            logger.error(f"Could not find readme at: {repository_url}. Exitting...")
-            exit(1)
-
+    def _build_prompt(self, repository_url: str, repository_readme: str) -> str:
         prompt = f"The GitHub URL for the MCP server is {repository_url}. Here "
-        prompt += f"is the README:\n{readme_text}"
+        prompt += f"is the README:\n{repository_readme}"
 
         return prompt
 
@@ -291,9 +247,15 @@ class DockerSandboxRegistry:
 
             logger.info("Generated dockerfile at: {image_tag}")
 
+    def get_image_tag_from_repo_url(self, repository_url: str) -> str:
+        domain = "github.com/"
+        idx = repository_url.find(domain) + len(domain)
+        version = "v1"
+        return f"onemcp/{domain}/{repository_url[idx:]}:{version}"
+
     def ask_openai(self, repository_url: str) -> str:
         # First get the repository readme file.
-        prompt = self._build_prompt(repository_url)
+        prompt = self._build_prompt(repository_url, repository_readme)
 
         system_prompt_file = Path(DISCOVERY_PROMPT_FILE_PATH)
         if not system_prompt_file.exists():
@@ -359,8 +321,7 @@ class DockerSandboxRegistry:
         logger.debug(f"{setup_script}")
 
         # Generate temporary dockerfile from the set-up.
-        # TODO: randomize
-        container_image_tag = "onemcp-smoke-test"
+        container_image_tag = self.get_image_tag_from_repo_url(repository_url)
         self._generate_dockerfile(setup_script, container_image_tag)
 
         overview = "MCP Server Repository"

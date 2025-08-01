@@ -76,7 +76,8 @@ async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
 
     Expected payload:
     {
-        "repository_url": "<URL>"
+        "repository_url": "<URL>",
+        "repository_readme": "<README_CONTENTS>"
     }
     """
     if "repository_url" not in body:
@@ -86,7 +87,8 @@ async def handle_discover(body: dict[str, Any]) -> dict[str, Any]:
         }
 
     repository_url = body["repository_url"]
-    result = await sandbox.discover(repository_url)
+    repository_readme = body["repository_readme"]
+    result = await sandbox.discover(repository_url, repository_readme)
 
     return result
 

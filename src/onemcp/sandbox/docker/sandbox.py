@@ -8,6 +8,7 @@ import logging
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,39 @@ class DockerContainer:
         docker container.
         """
         return self.proc.pid
+
+    def _ensure_container_up(self, name: str, attempts: int = 5, wait_seconds: float = 1.0) -> None:
+        """
+        Check up to `attempts` times (waiting `wait_seconds` each time) whether
+        the Docker container `name` is running.
+
+        Return on success; raise RuntimeError otherwise.
+        """
+        last_err = ""
+        logger.info(f"Checking if container {name} is running...")
+
+        for _ in range(attempts):
+            proc = subprocess.run(
+                ["docker", "inspect", "-f", "{{.State.Running}}", name],
+                capture_output=True, text=True
+            )
+
+            if proc.returncode == 0 and proc.stdout.strip().lower() == "true":
+                return
+
+            if proc.returncode != 0:
+                last_err = proc.stderr.strip()
+
+            time.sleep(wait_seconds)
+
+        # Before erroring out, remove the container if it is in a 'Created'
+        # state.
+        subprocess.run(f"docker rm -f {name}", shell=True, check=True)
+
+        if "No such object" in last_err:
+            raise RuntimeError(f"Container '{name}' not found.")
+
+        raise RuntimeError(f"Container '{name}' is not Up after {attempts} attempts.")
 
     def start(
         self, sandbox_id: str, bootstrap_metadata: dict[str, Any], port: int
@@ -86,9 +120,14 @@ class DockerContainer:
                 run_cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
+                # TODO: un-comment so that we do not pollute the logs
+                # stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
+
+            # Make sure that the container is up and running before returing.
+            self._ensure_container_up(self.name)
 
         except Exception as e:
             # Clean up on failure
