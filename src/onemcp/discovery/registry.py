@@ -35,6 +35,7 @@ class Registry(RegistryInterface):
                     tool_name=tool["tool_name"],
                     tool_description=tool["tool_description"],
                     server_name=tool["server_name"],
+                    server_url=tool["server_url"],
                     distance=tool["distance"],
                 )
                 tools.append(entry)

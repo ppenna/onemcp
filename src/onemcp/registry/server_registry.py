@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import pathlib
 from dataclasses import dataclass
 from typing import Any
 
 import requests
 
-BASE_URL: str = "https://1cpgs0fc-8001.usw2.devtunnels.ms"
+BASE_URL: str = "https://klqnxwmj-8001.usw2.devtunnels.ms"
 
 
 class ServerRegistryError(Exception):
@@ -28,7 +29,7 @@ class ServerRegistry:
     """
 
     base_url: str = BASE_URL
-    timeout: float = 15.0
+    timeout: float = 1500.0
 
     # --------------------------------------------------------------------------
     # Helpers
@@ -115,7 +116,7 @@ class ServerRegistry:
           }
         """
         payload = {
-            "codebase_url": codebase_url,
+            "repository_url": codebase_url,
             "description": description,
             "tools": tools,
         }
@@ -132,11 +133,38 @@ class ServerRegistry:
 
     def unregister_server(self, codebase_url: str) -> Any:
         """DELETE /unregister_server with {"codebase_url": "..."}"""
-        payload = {"codebase_url": codebase_url}
+        payload = {"repository_url": codebase_url}
         return self._delete_json("/unregister_server", json=payload)
 
-    def server_exists(self, codebase_url: str) -> bool:
+    def server_exists(self, repository_url: str) -> bool:
         """Convenience helper that checks whether a server is currently registered."""
         data = self.list_servers()
         servers = data.get("servers", [])
-        return any(s.get("codebase_url") == codebase_url for s in servers)
+        return any(s.get("repository_url") == repository_url for s in servers)
+
+
+# add main function for testing purposes
+if __name__ == "__main__":
+    # load the explored-mcp-server.json file and each server's tools
+    registry = ServerRegistry()
+
+    # load json file
+    prompt_path = (
+        pathlib.Path(__file__).parent.parent.parent.parent
+        / "assets"
+        / "explored-mcp-server.json"
+    )
+    with open(prompt_path, encoding="utf-8") as f:
+        server_data = json.load(f)
+
+    server_list = registry.list_servers()
+
+    # remove all for testing purposes
+    for server in server_list["servers"]:
+        print(f"Unregistering server: {server['repository_url']}")
+        registry.unregister_server(server["repository_url"])
+
+    # server_data is a json array, want to register each server
+    for server in server_data:
+        print(f"Registering server: {server['repository_url']}")
+        registry._post_json("/register_server", json=server)

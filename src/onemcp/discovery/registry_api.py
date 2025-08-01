@@ -15,14 +15,26 @@ class ServerEntry:
 
 
 class ToolEntry:
-    __slots__ = ("tool_name", "tool_description", "server_name", "distance")
+    __slots__ = (
+        "tool_name",
+        "tool_description",
+        "server_name",
+        "server_url",
+        "distance",
+    )
 
     def __init__(
-        self, tool_name: str, tool_description: str, server_name: str, distance: float
+        self,
+        tool_name: str,
+        tool_description: str,
+        server_name: str,
+        server_url: str,
+        distance: float,
     ):
         self.tool_name = tool_name
         self.tool_description = tool_description
         self.server_name = server_name
+        self.server_url = server_url
         self.distance = distance
 
 
