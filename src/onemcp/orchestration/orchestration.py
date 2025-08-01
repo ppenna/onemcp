@@ -67,11 +67,9 @@ class LocalState:
 
     def clear_dynamic(self) -> None:
         self._dynamic_tools.clear()
-        self._lookup_tools.clear()
 
     def add_dynamic(self, tool: types.Tool) -> None:
         self._dynamic_tools.append(tool)
-        self._lookup_tools[tool.name] = tool
 
     # add/remove entire MCP servers
     def has_server(self, server: str) -> bool:
@@ -80,6 +78,9 @@ class LocalState:
     def add_server(self, server: str, tools: list[types.Tool]) -> None:
         self._available_servers.add(server)
         self._available_tools[server] = tools
+
+        for tool in tools:
+            self._lookup_tools[tool.name] = tool
 
         # self._rag.upload_points(
         #     collection_name="tools",
@@ -223,8 +224,8 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
 
                 suggested_tools.add(entry)
 
-                if not local_state.has_server(entry.server_name):
-                    servers.add(entry.server_name)
+                if not local_state.has_server(entry.server_url):
+                    servers.add(entry.server_url)
 
     # install missing servers
     sandbox = MockSandbox()
@@ -252,7 +253,7 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
         base.Message(role="assistant", content=output),
         base.Message(
             role="user",
-            content="Retry the last prompt with any relevant tools.",
+            content=f"Reevaluate the following with the new suggested tools, and call the appropriate tools if necessary: {prompt}",
         ),
     ]
 

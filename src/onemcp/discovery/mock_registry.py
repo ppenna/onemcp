@@ -36,6 +36,7 @@ class MockRegistry(RegistryInterface):
                 tool_name=server.name,
                 tool_description="",
                 server_name=server.name,
+                server_url=server.url,
                 distance=score,
             )
             for server, score in servers
