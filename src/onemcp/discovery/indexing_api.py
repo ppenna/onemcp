@@ -236,7 +236,9 @@ class IndexingAPI:
                 print(f"Getting server JSON for: {codebase_url}")
 
                 # Use the existing get_server_json method from indexing
-                server_data = self.indexing.get_server_json(codebase_url)
+                server_data: dict[str, Any] = self.indexing.get_server_json(
+                    codebase_url
+                )
 
                 if not server_data:
                     raise HTTPException(
