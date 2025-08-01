@@ -5,6 +5,7 @@
 
 import asyncio
 import logging
+import select
 import shutil
 import subprocess
 import tempfile
@@ -159,9 +160,15 @@ class DockerContainer:
         self.proc.stdin.write(data)
         self.proc.stdin.flush()
 
-    def read(self) -> str:
+    def read(self, timeout: int = 5) -> str:
         if self.proc.stdout is None:
             raise DockerSandboxError("Docker container has no STDIN")
 
-        line: str = self.proc.stdout.readline()
+        # Try and read with a timeout, fail otherwise.
+        rlist, _, _ = select.select([self.proc.stdout], [], [], timeout)
+        if rlist:
+            line = self.proc.stdout.readline()
+        else:
+            raise TimeoutError("Timed-out reading from container STDIN")
+
         return line

@@ -31,7 +31,7 @@ INSTALL_MCP_DOCKERFILE_PATH = os.path.join(
 SETUP_SCRIPT_TEMPLATE_PATH = os.path.join(
     ONEMCP_SRC_ROOT, "sandbox", "try-install-mcp-server.sh"
 )
-USE_HEURISTIC_DISCOVERY = os.getenv("USE_HEURISTIC_DISCOVERY", "true").lower() == "true"
+USE_HEURISTIC_DISCOVERY = os.getenv("USE_HEURISTIC_DISCOVERY", "false").lower() == "true"
 
 
 class ReadmeNotFound(Exception):
@@ -147,6 +147,24 @@ class DockerSandboxRegistry:
                     "error_description": f"Failed to start sandbox: {str(e)}",
                 }
 
+    async def call_tool(self, sandbox_id: str, body: dict[str, Any]) -> list[dict[str, Any]]:
+        """Call a tool exposed by an MCP server running in `sandbox_id`.
+
+        Args:
+            The tools/call payload of the MCP protocol.
+
+        Returns:
+            The response for the tool execution.
+        """
+        logger.info("Calling tool {} for sandbox ID: {}".format(body["params"]["name"],
+                                                                sandbox_id))
+        (container, instance) = self.instances.get(sandbox_id)
+
+        logger.info(f"Body: {body}")
+        response = instance.call_tool(container, body)
+
+        return {"response": response}
+
     async def get_tools(self, sandbox_id: str) -> list[dict[str, Any]]:
         """Get the tools exposed by an MCP server.
 
@@ -159,10 +177,10 @@ class DockerSandboxRegistry:
         logger.info(f"Getting tools for sandbox ID: {sandbox_id}")
         (container, instance) = self.instances.get(sandbox_id)
 
-        tools = await instance.get_tools(container)
+        tools = instance.get_tools(container)
         logger.info(f"Got tools: {tools}")
 
-        return tools
+        return {"tools": tools}
 
 
     async def stop(self, sandbox_id: str) -> dict[str, Any]:
@@ -245,15 +263,15 @@ class DockerSandboxRegistry:
             logger.info(f"docker_cmd: {docker_cmd_str}")
             subprocess.run(docker_cmd_str, shell=True, check=True)
 
-            logger.info("Generated dockerfile at: {image_tag}")
+            logger.info(f"Generated dockerfile at: {image_tag}")
 
     def get_image_tag_from_repo_url(self, repository_url: str) -> str:
         domain = "github.com/"
         idx = repository_url.find(domain) + len(domain)
         version = "v1"
-        return f"onemcp/{domain}/{repository_url[idx:]}:{version}"
+        return f"onemcp/{domain}{repository_url[idx:]}:{version}"
 
-    def ask_openai(self, repository_url: str) -> str:
+    def ask_openai(self, repository_url: str, repository_readme: str) -> str:
         # First get the repository readme file.
         prompt = self._build_prompt(repository_url, repository_readme)
 
@@ -296,7 +314,7 @@ class DockerSandboxRegistry:
         )
         return setup_script
 
-    async def _analyze_repository(self, repository_url: str) -> dict[str, Any]:
+    async def _analyze_repository(self, repository_url: str, repository_readme: str) -> dict[str, Any]:
         """Analyze repository to extract MCP server information.
 
         Args:
@@ -315,7 +333,7 @@ class DockerSandboxRegistry:
         else:
             # Ask OpenAI to generate the setup script.
             logger.info(f"Using OpenAI to generate setup script for {repository_url}")
-            setup_script = self.ask_openai(repository_url)
+            setup_script = self.ask_openai(repository_url, repository_readme)
 
         logger.debug(f"Generated set-up script for MCP server at url: {repository_url}")
         logger.debug(f"{setup_script}")
@@ -332,7 +350,25 @@ class DockerSandboxRegistry:
         }
 
         # Start docker container
-        await self.start(bootstrap_metadata)
+        response = await self.start(bootstrap_metadata)
+        sandbox_id = response.get("sandbox_id")
+
+        (container, instance) = self.instances.get(sandbox_id)
+        tools = None
+        try:
+            tools = instance.get_tools(container)
+        except Exception:
+            logger.error(f"Error getting tools for sandbox {sandbox_id} from repo {repository_url}")
+
+        await self.stop(sandbox_id)
+
+        if tools is None:
+            return {
+                "response_code": "500",
+                "error_description": "Failed to retrieve tools from MCP server",
+            }
+
+        print(f"Got tools: {tools}")
 
         return {
             "overview": overview,

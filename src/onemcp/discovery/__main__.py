@@ -156,6 +156,12 @@ if __name__ == "__main__":
 
         response = requests.post(url, headers=headers, json=payload).json()
 
+        tools = response.get("tools", "")
+        setup_script = response.get("setup_script", "")
+
+        if len(tools) == 0 or len(setup_script) == 0:
+            raise RuntimeError(f"Could not get tools for {repository_url}")
+
         result = {
             "name": entry.get("name"),
             "description": entry.get("description"),
