@@ -8,7 +8,7 @@ from typing import Any
 
 import requests
 
-BASE_URL: str = "https://klqnxwmj-8001.usw2.devtunnels.ms"
+BASE_URL: str = "https://0f7w4rjt-8001.usw2.devtunnels.ms"
 
 
 class ServerRegistryError(Exception):
