@@ -7882,3 +7882,160 @@
   "description": "A comprehensive Message Control Protocol (MCP) server for Kafka Schema Registry.",
   "name": "kafka-schema-reg-mcp"
 }
+{
+  "repository_url": "https://github.com/hugobarbalho/optiguide-mcp",
+  "repository_readme": "",
+  "tools": [
+    {
+      "name": "mip-formulation",
+      "description": "Given an optimization problem description, return the LaTeX formulation of a mixed integer programming problem.",
+      "inputSchema": {
+        "properties": {
+          "problem_description": {
+            "title": "Problem Description",
+            "type": "string",
+            "description": "Description of the optimization problem"
+          }
+        },
+        "required": [
+          "problem_description"
+        ],
+        "title": "mipFormulationArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "latex": {
+            "title": "LaTeX Formulation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "latex"
+        ],
+        "title": "mipFormulationOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "mip-resolve",
+      "description": "Given a problem description, LaTeX formulation, and inputs, solve the optimization problem.",
+      "inputSchema": {
+        "properties": {
+          "problem_description": {
+            "title": "Problem Description",
+            "type": "string",
+            "description": "Description of the optimization problem"
+          },
+          "latex_formulation": {
+            "title": "LaTeX Formulation",
+            "type": "string",
+            "description": "LaTeX formulation of the problem"
+          },
+          "inputs": {
+            "title": "Inputs",
+            "type": "object",
+            "description": "Inputs for the optimization problem"
+          }
+        },
+        "required": [
+          "problem_description",
+          "latex_formulation",
+          "inputs"
+        ],
+        "title": "mipResolveArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "python-code": {
+            "title": "Python Code",
+            "type": "string"
+          },
+          "solution": {
+            "title": "Solution",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "python-code",
+          "solution",
+          "status"
+        ],
+        "title": "mipResolveOutput",
+        "type": "object"
+      }
+    },
+    {
+      "name": "what-if-analysis",
+      "description": "Given a question from the user, modify the formulation or data for a new scenario and resolve the problem.",
+      "inputSchema": {
+        "properties": {
+          "original-problem-description": {
+            "title": "Original Problem Description",
+            "type": "string",
+            "description": "Original problem description"
+          },
+          "original-latex-formulation": {
+            "title": "Original LaTeX Formulation",
+            "type": "string",
+            "description": "Original LaTeX formulation"
+          },
+          "original-inputs": {
+            "title": "Original Inputs",
+            "type": "object",
+            "description": "Original inputs for the optimization problem"
+          },
+          "original-python-code": {
+            "title": "Original Python Code",
+            "type": "string",
+            "description": "Python code that needs to be modified to answer the question"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string",
+            "description": "User's what-if question"
+          }
+        },
+        "required": [
+          "original-problem-description",
+          "original-latex-formulation",
+          "original-inputs",
+          "original-python-code",
+          "question"
+        ],
+        "title": "whatIfAnalysisArguments",
+        "type": "object"
+      },
+      "outputSchema": {
+        "properties": {
+          "analysis": {
+            "title": "Analysis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysis"
+        ],
+        "title": "whatIfAnalysisOutput",
+        "type": "object"
+      }
+    }
+  ],
+  "bootstrap_metadata": {
+    "repository_url": "https://github.com/hugobarbalho/optiguide-mcp",
+    "setup_script": "#!/bin/bash\n\n# Install git\napt-get update && apt-get install -y git\n\n# Clone the MCP server repository\ngit clone https://github.com/hugobarbalho/optiguide-mcp\ncd optiguide-mcp\n\n# Install Python3, pip, and python3-venv\n\napt-get install -y python3 python3-pip python3-venv\n\n# Create a Python3 virtual environment\npython3 -m venv venv\n\n# Activate the virtual environment\nsource venv/bin/activate\n\n# Install the MCP server using pip\npython3 -m pip install -e .\n\n# Deactivate the virtual environment (optional step for cleanliness)\ndeactivate\n\n# Create a script to run the MCP server\ncat << EOF > /run_mcp.sh\n#!/bin/bash\n# Activate the virtual environment\nsource /optiguide-mcp/venv/bin/activate\n\n# Run the MCP server\npython3 -m optiguide_mcp\nEOF\n\n# Make the script executable\nchmod +x /run_mcp.sh",
+    "container_image_tag": "onemcp/github.com/hugobarbalho/optiguide-mcp:v1"
+  },
+  "language": "Python",
+  "description": "A Model Context Protocol server for optimization problems using Mixed Integer Programming. Provides tools for MIP formulation, problem solving, and what-if analysis.",
+  "name": "optiguide-mcp-server"
+}
