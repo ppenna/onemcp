@@ -10,7 +10,8 @@ from typing import Any
 import mcp.types as types
 import pydantic_core
 from mcp.server.fastmcp import FastMCP
-from mcp.server.fastmcp.prompts import base
+
+# from mcp.server.fastmcp.prompts import base
 from mcp.server.fastmcp.server import Context
 from mcp.server.fastmcp.utilities.types import Image
 from mcp.types import (
