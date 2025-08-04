@@ -45,12 +45,12 @@ class MockSandbox:
 
     async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
         print(f"Mock sandbox server is running with metadata: {bootstrap_metadata}")
-       # api = SandboxAPI()
-       #response = api.start_sandbox(bootstrap_metadata)
-       # if not response:
-       #     raise RuntimeError("Failed to start sandbox server")
-       # sandbox_id: str = response
-       # return sandbox_id
+        # api = SandboxAPI()
+        # response = api.start_sandbox(bootstrap_metadata)
+        # if not response:
+        #     raise RuntimeError("Failed to start sandbox server")
+        # sandbox_id: str = response
+        # return sandbox_id
         return "mock_sandbox_id"
 
 
@@ -200,9 +200,12 @@ async def guess_required_tool_descriptions(
 
     return extracted_tools
 
+
 class InstallationRequest(BaseModel):
     """Schema for collecting installation preferences."""
+
     canInstall: bool = Field(description="Can you install the server?")
+
 
 ##
 # The OneMCP tool
@@ -262,10 +265,10 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
             # result = await ctx.elicit(message=f"Installing {url}", schema=InstallationRequest)
             # if result.action == "accept":
             await ctx.report_progress(
-                        progress=i+1,
-                        total=2*len(servers) + 1,
-                        message=f"Installing {url}",
-                    )
+                progress=i + 1,
+                total=2 * len(servers) + 1,
+                message=f"Installing {url}",
+            )
 
             output_installed += f"\n- {url}"
             any_installed = True
@@ -274,15 +277,13 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
             local_state.add_server(sandbox_id, url, registry_server.tools)
 
             await ctx.report_progress(
-                        progress=i+1,
-                        total=2*len(servers) + 1,
-                        message=f"Installed {url}",
-                    )
+                progress=i + 1,
+                total=2 * len(servers) + 1,
+                message=f"Installed {url}",
+            )
 
     if any_installed:
-        output_array.append(
-            output_installed.strip()
-        )
+        output_array.append(output_installed.strip())
 
     # servers are already installed, so just add the tools
     local_state.clear_dynamic()
@@ -296,7 +297,7 @@ async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Mess
 
     return output_array + [
         output.strip(),
-        f"Reevaluate the following with the new suggested tools, and call the appropriate tools if necessary: {prompt}"
+        f"Reevaluate the following with the new suggested tools, and call the appropriate tools if necessary: {prompt}",
         # base.UserMessage(
         #     content=f"Reevaluate the following with the new suggested tools, and call the appropriate tools if necessary: {prompt}",
         # ),
