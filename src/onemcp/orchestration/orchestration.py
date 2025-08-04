@@ -46,13 +46,15 @@ class MockSandbox:
 
     async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
         print(f"Mock sandbox server is running with metadata: {bootstrap_metadata}")
-        # api = SandboxAPI()
-        # response = api.start_sandbox(bootstrap_metadata)
-        # if not response:
-        #     raise RuntimeError("Failed to start sandbox server")
-        # sandbox_id: str = response
-        # return sandbox_id
-        return "mock_sandbox_id"
+        api = SandboxAPI()
+        response = api.start_sandbox(bootstrap_metadata)
+        if not response:
+            raise RuntimeError("Failed to start sandbox server")
+        sandbox_id: str = response
+        return sandbox_id
+
+
+#        return "mock_sandbox_id"
 
 
 class LocalState:
