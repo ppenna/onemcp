@@ -210,7 +210,7 @@ class InstallationRequest(BaseModel):
 ##
 # The OneMCP tool
 ##
-async def suggest(prompt: str, files: list[str], ctx: Context) -> list[base.Message]:
+async def suggest(prompt: str, files: list[str], ctx: Context) -> list[str]:
     """Takes the user prompt and suggests which MCP tools would be appropriate."""
 
     # 1. Extract tool descriptions from the prompt
