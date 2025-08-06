@@ -7931,17 +7931,11 @@
             "title": "LaTeX Formulation",
             "type": "string",
             "description": "LaTeX formulation of the problem"
-          },
-          "inputs": {
-            "title": "Inputs",
-            "type": "object",
-            "description": "Inputs for the optimization problem"
           }
         },
         "required": [
           "problem_description",
-          "latex_formulation",
-          "inputs"
+          "latex_formulation"
         ],
         "title": "mipSolveArguments",
         "type": "object"

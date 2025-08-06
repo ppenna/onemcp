@@ -45,6 +45,7 @@ class MockSandbox:
         # if the response is a callback request, make the request and keep polling
         while isinstance(response, dict) and response['response'].get("method") == "sampling/createMessage":
             params = response['response']['params']
+            print(f"\nMock callback request: {response['response']}\n\n")
             result = await context.session.create_message(
                 messages=[
                     SamplingMessage(
@@ -57,14 +58,16 @@ class MockSandbox:
 
             cb_response = {
                 "jsonrpc": "2.0",
-                "id": 0,
+                "id": response['response']['id'],
                 "result": { **result.model_dump() }
             }
 
+            print(f"\nMock callback response: {cb_response}\n\n")
             response = api.call_tool_continue(sandbox_id=sandbox_id, tool_name=name, arguments=cb_response)
 
-        response = response['response']["result"]["content"][0].get("text", "")
-        return response
+        print(f"Mock response: {response}")
+        #response = response['response']["result"]["content"][0].get("text", "")
+        return response['response']["result"]
 
     async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
         print(f"Mock sandbox server is running with metadata: {bootstrap_metadata}")

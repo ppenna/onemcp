@@ -11,7 +11,7 @@ class Registry(RegistryInterface):
     """Class to test the OneMCP Indexing API endpoints via REST calls."""
 
     def __init__(
-        self, base_url: str = "https://0f7w4rjt-8001.usw2.devtunnels.ms/"
+        self, base_url: str = "http://localhost:8001"
     ) -> None:
         self.base_url = base_url
 

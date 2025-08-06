@@ -16,7 +16,7 @@ DEFAULT_PROTOCOL_VERSION: str = "2024-11-05"
 DEFAULT_READ_DELAY: float = 0.01
 
 # Default timeout for reading data from a container.
-DEFAULT_READ_TIMEOUT: float = 10.0
+DEFAULT_READ_TIMEOUT: float = 20.0
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ class McpServer:
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to decode JSON: {e} - Line: {line}")
                 continue
-            if isinstance(msg, dict) and msg.get("id") == expect_id or msg.get("id") == 0:
+            if isinstance(msg, dict) and msg.get("id", -2) != -2:
                 return msg
             if "method" in msg and "id" not in msg:
                 # Notification received; ignore and continue reading.
