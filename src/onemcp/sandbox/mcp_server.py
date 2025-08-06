@@ -137,7 +137,7 @@ class McpServer:
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to decode JSON: {e} - Line: {line}")
                 continue
-            if isinstance(msg, dict) and msg.get("id") == expect_id:
+            if isinstance(msg, dict) and msg.get("id") == expect_id or msg.get("id") == 0:
                 return msg
             if "method" in msg and "id" not in msg:
                 # Notification received; ignore and continue reading.
@@ -211,6 +211,20 @@ class McpServer:
         # Request the list of tools.
         body["id"] = 2
         self.send(container, body)
+        tools_resp = self._read_until_id(container, expect_id=2)
+
+        if "error" in tools_resp:
+            logger.error(f"Failed to call tool from MCP server: {tools_resp['error']}")
+            raise RuntimeError(f"Tool execution error: {tools_resp['error']}")
+
+        logger.debug(f"Tools resp: {tools_resp}")
+
+        return tools_resp
+
+
+    def call_tool_continue(self, container: DockerContainer, body: dict[str, Any]) -> Any:
+        # continue the tool call with the provided body
+        self.send(container, body['params']['arguments'])
         tools_resp = self._read_until_id(container, expect_id=2)
 
         if "error" in tools_resp:

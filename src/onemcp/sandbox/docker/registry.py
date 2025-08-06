@@ -204,6 +204,29 @@ class DockerSandboxRegistry:
             }
 
         return {"response": response}
+    
+    async def call_tool_continue(self, sandbox_id: str, body: dict[str, Any]) -> dict[str, Any]:
+        """Call a tool exposed by an MCP server running in `sandbox_id`.
+
+        Args:
+            The tools/call payload of the MCP protocol.
+
+        Returns:
+            The response for the tool execution.
+        """
+        logger.info(f"Continuing tool for sandbox ID: {sandbox_id}")
+
+        (container, instance) = self.instances.get(sandbox_id, [None, None])
+
+        if instance is not None and container is not None:
+            response = instance.call_tool_continue(container, body)
+        else:
+            return {
+                "response_code": "404",
+                "error_description": f"Sandbox {sandbox_id} not found",
+            }
+
+        return {"response": response}
 
     async def get_tools(self, sandbox_id: str) -> dict[str, Any]:
         """Get the tools exposed by an MCP server.

@@ -60,6 +60,8 @@ async def sandbox_endpoint(
             return await handle_get_tools(body)
         elif x_onemcp_message_type == "CALL_TOOL":
             return await handle_call_tool(body)
+        elif x_onemcp_message_type == "CALL_TOOL_CONTINUE":
+            return await handle_call_tool_continue(body)
         elif x_onemcp_message_type == "STOP":
             return await handle_stop(body)
         else:
@@ -176,6 +178,35 @@ async def handle_call_tool(body: dict[str, Any]) -> dict[str, Any]:
     sandbox_id = body["sandbox_id"]
     del body["sandbox_id"]
     result = await sandbox.call_tool(sandbox_id, body)
+
+    return result
+
+
+async def handle_call_tool_continue(body: dict[str, Any]) -> dict[str, Any]:
+    """Handle CALL_TOOL_CONTINUE message type.
+
+    The expected payload is the same payload of the tools/call request of the
+    MCP protocol, plus the sandbox id.
+    {
+        "sandbox_id": "..."
+        "jsonrpc": "2.0"
+        "id": ...,
+        "method": "tools/call",
+        "params": {
+            "name": "tool_name",
+            "arguments": { tool: args },
+        }
+    }
+    """
+    if "sandbox_id" not in body:
+        return {
+            "response_code": "400",
+            "error_description": "Missing required field: sandbox_id",
+        }
+
+    sandbox_id = body["sandbox_id"]
+    del body["sandbox_id"]
+    result = await sandbox.call_tool_continue(sandbox_id, body)
 
     return result
 

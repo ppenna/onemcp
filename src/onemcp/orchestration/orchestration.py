@@ -34,7 +34,7 @@ from onemcp.sandbox.api import SandboxAPI
 class MockSandbox:
     """A mock sandbox for testing purposes."""
 
-    async def call_tool(self, sandbox_id: str, name: str, args: dict[str, Any]) -> Any:
+    async def call_tool(self, sandbox_id: str, name: str, args: dict[str, Any], context: Context) -> Any:
         print(
             f"Mock call to tool: {name} with args: {args} and sandbox_id: {sandbox_id}"
         )
@@ -42,6 +42,28 @@ class MockSandbox:
 
         response = api.call_tool(sandbox_id=sandbox_id, tool_name=name, arguments=args)
 
+        # if the response is a callback request, make the request and keep polling
+        while isinstance(response, dict) and response['response'].get("method") == "sampling/createMessage":
+            params = response['response']['params']
+            result = await context.session.create_message(
+                messages=[
+                    SamplingMessage(
+                        role=params['messages'][0]['role'],
+                        content=TextContent(type="text", text=params['messages'][0]['content']['text']),
+                    )
+                ],
+                max_tokens=params.get('maxTokens', 100),
+            )
+
+            cb_response = {
+                "jsonrpc": "2.0",
+                "id": 0,
+                "result": { **result.model_dump() }
+            }
+
+            response = api.call_tool_continue(sandbox_id=sandbox_id, tool_name=name, arguments=cb_response)
+
+        response = response['response']["result"]["content"][0].get("text", "")
         return response
 
     async def run_server(self, bootstrap_metadata: dict[str, str]) -> str:
@@ -312,7 +334,7 @@ async def sandbox_call(name: str, args: dict[str, Any], ctx: Context) -> Any:
 
     if tool:
         sandbox = MockSandbox()
-        return await sandbox.call_tool(tool[0], name, args)
+        return await sandbox.call_tool(tool[0], name, args, ctx)
 
     return [
         "This is a mock response from the sandbox MCP proxy for tool: "

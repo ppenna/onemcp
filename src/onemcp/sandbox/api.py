@@ -106,6 +106,32 @@ class SandboxAPI:
 
         return response.json()
 
+    def call_tool_continue(
+        self,
+        sandbox_id: str,
+        tool_name: str,
+        arguments: dict[str, Any],
+        request_id: int = 1,
+    ) -> Any:
+        data = {
+            "sandbox_id": sandbox_id,
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "tools/call",
+            "params": {"name": tool_name, "arguments": arguments},
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-OneMCP-Message-Type": "CALL_TOOL_CONTINUE",
+        }
+
+        print(f"Calling tool '{tool_name}' with arguments: {arguments}")
+        response = requests.post(self.sandbox_endpoint, json=data, headers=headers)
+        response.raise_for_status()
+
+        return response.json()
+
     def stop_sandbox(self, sandbox_id: str) -> Any:
         """
         Stop a sandbox.
