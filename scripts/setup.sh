@@ -81,7 +81,7 @@ install_docker() {
 
     # Install Docker using the universal installation script
     print_status "Installing Docker using Docker's universal installation script..."
-    if command_exists apt-get; then
+    if command -v apt-get >/dev/null 2>&1; then
       sudo apt-get update
     else
       print_error "apt-get is not available on this system. Please use a Debian-based Linux distribution."
